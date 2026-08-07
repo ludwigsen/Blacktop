@@ -2,8 +2,8 @@ using UnityEngine;
 
 // Shared state bundle passed into every IPlayerMove (Juke, Hurdle, StiffArm, future moves).
 // This is the single channel moves use to touch the outside world — transform, attributes,
-// live input, cooldown — so individual move scripts never need their own component
-// references or Input.* calls. Keeps moves self-contained and easy to add/remove.
+// live input, defender proximity, cooldown — so individual move scripts never need their
+// own component references or Input.* calls. Keeps moves self-contained and easy to add/remove.
 public class PlayerContext
 {
     public Transform transform;
@@ -14,6 +14,10 @@ public class PlayerContext
     // this delegate rather than calling Input.GetAxisRaw or the new Input System directly —
     // keeps input-reading centralized in PlayerMovement, moves just consume the result.
     public System.Func<Vector2> getMoveInput;
+
+    // Routes to DefenderDetector.DefenderInRange — moves check this rather than holding
+    // their own collider reference. Same centralization pattern as getMoveInput.
+    public System.Func<bool> isDefenderInRange;
 
     // Move calls this in its own Exit() to start the shared cooldown timer. Cooldown begins
     // at move EXIT, not at trigger — a 0.3s move with a 0.2s cooldown measured from trigger

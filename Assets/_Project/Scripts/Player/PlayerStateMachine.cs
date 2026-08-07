@@ -19,6 +19,7 @@ public class PlayerStateMachine : MonoBehaviour
     {
         movement = GetComponent<PlayerMovement>();
         inputBuffer = GetComponent<InputBuffer>();
+        var defenderDetector = GetComponent<DefenderDetector>();
 
         ctx = new PlayerContext
         {
@@ -26,12 +27,27 @@ public class PlayerStateMachine : MonoBehaviour
             attributes = attributes,
             inputBuffer = inputBuffer,
             getMoveInput = () => movement.CurrentMoveInput,
+            isDefenderInRange = () => defenderDetector.DefenderInRange,
             setCooldown = t => cooldownTimer = t
         };
+
+        // On tackle, the state machine stops processing entirely — no locomotion, no move
+        // triggers. Deliberately NOT disabling the whole component, just gating Update(),
+        // so re-enabling on ResetPlay() later is a one-line flip, not a re-Awake.
+        if (PlayState.Instance != null)
+            PlayState.Instance.OnPlayEnded += HandlePlayEnded;
+    }
+
+    void HandlePlayEnded()
+    {
+        activeMove = null; // cut any in-progress move short — you don't finish a juke after being tackled
+        currentState = PlayerState.Idle;
     }
 
     void Update()
     {
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return; // play's dead — no input processed
+
         if (cooldownTimer > 0f) cooldownTimer -= Time.deltaTime;
 
         if (activeMove != null)

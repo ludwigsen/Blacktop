@@ -52,6 +52,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive)
+        {
+            currentVelocity = Vector3.zero; // hard stop — no coasting to a halt after being tackled
+            return;
+        }
+
         Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
         Vector3 targetVelocity = moveDir * MaxSpeed;
 

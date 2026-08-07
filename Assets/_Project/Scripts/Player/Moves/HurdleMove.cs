@@ -15,9 +15,12 @@ public class HurdleMove : IPlayerMove
     float PeakHeight => basePeakHeight * attr.hurdleMult;
     float Duration => baseDuration;
 
-    // Standing hurdle is legitimate too — hopping a low obstacle/attempted tackle from a stop.
+    // Hurdle now requires a defender actually in front of you — this is what turns it from
+    // "a hop button" into "a reactive move." Standing-still hurdles are still allowed (per
+    // earlier requirement) as long as something's in range to hurdle over/past.
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
-        => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;
+        => (currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run)
+        && ctx.isDefenderInRange();
 
     public void Enter(PlayerContext ctx)
     {
