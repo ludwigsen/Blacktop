@@ -14,7 +14,7 @@ public class PlayerMovement : MonoBehaviour
     // values per archetype, or tuning work gets thrown away when stats are added later.
     [SerializeField] float baseMaxSpeed = 8f;
     [SerializeField] float baseAcceleration = 40f;
-    [SerializeField] float deceleration = 60f; // intentionally NOT attribute-scaled (yet) — stopping feel stays consistent across players
+    [SerializeField] float deceleration = 60f; // intentionally NOT attribute-scaled — stopping feel stays consistent across players
     [SerializeField] float rotationSpeed = 720f; // deg/sec — test diagonal-to-diagonal flicks specifically when tuning this
 
     InputSystem_Actions controls; // auto-generated wrapper from the project-wide Input Actions asset
@@ -29,6 +29,11 @@ public class PlayerMovement : MonoBehaviour
     // Exposed for PlayerStateMachine to read — drives Idle/Walk/Run thresholds without
     // the state machine needing its own input polling.
     public float CurrentInputMagnitude => moveInput.magnitude;
+
+    // Exposed so moves (via PlayerContext.getMoveInput) can read raw direction — e.g. Juke
+    // needs to know which way the stick was tilted at trigger time. Keeps all input reading
+    // routed through PlayerMovement rather than moves polling Input.* directly (legacy or new).
+    public Vector2 CurrentMoveInput => moveInput;
 
     void Awake()
     {

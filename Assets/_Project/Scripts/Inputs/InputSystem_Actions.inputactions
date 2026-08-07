@@ -65,6 +65,16 @@
                     "interactions": "",
                     "initialStateCheck": false,
                     "priority": 0
+                },
+                {
+                    "name": "Stiff Arm",
+                    "type": "Button",
+                    "id": "0b5acdb4-0dbe-4367-bcdf-bd997b41c3b8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -318,6 +328,17 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Juke",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c3d11b1e-07bf-4a40-873b-b208432d49ca",
+                    "path": "<Keyboard>/#(C)",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Stiff Arm",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
