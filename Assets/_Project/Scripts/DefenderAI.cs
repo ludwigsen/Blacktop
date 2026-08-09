@@ -15,10 +15,22 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float moveSpeed = 5f; // intentionally slower than player baseMaxSpeed (8) — defender shouldn't just walk it down instantly
     [SerializeField] float stopDistance = 1f; // how close before defender halts — prevents jittering/overlapping at zero distance
 
+    // Shed = temporarily can't chase at all. Simple timer-based lockout rather than a
+    // full state machine — defender doesn't need Juke/Hurdle-style complexity, just
+    // "disabled for a bit."
+    float shedTimer;
+    bool IsShed => shedTimer > 0f;
+
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
+        if (shedTimer > 0f)
+        {
+            shedTimer -= Time.deltaTime;
+            return; // frozen while shed — no movement, no chase
+        }
+        
         if (target == null) return;
 
         float distance = Vector3.Distance(transform.position, target.position);
@@ -31,5 +43,20 @@ public class DefenderAI : MonoBehaviour
         // any directional animation/reaction later.
         if (direction != Vector3.zero)
             transform.rotation = Quaternion.LookRotation(direction);
+    }
+
+    // Called by StiffArmMove on a "push back" result — knocks the defender away
+    // instantly (teleport-style displacement, matching the project's preference for
+    // curve/direct-position moves over physics forces) but they keep chasing after.
+    public void ApplyPushBack(Vector3 direction, float distance)
+    {
+        transform.position += direction * distance;
+    }
+
+    // Called by StiffArmMove on a "full shed" result — defender stops entirely for
+    // a duration, giving the player a real window to separate before the chase resumes.
+    public void ApplyShed(float duration)
+    {
+        shedTimer = duration;
     }
 }

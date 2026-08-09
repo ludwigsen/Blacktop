@@ -75,6 +75,16 @@
                     "interactions": "",
                     "initialStateCheck": false,
                     "priority": 0
+                },
+                {
+                    "name": "Reset Play",
+                    "type": "Button",
+                    "id": "f2a146b7-9fcb-4a44-9879-abfd8d92c2ea",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -339,6 +349,17 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Stiff Arm",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "48cd43cb-e521-442d-b7e2-d6c56a5bd630",
+                    "path": "<Keyboard>/#(R)",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Reset Play",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

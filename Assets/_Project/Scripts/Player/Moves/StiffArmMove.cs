@@ -19,11 +19,29 @@ public class StiffArmMove : IPlayerMove
     [SerializeField] float baseForwardBurst = 2.5f;
     [SerializeField] float cooldownDuration = 0.3f;
 
+    // Contact detection range — how close a defender needs to be, in front of the player,
+    // to count as "connected with." Deliberately generous (arcade forgiveness), similar
+    // reasoning to DefenderDetector's trigger volume, but checked via OverlapSphere here
+    // rather than a persistent collider, since this only needs to matter during the move's
+    // brief active window.
+    [SerializeField] float contactRange = 1.5f;
+    [SerializeField] string defenderTag = "Defender";
+
+    // Outcome odds — base 30% full shed, 70% push back, per design call. Scaled by
+    // powerMult: a maxed-power player (1.3x) pushes the shed chance up meaningfully,
+    // a low-power player (0.7x) pushes it down. Defenders have no resistance stat yet —
+    // known simplification, revisit once defenders get their own attributes.
+    [SerializeField] float baseShedChance = 0.3f;
+    [SerializeField] float pushBackDistance = 2f;
+    [SerializeField] float shedDuration = 1f;
+
     float timer, lastSample;
     PlayerAttributes attr;
+    bool hasResolvedContact; // ensures only ONE outcome roll per activation, even if OverlapSphere keeps detecting the same defender across multiple Tick frames
 
     float Duration => baseDuration;
     float ForwardBurst => baseForwardBurst * attr.speedMult;
+    float ShedChance => Mathf.Clamp01(baseShedChance * attr.powerMult);
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
         => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;
@@ -33,6 +51,7 @@ public class StiffArmMove : IPlayerMove
         attr = ctx.attributes;
         timer = 0f;
         lastSample = 0f;
+        hasResolvedContact = false;
     }
 
     public void Tick(PlayerContext ctx, float deltaTime)
@@ -44,6 +63,37 @@ public class StiffArmMove : IPlayerMove
         lastSample = sample;
 
         ctx.transform.position += ctx.transform.forward * ForwardBurst * delta;
+
+        if (!hasResolvedContact)
+            CheckContact(ctx);
+    }
+
+    void CheckContact(PlayerContext ctx)
+    {
+        Vector3 checkCenter = ctx.transform.position + ctx.transform.forward * (contactRange * 0.5f);
+        Collider[] hits = Physics.OverlapSphere(checkCenter, contactRange);
+
+        foreach (var hit in hits)
+        {
+            if (!hit.CompareTag(defenderTag)) continue;
+
+            hasResolvedContact = true; // resolve at most one defender per stiff arm — simplest correct behavior for now, revisit for double-team scenarios
+
+            var defenderAI = hit.GetComponent<DefenderAI>();
+            if (defenderAI == null) break;
+
+            bool shed = Random.value < ShedChance;
+            if (shed)
+            {
+                defenderAI.ApplyShed(shedDuration);
+            }
+            else
+            {
+                Vector3 pushDir = (hit.transform.position - ctx.transform.position).normalized;
+                defenderAI.ApplyPushBack(pushDir, pushBackDistance);
+            }
+            break;
+        }
     }
 
     public bool IsComplete => timer >= Duration;

@@ -161,6 +161,16 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Reset Play"",
+                    ""type"": ""Button"",
+                    ""id"": ""f2a146b7-9fcb-4a44-9879-abfd8d92c2ea"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -425,6 +435,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Stiff Arm"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""48cd43cb-e521-442d-b7e2-d6c56a5bd630"",
+                    ""path"": ""<Keyboard>/#(R)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Reset Play"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1029,6 +1050,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_Juke = m_Player.FindAction("Juke", throwIfNotFound: true);
         m_Player_StiffArm = m_Player.FindAction("Stiff Arm", throwIfNotFound: true);
+        m_Player_ResetPlay = m_Player.FindAction("Reset Play", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1129,6 +1151,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_Juke;
     private readonly InputAction m_Player_StiffArm;
+    private readonly InputAction m_Player_ResetPlay;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1168,6 +1191,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/StiffArm".
         /// </summary>
         public InputAction @StiffArm => m_Wrapper.m_Player_StiffArm;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ResetPlay".
+        /// </summary>
+        public InputAction @ResetPlay => m_Wrapper.m_Player_ResetPlay;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1215,6 +1242,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @StiffArm.started += instance.OnStiffArm;
             @StiffArm.performed += instance.OnStiffArm;
             @StiffArm.canceled += instance.OnStiffArm;
+            @ResetPlay.started += instance.OnResetPlay;
+            @ResetPlay.performed += instance.OnResetPlay;
+            @ResetPlay.canceled += instance.OnResetPlay;
         }
 
         /// <summary>
@@ -1247,6 +1277,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @StiffArm.started -= instance.OnStiffArm;
             @StiffArm.performed -= instance.OnStiffArm;
             @StiffArm.canceled -= instance.OnStiffArm;
+            @ResetPlay.started -= instance.OnResetPlay;
+            @ResetPlay.performed -= instance.OnResetPlay;
+            @ResetPlay.canceled -= instance.OnResetPlay;
         }
 
         /// <summary>
@@ -1596,6 +1629,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnStiffArm(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Reset Play" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnResetPlay(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
