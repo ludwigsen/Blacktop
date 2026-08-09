@@ -1,32 +1,34 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// First real "game state" concept in the project — everything before this (movement,
-// moves, defender) operated with no notion of a play being active or over. This is
-// intentionally minimal: two states, one event. Down/distance, scoring, play-calling
-// all build on top of this later, but none of that belongs here yet.
 public class PlayState : MonoBehaviour
 {
+    public enum PlayEndReason { Tackled, Touchdown }
+
     public static PlayState Instance { get; private set; }
 
     [SerializeField] Transform player;
-    [SerializeField] Transform defender;
-    [SerializeField] Vector3 playerStartPos = new Vector3(0f, 1f, -5f);
-    [SerializeField] Vector3 defenderStartPos = new Vector3(0f, 1f, 5f);
+    [SerializeField] float initialPlayerZ = -5f;
+    [SerializeField] float kickoffResetZ = -5f; // where the next play starts after a score — separate from initialPlayerZ in case you want them to differ later (e.g. touchback rules)
+    [SerializeField] List<Transform> defenders = new List<Transform>();
+    [SerializeField] List<Vector3> defenderStartOffsetsFromPlayer = new List<Vector3>();
 
     public bool IsLive { get; private set; } = true;
 
-    // Other systems (player, defender, UI) subscribe to this rather than polling IsLive
-    // every frame — cheaper and keeps the "what happens on tackle" logic decoupled from
-    // this class knowing about players/UI/etc.
-    public event System.Action OnPlayEnded;
-    public event System.Action OnPlayReset; // new — lets subscribers re-arm themselves (state machine re-enable, etc.)
+    // Now passes the reason — subscribers (UI, scoring, future systems) can react
+    // differently to a tackle vs. a touchdown instead of treating every stoppage the same.
+    public event System.Action<PlayEndReason> OnPlayEnded;
+    public event System.Action OnPlayReset;
 
     InputSystem_Actions controls;
+    float nextLineOfScrimmageZ;
+    PlayEndReason lastEndReason;
 
     void Awake()
     {
         Instance = this;
         controls = new InputSystem_Actions();
+        nextLineOfScrimmageZ = initialPlayerZ;
     }
 
     void OnEnable()
@@ -37,23 +39,43 @@ public class PlayState : MonoBehaviour
 
     void OnDisable() => controls.Player.Disable();
 
-    public void EndPlay()
+    public void EndPlay(PlayEndReason reason)
     {
-        if (!IsLive) return; // guard against double-firing if multiple colliders trigger contact in the same frame
+        if (!IsLive) return;
         IsLive = false;
-        OnPlayEnded?.Invoke();
+        lastEndReason = reason;
+
+        if (reason == PlayEndReason.Tackled && player != null)
+        {
+            nextLineOfScrimmageZ = player.position.z; // next play starts where the tackle happened
+        }
+        // Touchdown doesn't touch nextLineOfScrimmageZ here — handled in ResetPlay via kickoffResetZ instead
+
+        OnPlayEnded?.Invoke(reason);
     }
 
-    // Called later by a "reset/next play" flow — not wired to anything yet, but the
-    // state needs a documented way back to Live or it's a dead end after one tackle.
     public void ResetPlay()
     {
-        if (IsLive) return; // only makes sense to reset a dead play — no-op if called mid-live-play by accident
+        if (IsLive) return;
 
-        // Snap positions back — deliberately teleport, not lerp/animate. This is a debug/test
-        // convenience, not a "next play" presentation moment; that's a much later polish pass.
-        if (player != null) player.position = playerStartPos;
-        if (defender != null) defender.position = defenderStartPos;
+        float resetZ = lastEndReason == PlayEndReason.Touchdown ? kickoffResetZ : nextLineOfScrimmageZ;
+
+        if (player != null)
+        {
+            Vector3 pos = player.position;
+            pos.x = 0f;
+            pos.z = resetZ;
+            player.position = pos;
+        }
+
+        for (int i = 0; i < defenders.Count && i < defenderStartOffsetsFromPlayer.Count; i++)
+        {
+            if (defenders[i] == null) continue;
+            defenders[i].position = new Vector3(0f, 1f, resetZ) + defenderStartOffsetsFromPlayer[i];
+        }
+
+        if (lastEndReason == PlayEndReason.Touchdown)
+            nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
 
         IsLive = true;
         OnPlayReset?.Invoke();

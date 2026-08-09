@@ -1,31 +1,42 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// Forward detection zone — a trigger collider (not a raycast) sitting in front of the
-// player, checking for anything tagged "Defender" within range. Trigger over raycast
-// because it's more forgiving/arcade-appropriate: a raycast can miss a defender standing
-// slightly off-center, a volume trigger reads "roughly in front of me" more generously,
-// matching how NFL Street-style games are forgiving rather than precise.
-//
-// This same detection also seeds the future tackle-contact system — "defender in my
-// hurdle-trigger zone" and "defender close enough to tackle me" are the same underlying
-// question at different ranges, so keeping this generic (not hardcoded to Hurdle) matters.
-[RequireComponent(typeof(BoxCollider))]
+// Forward detection zone, polled every frame via OverlapBox rather than relying on
+// OnTriggerEnter/Exit — trigger callbacks require a Rigidbody on at least one object,
+// and this project deliberately has none (transform-based movement throughout, matching
+// StiffArm's existing OverlapSphere pattern rather than adding Rigidbodies just to
+// satisfy Unity's event requirements).
 public class DefenderDetector : MonoBehaviour
 {
     [SerializeField] string defenderTag = "Defender";
+    [SerializeField] Vector3 boxSize = new Vector3(2f, 1.5f, 2f); // forward-facing zone for Hurdle — hurdling is inherently a forward move, doesn't need to detect from behind
+    [SerializeField] Vector3 boxOffset = new Vector3(0f, 0f, 1.2f); // pushed forward from player center
 
-    // Exposed as a simple bool rather than a list — for now we only care THAT something's
-    // in range, not which defender or how many. Revisit if defender-specific logic
-    // (e.g. targeting a specific tackle animation) is needed later.
     public bool DefenderInRange { get; private set; }
+    public int DefenderCount { get; private set; }
 
-    void OnTriggerEnter(Collider other)
+    void Update()
     {
-        if (other.CompareTag(defenderTag)) DefenderInRange = true;
+        Vector3 center = transform.position + transform.TransformDirection(boxOffset);
+        Collider[] hits = Physics.OverlapBox(center, boxSize * 0.5f, transform.rotation);
+
+        int count = 0;
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag(defenderTag)) count++;
+        }
+
+        DefenderCount = count;
+        DefenderInRange = count > 0;
     }
 
-    void OnTriggerExit(Collider other)
+    // Visualize the detection box in Scene view even without a real collider component —
+    // makes tuning boxSize/boxOffset visually verifiable instead of guessing blind.
+    void OnDrawGizmosSelected()
     {
-        if (other.CompareTag(defenderTag)) DefenderInRange = false;
+        Gizmos.color = Color.yellow;
+        Vector3 center = transform.position + transform.TransformDirection(boxOffset);
+        Gizmos.matrix = Matrix4x4.TRS(center, transform.rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, boxSize);
     }
 }

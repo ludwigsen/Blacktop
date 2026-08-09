@@ -49,6 +49,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return; // play's dead — no input processed
 
         if (cooldownTimer > 0f) cooldownTimer -= Time.deltaTime;
+        Debug.Log($"DefenderInRange: {GetComponent<DefenderDetector>().DefenderInRange}, State: {currentState}, Cooldown: {cooldownTimer}");
 
         if (activeMove != null)
         {

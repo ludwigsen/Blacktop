@@ -1,19 +1,31 @@
 using UnityEngine;
 
-// Tight-range contact check, separate from DefenderDetector's forward zone (which is
-// deliberately generous/forgiving for Hurdle gating). Tackle contact should be a much
-// smaller, more precise trigger — "the defender is actually touching you," not "roughly
-// in front of you." Sits on the PLAYER, checks for the Defender tag, same pattern as
-// DefenderDetector but different collider size/purpose.
-[RequireComponent(typeof(SphereCollider))]
+// Same polling approach as DefenderDetector — no Rigidbody dependency. Omnidirectional
+// (small sphere centered on player) since a tackle from behind or the side is just as
+// valid as one from the front, unlike Hurdle's forward-only detection.
 public class TackleContact : MonoBehaviour
 {
     [SerializeField] string defenderTag = "Defender";
+    [SerializeField] float contactRadius = 0.8f;
 
-    void OnTriggerEnter(Collider other)
+    void Update()
     {
-        if (!other.CompareTag(defenderTag)) return;
-        if (PlayState.Instance == null || !PlayState.Instance.IsLive) return; // already-dead plays shouldn't re-trigger
-        PlayState.Instance.EndPlay();
+        if (PlayState.Instance == null || !PlayState.Instance.IsLive) return;
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag(defenderTag))
+            {
+                PlayState.Instance.EndPlay(PlayState.PlayEndReason.Tackled);
+                return;
+            }
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, contactRadius);
     }
 }

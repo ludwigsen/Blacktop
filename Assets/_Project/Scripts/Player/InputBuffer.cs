@@ -31,10 +31,10 @@ public class InputBuffer : MonoBehaviour
     void OnEnable()
     {
         controls.Player.Enable();
-        // Record on press event, not polled each frame — guarantees no input is missed
-        // regardless of frame timing.
+        // Record on press event, not polled each frame — guarantees no input is missed regardless of frame timing.
         controls.Player.Juke.performed += ctx => Record("Juke");
-        controls.Player.Hurdle.performed += ctx => Record("Hurdle"); // repurposed from default "Jump" action
+        controls.Player.Hurdle.performed += ctx => Record("Hurdle");
+        controls.Player.StiffArm.performed += ctx => Record("StiffArm");
     }
 
     void OnDisable() => controls.Player.Disable();

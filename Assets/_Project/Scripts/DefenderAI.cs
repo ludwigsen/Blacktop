@@ -11,15 +11,30 @@ using UnityEngine;
 // intelligence against a player move-set that's still being tuned itself.
 public class DefenderAI : MonoBehaviour
 {
-    [SerializeField] Transform target; // the player — assign in Inspector
-    [SerializeField] float moveSpeed = 5f; // intentionally slower than player baseMaxSpeed (8) — defender shouldn't just walk it down instantly
-    [SerializeField] float stopDistance = 1f; // how close before defender halts — prevents jittering/overlapping at zero distance
+    [SerializeField] Transform target; // the player
+    [SerializeField] float moveSpeed = 5f;
+    [SerializeField] float stopDistance = 1f;
 
-    // Shed = temporarily can't chase at all. Simple timer-based lockout rather than a
-    // full state machine — defender doesn't need Juke/Hurdle-style complexity, just
-    // "disabled for a bit."
+    // Manual separation — since movement is transform-based (no Rigidbody), colliders
+    // don't physically resolve overlaps between defenders on their own. This nudges
+    // defenders apart when too close to each other, checked/applied every frame alongside
+    // the chase movement. Cheap O(n) check against other Defenders — fine at this scale
+    // (a handful of defenders), would need spatial partitioning if this ever scaled to
+    // dozens of agents, which it won't for 7v7.
+    [SerializeField] float separationRadius = 1.2f;
+    [SerializeField] float separationStrength = 3f;
+    [SerializeField] string defenderTag = "Defender";
+
     float shedTimer;
-    bool IsShed => shedTimer > 0f;
+
+    void Awake()
+    {
+        if (target == null)
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) target = player.transform;
+        }
+    }
 
     void Update()
     {
@@ -28,33 +43,51 @@ public class DefenderAI : MonoBehaviour
         if (shedTimer > 0f)
         {
             shedTimer -= Time.deltaTime;
-            return; // frozen while shed — no movement, no chase
+            return;
         }
-        
-        if (target == null) return;
 
-        float distance = Vector3.Distance(transform.position, target.position);
-        if (distance <= stopDistance) return; // close enough — stand ground rather than pushing into/through the player
+        Vector3 chaseMove = Vector3.zero;
+        if (target != null)
+        {
+            float distance = Vector3.Distance(transform.position, target.position);
+            if (distance > stopDistance)
+            {
+                Vector3 direction = (target.position - transform.position).normalized;
+                chaseMove = direction * moveSpeed;
+                transform.rotation = Quaternion.LookRotation(direction);
+            }
+        }
 
-        Vector3 direction = (target.position - transform.position).normalized;
-        transform.position += direction * moveSpeed * Time.deltaTime;
+        Vector3 separationMove = CalculateSeparation();
 
-        // Face the player while closing — cosmetic for now, but matters once defender has
-        // any directional animation/reaction later.
-        if (direction != Vector3.zero)
-            transform.rotation = Quaternion.LookRotation(direction);
+        transform.position += (chaseMove + separationMove) * Time.deltaTime;
     }
 
-    // Called by StiffArmMove on a "push back" result — knocks the defender away
-    // instantly (teleport-style displacement, matching the project's preference for
-    // curve/direct-position moves over physics forces) but they keep chasing after.
+    Vector3 CalculateSeparation()
+    {
+        Vector3 push = Vector3.zero;
+        GameObject[] defenders = GameObject.FindGameObjectsWithTag(defenderTag);
+
+        foreach (var other in defenders)
+        {
+            if (other.transform == transform) continue;
+
+            float dist = Vector3.Distance(transform.position, other.transform.position);
+            if (dist < separationRadius && dist > 0.001f)
+            {
+                Vector3 away = (transform.position - other.transform.position).normalized;
+                push += away * (separationRadius - dist); // closer = stronger push
+            }
+        }
+
+        return push * separationStrength;
+    }
+
     public void ApplyPushBack(Vector3 direction, float distance)
     {
         transform.position += direction * distance;
     }
 
-    // Called by StiffArmMove on a "full shed" result — defender stops entirely for
-    // a duration, giving the player a real window to separate before the chase resumes.
     public void ApplyShed(float duration)
     {
         shedTimer = duration;
