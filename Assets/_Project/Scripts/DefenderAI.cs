@@ -24,6 +24,17 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float separationRadius = 1.2f;
     [SerializeField] float separationStrength = 3f;
     [SerializeField] string defenderTag = "Defender";
+    [SerializeField] DefenderAttributes attributes;
+    [SerializeField] float baseMoveSpeed = 5f;
+    Vector3 pushBackTarget;
+    float pushBackTimer;
+    const float pushBackDuration = 0.15f;
+
+    float MoveSpeed => baseMoveSpeed * (attributes != null ? attributes.speedMult : 1f);
+    // ...use MoveSpeed instead of moveSpeed in the chase calc
+
+    // Exposed so StiffArmMove can read resistance when rolling/applying its outcome.
+    public float ResistMult => attributes != null ? attributes.resistMult : 1f;
 
     float shedTimer;
 
@@ -44,6 +55,14 @@ public class DefenderAI : MonoBehaviour
         {
             shedTimer -= Time.deltaTime;
             return;
+        }
+
+        // In Update(), before chase logic:
+        if (pushBackTimer > 0f)
+        {
+            transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
+            pushBackTimer -= Time.deltaTime;
+            return; // skip chase/separation this frame while being pushed
         }
 
         Vector3 chaseMove = Vector3.zero;
@@ -85,7 +104,8 @@ public class DefenderAI : MonoBehaviour
 
     public void ApplyPushBack(Vector3 direction, float distance)
     {
-        transform.position += direction * distance;
+        pushBackTarget = transform.position + direction * distance;
+        pushBackTimer = pushBackDuration;
     }
 
     public void ApplyShed(float duration)

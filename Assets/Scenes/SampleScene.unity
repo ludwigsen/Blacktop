@@ -399,6 +399,16 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!4 &413783320 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
+  m_PrefabInstance: {fileID: 1921861412}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &670707746 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
+  m_PrefabInstance: {fileID: 1731406316029656970}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -467,6 +477,7 @@ GameObject:
   - component: {fileID: 1064215535}
   - component: {fileID: 1064215538}
   - component: {fileID: 1064215537}
+  - component: {fileID: 1064215539}
   m_Layer: 0
   m_Name: UserPlayer
   m_TagString: Player
@@ -773,6 +784,24 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1
   m_Center: {x: 0.6, y: 0.8, z: 0}
+--- !u!114 &1064215539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064215527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cfaf8d26966440f6aa95edb408988c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TouchdownZone
+  endZoneZ: 25
+--- !u!4 &1099329970 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
+  m_PrefabInstance: {fileID: 1928572278}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1314477354
 GameObject:
   m_ObjectHideFlags: 0
@@ -803,9 +832,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayState
   player: {fileID: 1064215533}
-  initialPlayerZ: -5
-  defenders: []
-  defenderStartOffsetsFromPlayer: []
+  initialPlayerZ: -10
+  kickoffResetZ: -5
+  defenders:
+  - {fileID: 670707746}
+  - {fileID: 1099329970}
+  - {fileID: 413783320}
+  defenderStartOffsetsFromLOS:
+  - {x: 3, y: 0, z: 3}
+  - {x: 10, y: 0, z: 5}
+  - {x: -5, y: 0, z: 2}
 --- !u!4 &1314477356
 Transform:
   m_ObjectHideFlags: 0
@@ -948,7 +984,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_LocalPosition.z

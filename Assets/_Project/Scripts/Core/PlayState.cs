@@ -11,7 +11,7 @@ public class PlayState : MonoBehaviour
     [SerializeField] float initialPlayerZ = -5f;
     [SerializeField] float kickoffResetZ = -5f; // where the next play starts after a score — separate from initialPlayerZ in case you want them to differ later (e.g. touchback rules)
     [SerializeField] List<Transform> defenders = new List<Transform>();
-    [SerializeField] List<Vector3> defenderStartOffsetsFromPlayer = new List<Vector3>();
+    [SerializeField] List<Vector3> defenderStartOffsetsFromLOS = new List<Vector3>();
 
     public bool IsLive { get; private set; } = true;
 
@@ -68,10 +68,10 @@ public class PlayState : MonoBehaviour
             player.position = pos;
         }
 
-        for (int i = 0; i < defenders.Count && i < defenderStartOffsetsFromPlayer.Count; i++)
+        for (int i = 0; i < defenders.Count && i < defenderStartOffsetsFromLOS.Count; i++)
         {
             if (defenders[i] == null) continue;
-            defenders[i].position = new Vector3(0f, 1f, resetZ) + defenderStartOffsetsFromPlayer[i];
+            defenders[i].position = new Vector3(0f, 1f, resetZ) + defenderStartOffsetsFromLOS[i];
         }
 
         if (lastEndReason == PlayEndReason.Touchdown)

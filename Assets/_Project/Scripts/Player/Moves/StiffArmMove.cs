@@ -11,7 +11,8 @@ using UnityEngine;
 [System.Serializable]
 public class StiffArmMove : IPlayerMove
 {
-    [SerializeField] AnimationCurve curve = new AnimationCurve(
+    [SerializeField]
+    AnimationCurve curve = new AnimationCurve(
         new Keyframe(0f, 1f, 0f, -4f), // starts at full value, steep negative out-tangent for a fast initial burst
         new Keyframe(1f, 0f, -1f, 0f)  // decays to 0, gentle in-tangent so it trails off rather than stopping abruptly
     );
@@ -32,7 +33,7 @@ public class StiffArmMove : IPlayerMove
     // a low-power player (0.7x) pushes it down. Defenders have no resistance stat yet —
     // known simplification, revisit once defenders get their own attributes.
     [SerializeField] float baseShedChance = 0.3f;
-    [SerializeField] float pushBackDistance = 2f;
+    [SerializeField] float pushBackDistance = 0.8f;
     [SerializeField] float shedDuration = 1f;
 
     float timer, lastSample;
@@ -77,12 +78,17 @@ public class StiffArmMove : IPlayerMove
         {
             if (!hit.CompareTag(defenderTag)) continue;
 
-            hasResolvedContact = true; // resolve at most one defender per stiff arm — simplest correct behavior for now, revisit for double-team scenarios
+            hasResolvedContact = true;
 
             var defenderAI = hit.GetComponent<DefenderAI>();
             if (defenderAI == null) break;
 
-            bool shed = Random.value < ShedChance;
+            // Net roll: attacker power pushes shed chance up, defender resistance pushes it back down.
+            float netShedChance = Mathf.Clamp01(baseShedChance * attr.powerMult / defenderAI.ResistMult);
+            bool shed = Random.value < netShedChance;
+
+            float netPushDistance = pushBackDistance * attr.powerMult / defenderAI.ResistMult;
+
             if (shed)
             {
                 defenderAI.ApplyShed(shedDuration);
@@ -90,7 +96,7 @@ public class StiffArmMove : IPlayerMove
             else
             {
                 Vector3 pushDir = (hit.transform.position - ctx.transform.position).normalized;
-                defenderAI.ApplyPushBack(pushDir, pushBackDistance);
+                defenderAI.ApplyPushBack(pushDir, netPushDistance);
             }
             break;
         }

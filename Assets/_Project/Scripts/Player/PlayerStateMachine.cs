@@ -1,6 +1,9 @@
 using System.Linq;
 using UnityEngine;
 
+// Orchestrator only — holds current state and delegates to the active IPlayerMove.
+// Deliberately does NOT contain move implementation details; that's what IPlayerMove
+// abstracts away. This class should stay thin even as more moves get added.
 public class PlayerStateMachine : MonoBehaviour
 {
     [SerializeField] JukeMove jukeMove;
@@ -15,6 +18,12 @@ public class PlayerStateMachine : MonoBehaviour
     IPlayerMove activeMove;
     float cooldownTimer;
 
+    // Set by HurdleMove via ctx.setTackleImmune during a successful negation roll.
+    // TackleContact reads this directly (via GetComponent<PlayerStateMachine>()) before
+    // ending the play on contact — a hurdle that "won" its roll passes through a tackle
+    // attempt untouched for the remainder of the move.
+    public bool IsTackleImmune { get; private set; }
+
     void Awake()
     {
         movement = GetComponent<PlayerMovement>();
@@ -28,19 +37,23 @@ public class PlayerStateMachine : MonoBehaviour
             inputBuffer = inputBuffer,
             getMoveInput = () => movement.CurrentMoveInput,
             isDefenderInRange = () => defenderDetector.DefenderInRange,
+            setTackleImmune = v => IsTackleImmune = v,
             setCooldown = t => cooldownTimer = t
         };
 
-        // On tackle, the state machine stops processing entirely — no locomotion, no move
-        // triggers. Deliberately NOT disabling the whole component, just gating Update(),
-        // so re-enabling on ResetPlay() later is a one-line flip, not a re-Awake.
+        // Subscribes to PlayState so an in-progress move gets cut short the instant the
+        // play ends (tackle or touchdown) — prevents a move from finishing its animation
+        // after the play is already dead.
         if (PlayState.Instance != null)
             PlayState.Instance.OnPlayEnded += HandlePlayEnded;
     }
 
-    void HandlePlayEnded()
+    // Signature matches Action<PlayEndReason> — reason isn't used yet, but having it
+    // available means future logic (different freeze behavior for touchdown vs tackle,
+    // celebration state, etc.) doesn't require another signature change later.
+    void HandlePlayEnded(PlayState.PlayEndReason reason)
     {
-        activeMove = null; // cut any in-progress move short — you don't finish a juke after being tackled
+        activeMove = null;
         currentState = PlayerState.Idle;
     }
 
@@ -49,7 +62,6 @@ public class PlayerStateMachine : MonoBehaviour
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return; // play's dead — no input processed
 
         if (cooldownTimer > 0f) cooldownTimer -= Time.deltaTime;
-        Debug.Log($"DefenderInRange: {GetComponent<DefenderDetector>().DefenderInRange}, State: {currentState}, Cooldown: {cooldownTimer}");
 
         if (activeMove != null)
         {
@@ -58,9 +70,9 @@ public class PlayerStateMachine : MonoBehaviour
             {
                 activeMove.Exit(ctx);
                 activeMove = null;
-                currentState = PlayerState.Run;
+                currentState = PlayerState.Run; // moves always return to Run — locomotion re-evaluates next frame anyway
             }
-            return;
+            return; // input locked out entirely while a move is active — no steering during committed moves
         }
 
         HandleLocomotion();
@@ -77,7 +89,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     void CheckMoveTriggers()
     {
-        if (cooldownTimer > 0f) return;
+        if (cooldownTimer > 0f) return; // dropped, not buffered — buffering through cooldown would feel like inconsistent "why didn't my move happen" confusion
 
         var candidates = new (string action, IPlayerMove move)[]
         {
@@ -86,6 +98,8 @@ public class PlayerStateMachine : MonoBehaviour
             ("StiffArm", stiffArmMove)
         };
 
+        // Peek (don't consume) so we can validate CanTrigger before committing —
+        // otherwise a move that fails its own trigger condition would still eat the input.
         string action = inputBuffer.PeekEarliestValid(candidates.Select(c => c.action).ToArray());
         if (action == null) return;
 
