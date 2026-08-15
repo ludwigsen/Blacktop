@@ -9,14 +9,15 @@ public class PlayState : MonoBehaviour
 
     [SerializeField] Transform player;
     [SerializeField] float initialPlayerZ = -5f;
-    [SerializeField] float kickoffResetZ = -5f; // where the next play starts after a score — separate from initialPlayerZ in case you want them to differ later (e.g. touchback rules)
+    [SerializeField] float kickoffResetZ = -5f;
+
+    // Defenders list stays as-is — these are live scene object references, unavoidable
+    // per-scene setup. What changes is where their reset OFFSETS come from: authored
+    // once in a FormationData asset instead of duplicated per-PlayState-instance data entry.
     [SerializeField] List<Transform> defenders = new List<Transform>();
-    [SerializeField] List<Vector3> defenderStartOffsetsFromLOS = new List<Vector3>();
+    [SerializeField] FormationData formation;
 
     public bool IsLive { get; private set; } = true;
-
-    // Now passes the reason — subscribers (UI, scoring, future systems) can react
-    // differently to a tackle vs. a touchdown instead of treating every stoppage the same.
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
 
@@ -68,10 +69,16 @@ public class PlayState : MonoBehaviour
             player.position = pos;
         }
 
-        for (int i = 0; i < defenders.Count && i < defenderStartOffsetsFromLOS.Count; i++)
+        // Matched by INDEX — defenders[0] gets formation.defenderSlots[0]'s offset, etc.
+        // Same sync-by-index contract as before, but now count mismatches are visible in
+        // ONE place (the formation asset) rather than two duplicated lists drifting apart.
+        if (formation != null)
         {
-            if (defenders[i] == null) continue;
-            defenders[i].position = new Vector3(0f, 1f, resetZ) + defenderStartOffsetsFromLOS[i];
+            for (int i = 0; i < defenders.Count && i < formation.defenderSlots.Count; i++)
+            {
+                if (defenders[i] == null) continue;
+                defenders[i].position = new Vector3(0f, 1f, resetZ) + formation.defenderSlots[i].offsetFromLOS;
+            }
         }
 
         if (lastEndReason == PlayEndReason.Touchdown)
