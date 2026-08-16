@@ -24,6 +24,10 @@ public class PlayerStateMachine : MonoBehaviour
     // attempt untouched for the remainder of the move.
     public bool IsTackleImmune { get; private set; }
 
+    // Exposed for visual feedback (and any other read-only observer) — currentState
+    // itself stays private so only this class can set it.
+    public PlayerState CurrentState => currentState;
+
     void Awake()
     {
         movement = GetComponent<PlayerMovement>();
