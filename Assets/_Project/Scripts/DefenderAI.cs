@@ -1,41 +1,41 @@
 using UnityEngine;
 
-// Minimal defender behavior: closes distance on the player at a fixed speed. No
-// pathfinding, no avoidance, no reaction to player moves yet — this exists purely to
-// give DefenderDetector/Hurdle something dynamic to react to, replacing the static
-// placeholder capsule. Same "arcade not sim" philosophy as PlayerMovement: transform-based,
-// no Rigidbody/NavMesh, direct MoveTowards.
-//
-// Deliberately dumb for now. Smarter behavior (juke reaction, pursuit angles, containment)
-// is a later pass once basic contact/tackle rules exist — no point tuning defender
-// intelligence against a player move-set that's still being tuned itself.
+// Chase-and-contain logic, transform-based (no Rigidbody — consistent with the rest of
+// the project). Behavior now branches on a Role set externally by DefenderCoordinator:
+// Engage = direct pursuit (today's original behavior). Contain = hold a lane position
+// between the ball carrier and the end zone, only escalating to direct chase if the
+// ball carrier gets close enough to this specific defender to be a real threat.
 public class DefenderAI : MonoBehaviour
 {
-    [SerializeField] Transform target; // the player
-    [SerializeField] float moveSpeed = 5f;
-    [SerializeField] float stopDistance = 1f;
+    public enum Role { Engage, Contain }
 
-    // Manual separation — since movement is transform-based (no Rigidbody), colliders
-    // don't physically resolve overlaps between defenders on their own. This nudges
-    // defenders apart when too close to each other, checked/applied every frame alongside
-    // the chase movement. Cheap O(n) check against other Defenders — fine at this scale
-    // (a handful of defenders), would need spatial partitioning if this ever scaled to
-    // dozens of agents, which it won't for 7v7.
+    [SerializeField] Transform target;
+    [SerializeField] DefenderAttributes attributes;
+    [SerializeField] float baseMoveSpeed = 5f;
+    [SerializeField] float stopDistance = 1f;
     [SerializeField] float separationRadius = 1.2f;
     [SerializeField] float separationStrength = 3f;
     [SerializeField] string defenderTag = "Defender";
-    [SerializeField] DefenderAttributes attributes;
-    [SerializeField] float baseMoveSpeed = 5f;
+
+    // How close the ball carrier needs to get to THIS defender before a Contain defender
+    // drops the "hold position" behavior and chases directly, same as Engage would.
+    // This is what makes a broken-past defender still a threat rather than a permanent
+    // statue once someone else is marked Engage.
+    [SerializeField] float containBreakRadius = 4f;
+
+    // How far downfield (toward the end zone) a Contain defender holds relative to the
+    // ball carrier's current Z — keeps them positioned as a real obstacle ahead of the
+    // runner rather than standing still wherever they started.
+    [SerializeField] float containLeadDistance = 3f;
+
+    public Role CurrentRole { get; private set; } = Role.Engage; // default Engage so a single-defender scene (no coordinator) behaves exactly as before
+
+    float MoveSpeed => baseMoveSpeed * (attributes != null ? attributes.speedMult : 1f);
+    public float ResistMult => attributes != null ? attributes.resistMult : 1f;
+
     Vector3 pushBackTarget;
     float pushBackTimer;
     const float pushBackDuration = 0.15f;
-
-    float MoveSpeed => baseMoveSpeed * (attributes != null ? attributes.speedMult : 1f);
-    // ...use MoveSpeed instead of moveSpeed in the chase calc
-
-    // Exposed so StiffArmMove can read resistance when rolling/applying its outcome.
-    public float ResistMult => attributes != null ? attributes.resistMult : 1f;
-
     float shedTimer;
 
     void Awake()
@@ -47,9 +47,23 @@ public class DefenderAI : MonoBehaviour
         }
     }
 
+    // Called by DefenderCoordinator once per frame — external assignment rather than
+    // this script deciding its own role, since "who's closest" requires comparing
+    // across ALL defenders, information a single DefenderAI instance doesn't have.
+    public void SetRole(Role role) => CurrentRole = role;
+
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+
+        // Push-back and shed states take priority over any role behavior — being
+        // stiff-armed interrupts whatever the defender was doing.
+        if (pushBackTimer > 0f)
+        {
+            transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
+            pushBackTimer -= Time.deltaTime;
+            return;
+        }
 
         if (shedTimer > 0f)
         {
@@ -57,37 +71,55 @@ public class DefenderAI : MonoBehaviour
             return;
         }
 
-        // In Update(), before chase logic:
-        if (pushBackTimer > 0f)
-        {
-            transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
-            pushBackTimer -= Time.deltaTime;
-            return; // skip chase/separation this frame while being pushed
-        }
+        if (target == null) return;
 
-        Vector3 chaseMove = Vector3.zero;
-        if (target != null)
-        {
-            float distance = Vector3.Distance(transform.position, target.position);
-            if (distance > stopDistance)
-            {
-                Vector3 direction = (target.position - transform.position).normalized;
-                chaseMove = direction * moveSpeed;
-                transform.rotation = Quaternion.LookRotation(direction);
-            }
-        }
-
+        Vector3 roleMove = CurrentRole == Role.Engage ? CalculateEngageMove() : CalculateContainMove();
         Vector3 separationMove = CalculateSeparation();
 
-        transform.position += (chaseMove + separationMove) * Time.deltaTime;
+        transform.position += (roleMove + separationMove) * Time.deltaTime;
+    }
+
+    Vector3 CalculateEngageMove()
+    {
+        float distance = Vector3.Distance(transform.position, target.position);
+        if (distance <= stopDistance) return Vector3.zero;
+
+        Vector3 direction = (target.position - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(direction);
+        return direction * MoveSpeed;
+    }
+
+    Vector3 CalculateContainMove()
+    {
+        float distanceToCarrier = Vector3.Distance(transform.position, target.position);
+
+        if (distanceToCarrier <= containBreakRadius)
+        {
+            return CalculateEngageMove();
+        }
+
+        // Hold position is anchored to the actual line of scrimmage, NOT the ball carrier's
+        // live position — otherwise a player moving backward drags the whole contain formation
+        // backward with them, which reads as defenders "predicting" a sack/negative play rather
+        // than actually holding ground. LOS is the fixed anchor; only the break-radius check
+        // above should react to where the ball carrier currently is.
+        float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : target.position.z;
+        Vector3 holdPosition = new Vector3(transform.position.x, transform.position.y, losZ + containLeadDistance);
+        float distanceToHold = Vector3.Distance(transform.position, holdPosition);
+
+        if (distanceToHold <= stopDistance) return Vector3.zero;
+
+        Vector3 direction = (holdPosition - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation((target.position - transform.position).normalized);
+        return direction * MoveSpeed;
     }
 
     Vector3 CalculateSeparation()
     {
         Vector3 push = Vector3.zero;
-        GameObject[] defenders = GameObject.FindGameObjectsWithTag(defenderTag);
+        GameObject[] allDefenders = GameObject.FindGameObjectsWithTag(defenderTag);
 
-        foreach (var other in defenders)
+        foreach (var other in allDefenders)
         {
             if (other.transform == transform) continue;
 
@@ -95,7 +127,7 @@ public class DefenderAI : MonoBehaviour
             if (dist < separationRadius && dist > 0.001f)
             {
                 Vector3 away = (transform.position - other.transform.position).normalized;
-                push += away * (separationRadius - dist); // closer = stronger push
+                push += away * (separationRadius - dist);
             }
         }
 

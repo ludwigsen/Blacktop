@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::FormationData
   defenderSlots:
   - label: EDGE-Left
-    offsetFromLOS: {x: 1, y: 0, z: 2}
+    offsetFromLOS: {x: -1.5, y: 0, z: 2}
   - label: EDGE-Right
-    offsetFromLOS: {x: -1, y: 0, z: 2}
-  - label: DE-Center
-    offsetFromLOS: {x: 0, y: 0, z: 2}
-  - label: MLB
-    offsetFromLOS: {x: 0, y: 0, z: 5}
+    offsetFromLOS: {x: 1.5, y: 0, z: 2}
+  - label: LB-Left
+    offsetFromLOS: {x: -3, y: 0, z: 4}
+  - label: LB-Right
+    offsetFromLOS: {x: 3, y: 0, z: 4}
   - label: DB-Left
-    offsetFromLOS: {x: 3, y: 0, z: 3}
+    offsetFromLOS: {x: -7, y: 0, z: 5}
   - label: DB-Right
-    offsetFromLOS: {x: -3, y: 0, z: 3}
+    offsetFromLOS: {x: 7, y: 0, z: 5}
   - label: S
     offsetFromLOS: {x: 0, y: 0, z: 7}

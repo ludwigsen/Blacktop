@@ -23,6 +23,10 @@ public class PlayState : MonoBehaviour
 
     InputSystem_Actions controls;
     float nextLineOfScrimmageZ;
+    // Exposed so DefenderCoordinator (and potentially other systems later) can compare
+    // the ball carrier's live position against the current line of scrimmage without
+    // PlayState needing to know anything about defender logic itself.
+    public float CurrentLineOfScrimmageZ => nextLineOfScrimmageZ;
     PlayEndReason lastEndReason;
 
     void Awake()
