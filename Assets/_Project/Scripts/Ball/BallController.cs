@@ -13,8 +13,15 @@ public class BallController : MonoBehaviour
 {
     public static BallController Instance { get; private set; }
 
-    [SerializeField] Transform carrier; // assign the initial ball carrier (UserPlayer) in Inspector
-    [SerializeField] Vector3 carryOffset = new Vector3(0.4f, 1f, 0.3f); // tucked at carrier's side, in carrier-local space
+    [SerializeField] Transform carrier;
+    [SerializeField] Vector3 carryOffset = new Vector3(0.4f, 1f, 0.3f);
+
+    // How close a player/defender needs to get to a loose ball to scoop it up.
+    // Generous on purpose — same arcade-forgiveness reasoning as every other
+    // OverlapSphere check in the project (TackleContact, StiffArmMove's contact range).
+    [SerializeField] float recoveryRadius = 1f;
+    [SerializeField] string playerTag = "Player";
+    [SerializeField] string defenderTag = "Defender";
 
     public Transform Carrier => carrier;
     public bool IsHeld => carrier != null;
@@ -58,25 +65,48 @@ public class BallController : MonoBehaviour
 
     void LateUpdate()
     {
-        if (carrier == null) return;
+        if (carrier == null)
+        {
+            CheckRecovery(); // loose ball — poll every frame for anyone close enough to scoop it up
+            return;
+        }
 
-        // Only forward/up components rotate with facing — the lateral (x) component
-        // stays in world space. A fully carrier-relative offset was swinging visibly
-        // during quick turns (the x offset sweeping through the turn arc), which read
-        // as camera lag once CameraFollow started tracking the ball instead of the
-        // player directly. This keeps the "tucked" look without the swing.
         Vector3 forwardUp = carrier.TransformDirection(new Vector3(0f, carryOffset.y, carryOffset.z));
         transform.position = carrier.position + forwardUp + carrier.right * carryOffset.x;
         transform.rotation = carrier.rotation;
     }
 
-    // Called on possession change — reception, fumble recovery, etc. Kept generic
-    // (not "GiveToPlayer") since defenders will eventually be able to hold it too
-    // (interceptions).
+    // Polled via OverlapSphere, same pattern as TackleContact/StiffArmMove — no
+    // Rigidbody/trigger-callback reliance anywhere in this project. First Player or
+    // Defender tag found within range recovers the ball; whichever happens to be
+    // first in the hits array wins on a tie (no tie-breaking logic — extremely rare
+    // in practice given frame-rate granularity, revisit only if it's ever visibly bad).
+    void CheckRecovery()
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, recoveryRadius);
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag(playerTag) || hit.CompareTag(defenderTag))
+            {
+                AttachTo(hit.transform);
+                return;
+            }
+        }
+    }
+
     public void AttachTo(Transform newCarrier) => carrier = newCarrier;
 
     // Detaches and leaves the ball at its current world position — the drop spot for
     // a fumble. Recovery logic (nearest player/defender picks it up via OverlapSphere,
     // same pattern as TackleContact) is next pass, not this one.
     public void Drop() => carrier = null;
+
+    void OnDrawGizmosSelected()
+    {
+        if (carrier == null)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(transform.position, recoveryRadius);
+        }
+    }
 }
