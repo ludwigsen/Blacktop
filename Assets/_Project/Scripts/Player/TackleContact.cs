@@ -1,15 +1,14 @@
 using UnityEngine;
 
-// Tight-range contact check, separate from DefenderDetector's forward zone (which is
-// deliberately generous/forgiving and forward-only, for Hurdle's OLD gating behavior).
-// Tackle contact is omnidirectional and precise — a tackle from behind or the side counts
-// just as much as one from the front. Polled via Physics.OverlapSphere rather than
-// OnTriggerEnter/Exit, since trigger callbacks require a Rigidbody on at least one
-// colliding object and this project has none (transform-based movement throughout).
 public class TackleContact : MonoBehaviour
 {
     [SerializeField] string defenderTag = "Defender";
     [SerializeField] float contactRadius = 0.8f;
+
+    // Testing value — no ballSecurity-style attribute exists yet, so this is a flat
+    // base chance rather than attribute-scaled (mirrors StiffArmMove's baseShedChance
+    // pattern, minus the multiplier since there's nothing to multiply by yet).
+    [SerializeField] float baseFumbleChance = 0.5f;
 
     PlayerStateMachine stateMachine;
 
@@ -21,10 +20,6 @@ public class TackleContact : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance == null || !PlayState.Instance.IsLive) return;
-
-        // Hurdle can grant temporary tackle immunity via a successful negation roll —
-        // check this BEFORE the overlap check, so an immune player passes through a
-        // defender's contact entirely, no play-ending call at all.
         if (stateMachine != null && stateMachine.IsTackleImmune) return;
 
         Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);
@@ -32,14 +27,22 @@ public class TackleContact : MonoBehaviour
         {
             if (hit.CompareTag(defenderTag))
             {
+                // Roll BEFORE ending the play — a fumble still ends the play as Tackled
+                // (turnover-on-downs style stoppage), it just also drops the ball first.
+                // Recovery/pickup logic doesn't exist yet — ball just sits wherever
+                // BallController.Drop() leaves it (its last-followed position).
+                if (BallController.Instance != null && BallController.Instance.IsHeld
+                    && Random.value < baseFumbleChance)
+                {
+                    BallController.Instance.Drop();
+                }
+
                 PlayState.Instance.EndPlay(PlayState.PlayEndReason.Tackled);
                 return;
             }
         }
     }
 
-    // Visualize the contact radius in Scene view even without a real collider component —
-    // makes tuning contactRadius visually verifiable instead of guessing blind.
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;

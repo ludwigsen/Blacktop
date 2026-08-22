@@ -1,22 +1,30 @@
 using UnityEngine;
 
-// Simple fixed-angle follow camera, mimicking NFL Street's high 3/4 broadcast-style
-// angle. Deliberately NOT parented/rotated to the player — camera stays field-oriented
-// regardless of which way the player is facing, matching the original's fixed perspective.
-// Cinemachine will replace this later for smoothing/zoom/gamebreaker pull-back; this is
-// just enough to unblock playtesting movement and moves.
 public class CameraFollow : MonoBehaviour
 {
-    [SerializeField] Transform target; // the player capsule
-    [SerializeField] Vector3 offset = new Vector3(0f, 9f, -7f); // height, pulled back — tune to taste
-    [SerializeField] float followSpeed = 8f; // smoothing — higher = snappier follow, lower = more lag/drift
+    [SerializeField] Transform target; // fallback if no ball exists (e.g. testing without BallController in scene)
+    [SerializeField] Vector3 offset = new Vector3(0f, 9f, -7f);
+    [SerializeField] float followSpeed = 8f;
 
     void LateUpdate()
     {
-        if (target == null) return;
+        // Follow the ball carrier directly while possessed — avoids tracking
+        // BallController's derived (and rotation-swinging) position when we can just
+        // follow the source transform instead. Only fall back to the ball's own
+        // transform when it's loose (fumbled, no carrier) — there's no player to
+        // follow at that point, the ball IS the subject.
+        Transform followTarget = target;
+        if (BallController.Instance != null)
+        {
+            followTarget = BallController.Instance.IsHeld
+                ? BallController.Instance.Carrier
+                : BallController.Instance.transform;
+        }
 
-        Vector3 desiredPosition = target.position + offset;
+        if (followTarget == null) return;
+
+        Vector3 desiredPosition = followTarget.position + offset;
         transform.position = Vector3.Lerp(transform.position, desiredPosition, followSpeed * Time.deltaTime);
-        transform.LookAt(target.position + Vector3.up * 1f); // look slightly above player base, not at their feet
+        transform.LookAt(followTarget.position + Vector3.up * 1f);
     }
 }
