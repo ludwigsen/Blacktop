@@ -25,7 +25,7 @@ public class HurdleMove : IPlayerMove
     float timer, lastHeightSample, lastForwardSample;
     PlayerAttributes attr;
 
-    float PeakHeight => basePeakHeight * attr.hurdleMult;
+    float PeakHeight => basePeakHeight * attr.Agility();
     float Duration => baseDuration;
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
@@ -50,7 +50,7 @@ public class HurdleMove : IPlayerMove
 
         if (defenderClose)
         {
-            float netChance = Mathf.Clamp01(baseNegateChance * attr.hurdleMult);
+            float netChance = Mathf.Clamp01(baseNegateChance * attr.Agility());
             bool negates = Random.value < netChance;
             ctx.setTackleImmune(negates);
         }

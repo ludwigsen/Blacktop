@@ -41,8 +41,8 @@ public class StiffArmMove : IPlayerMove
     bool hasResolvedContact; // ensures only ONE outcome roll per activation, even if OverlapSphere keeps detecting the same defender across multiple Tick frames
 
     float Duration => baseDuration;
-    float ForwardBurst => baseForwardBurst * attr.speedMult;
-    float ShedChance => Mathf.Clamp01(baseShedChance * attr.powerMult);
+    float ForwardBurst => baseForwardBurst * attr.Speed();
+    float ShedChance => Mathf.Clamp01(baseShedChance * attr.RunPower());
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
         => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;
@@ -84,10 +84,9 @@ public class StiffArmMove : IPlayerMove
             if (defenderAI == null) break;
 
             // Net roll: attacker power pushes shed chance up, defender resistance pushes it back down.
-            float netShedChance = Mathf.Clamp01(baseShedChance * attr.powerMult / defenderAI.ResistMult);
+            float netShedChance = Mathf.Clamp01(baseShedChance * attr.RunPower() / defenderAI.ResistMult);
+            float netPushDistance = pushBackDistance * attr.RunPower() / defenderAI.ResistMult;
             bool shed = Random.value < netShedChance;
-
-            float netPushDistance = pushBackDistance * attr.powerMult / defenderAI.ResistMult;
 
             if (shed)
             {
