@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayState : MonoBehaviour
 {
-    public enum PlayEndReason { Tackled, Touchdown }
+    public enum PlayEndReason { Tackled, Touchdown, Interception }
 
     public static PlayState Instance { get; private set; }
 
@@ -50,9 +50,9 @@ public class PlayState : MonoBehaviour
         IsLive = false;
         lastEndReason = reason;
 
-        if (reason == PlayEndReason.Tackled && player != null)
+        if ((reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception) && player != null)
         {
-            nextLineOfScrimmageZ = player.position.z; // next play starts where the tackle happened
+            nextLineOfScrimmageZ = player.position.z;
         }
         // Touchdown doesn't touch nextLineOfScrimmageZ here — handled in ResetPlay via kickoffResetZ instead
 
