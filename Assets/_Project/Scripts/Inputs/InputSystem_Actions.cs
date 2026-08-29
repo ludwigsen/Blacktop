@@ -94,9 +94,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             ""actions"": [
                 {
                     ""name"": ""Move"",
-                    ""type"": ""Value"",
+                    ""type"": ""Button"",
                     ""id"": ""351f2ccd-1f9f-44bf-9bec-d62ac5c5f408"",
-                    ""expectedControlType"": ""Vector2"",
+                    ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true,
@@ -166,6 +166,26 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""name"": ""Reset Play"",
                     ""type"": ""Button"",
                     ""id"": ""f2a146b7-9fcb-4a44-9879-abfd8d92c2ea"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Pass"",
+                    ""type"": ""Button"",
+                    ""id"": ""cc41440e-b10f-45f1-86a8-dd59762c104c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Pitch"",
+                    ""type"": ""Button"",
+                    ""id"": ""67d0a2c5-3158-4a42-8c14-50dd85074629"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -446,6 +466,28 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Reset Play"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f80b68c6-4769-4f69-b14f-29f13820ca6c"",
+                    ""path"": ""h"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Pass"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6601715a-5375-437a-8b3c-b1b98bc9e127"",
+                    ""path"": ""p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Pitch"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1051,6 +1093,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Juke = m_Player.FindAction("Juke", throwIfNotFound: true);
         m_Player_StiffArm = m_Player.FindAction("Stiff Arm", throwIfNotFound: true);
         m_Player_ResetPlay = m_Player.FindAction("Reset Play", throwIfNotFound: true);
+        m_Player_Pass = m_Player.FindAction("Pass", throwIfNotFound: true);
+        m_Player_Pitch = m_Player.FindAction("Pitch", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1152,6 +1196,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Juke;
     private readonly InputAction m_Player_StiffArm;
     private readonly InputAction m_Player_ResetPlay;
+    private readonly InputAction m_Player_Pass;
+    private readonly InputAction m_Player_Pitch;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1195,6 +1241,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/ResetPlay".
         /// </summary>
         public InputAction @ResetPlay => m_Wrapper.m_Player_ResetPlay;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Pass".
+        /// </summary>
+        public InputAction @Pass => m_Wrapper.m_Player_Pass;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Pitch".
+        /// </summary>
+        public InputAction @Pitch => m_Wrapper.m_Player_Pitch;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1245,6 +1299,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @ResetPlay.started += instance.OnResetPlay;
             @ResetPlay.performed += instance.OnResetPlay;
             @ResetPlay.canceled += instance.OnResetPlay;
+            @Pass.started += instance.OnPass;
+            @Pass.performed += instance.OnPass;
+            @Pass.canceled += instance.OnPass;
+            @Pitch.started += instance.OnPitch;
+            @Pitch.performed += instance.OnPitch;
+            @Pitch.canceled += instance.OnPitch;
         }
 
         /// <summary>
@@ -1280,6 +1340,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @ResetPlay.started -= instance.OnResetPlay;
             @ResetPlay.performed -= instance.OnResetPlay;
             @ResetPlay.canceled -= instance.OnResetPlay;
+            @Pass.started -= instance.OnPass;
+            @Pass.performed -= instance.OnPass;
+            @Pass.canceled -= instance.OnPass;
+            @Pitch.started -= instance.OnPitch;
+            @Pitch.performed -= instance.OnPitch;
+            @Pitch.canceled -= instance.OnPitch;
         }
 
         /// <summary>
@@ -1636,6 +1702,20 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnResetPlay(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Pass" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPass(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Pitch" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPitch(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

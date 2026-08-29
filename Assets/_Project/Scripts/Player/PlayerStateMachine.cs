@@ -9,6 +9,8 @@ public class PlayerStateMachine : MonoBehaviour
     [SerializeField] JukeMove jukeMove;
     [SerializeField] HurdleMove hurdleMove;
     [SerializeField] StiffArmMove stiffArmMove;
+    [SerializeField] PitchMove pitchMove;
+    [SerializeField] PassMove passMove;
     [SerializeField] PlayerAttributes attributes;
 
     PlayerMovement movement;
@@ -99,7 +101,9 @@ public class PlayerStateMachine : MonoBehaviour
         {
             ("Juke", jukeMove),
             ("Hurdle", hurdleMove),
-            ("StiffArm", stiffArmMove)
+            ("StiffArm", stiffArmMove),
+            ("Pitch", pitchMove),
+            ("Pass", passMove)
         };
 
         // Peek (don't consume) so we can validate CanTrigger before committing —
@@ -118,6 +122,8 @@ public class PlayerStateMachine : MonoBehaviour
             "Juke" => PlayerState.Juke,
             "Hurdle" => PlayerState.Hurdle,
             "StiffArm" => PlayerState.StiffArm,
+            "Pitch" => PlayerState.Pitch,
+            "Pass" => PlayerState.Pass,
             _ => currentState
         };
     }

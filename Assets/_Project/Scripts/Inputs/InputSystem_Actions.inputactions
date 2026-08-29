@@ -8,9 +8,9 @@
             "actions": [
                 {
                     "name": "Move",
-                    "type": "Value",
+                    "type": "Button",
                     "id": "351f2ccd-1f9f-44bf-9bec-d62ac5c5f408",
-                    "expectedControlType": "Vector2",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true,
@@ -80,6 +80,26 @@
                     "name": "Reset Play",
                     "type": "Button",
                     "id": "f2a146b7-9fcb-4a44-9879-abfd8d92c2ea",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Pass",
+                    "type": "Button",
+                    "id": "cc41440e-b10f-45f1-86a8-dd59762c104c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Pitch",
+                    "type": "Button",
+                    "id": "67d0a2c5-3158-4a42-8c14-50dd85074629",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -360,6 +380,28 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Reset Play",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f80b68c6-4769-4f69-b14f-29f13820ca6c",
+                    "path": "h",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Pass",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6601715a-5375-437a-8b3c-b1b98bc9e127",
+                    "path": "p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Pitch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

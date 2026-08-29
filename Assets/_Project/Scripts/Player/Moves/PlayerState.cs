@@ -5,5 +5,7 @@ public enum PlayerState
     Run,
     Juke,
     Hurdle,
-    StiffArm
+    StiffArm,
+    Pitch,
+    Pass
 }
