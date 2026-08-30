@@ -131,6 +131,12 @@ GameObject:
   - component: {fileID: 195880689}
   - component: {fileID: 195880688}
   - component: {fileID: 195880687}
+  - component: {fileID: 885954168}
+  - component: {fileID: 427697813}
+  - component: {fileID: 625091322}
+  - component: {fileID: 171888437}
+  - component: {fileID: 556088124}
+  - component: {fileID: 994104425}
   m_Layer: 0
   m_Name: Offensive 4
   m_TagString: Teammate
@@ -469,6 +475,12 @@ GameObject:
   - component: {fileID: 408248673}
   - component: {fileID: 408248672}
   - component: {fileID: 408248671}
+  - component: {fileID: 126103393}
+  - component: {fileID: 767475199}
+  - component: {fileID: 761006208}
+  - component: {fileID: 521968772}
+  - component: {fileID: 604982153}
+  - component: {fileID: 853551570}
   m_Layer: 0
   m_Name: Offensive 3
   m_TagString: Teammate
@@ -827,6 +839,12 @@ GameObject:
   - component: {fileID: 539984040}
   - component: {fileID: 539984039}
   - component: {fileID: 539984038}
+  - component: {fileID: 341163668}
+  - component: {fileID: 291059463}
+  - component: {fileID: 278471023}
+  - component: {fileID: 619891828}
+  - component: {fileID: 483629281}
+  - component: {fileID: 372524127}
   m_Layer: 0
   m_Name: Offensive 6
   m_TagString: Teammate
@@ -942,6 +960,11 @@ GameObject:
   - component: {fileID: 600202982}
   - component: {fileID: 600202981}
   - component: {fileID: 600202980}
+  - component: {fileID: 652355003}
+  - component: {fileID: 125934393}
+  - component: {fileID: 575221798}
+  - component: {fileID: 693508055}
+  - component: {fileID: 686348500}
   m_Layer: 0
   m_Name: Offensive 1
   m_TagString: Teammate
@@ -1075,6 +1098,12 @@ GameObject:
   - component: {fileID: 792476065}
   - component: {fileID: 792476064}
   - component: {fileID: 792476063}
+  - component: {fileID: 886900884}
+  - component: {fileID: 996043787}
+  - component: {fileID: 644878641}
+  - component: {fileID: 281086690}
+  - component: {fileID: 530487103}
+  - component: {fileID: 391791332}
   m_Layer: 0
   m_Name: Offensive 2
   m_TagString: Teammate
@@ -2301,6 +2330,12 @@ GameObject:
   - component: {fileID: 2126565983}
   - component: {fileID: 2126565982}
   - component: {fileID: 2126565981}
+  - component: {fileID: 955626474}
+  - component: {fileID: 392609922}
+  - component: {fileID: 623409178}
+  - component: {fileID: 689281225}
+  - component: {fileID: 566931841}
+  - component: {fileID: 747522327}
   m_Layer: 0
   m_Name: Offensive 5
   m_TagString: Teammate
@@ -2488,3 +2523,1136 @@ SceneRoots:
   - {fileID: 195880690}
   - {fileID: 2126565984}
   - {fileID: 539984041}
+
+--- !u!114 &652355003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600202979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerMovement
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  baseMaxSpeed: 8
+  baseAcceleration: 40
+  deceleration: 60
+  rotationSpeed: 720
+--- !u!114 &125934393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600202979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::InputBuffer
+  bufferWindow: 0.1
+--- !u!114 &575221798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600202979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerStateMachine
+  jukeMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.3
+    baseLateralDistance: 2.2
+    cooldownDuration: 0.2
+  hurdleMove:
+    heightCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1.0000061
+        value: 0.0023828
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.5
+    basePeakHeight: 1.4
+    baseForwardDistance: 3
+    cooldownDuration: 0.2
+    negateCheckRadius: 2
+    baseNegateChance: 0.2
+    defenderTag: Defender
+  stiffArmMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.25
+    baseForwardBurst: 2.5
+    cooldownDuration: 0.3
+    contactRange: 1.5
+    defenderTag: Defender
+    baseShedChance: 0.3
+    pushBackDistance: 2
+    shedDuration: 1
+  pitchMove:
+    windupDuration: 0.05
+    pitchRadius: 6
+    teammateTag: Teammate
+    arcHeight: 0.5
+    flightDuration: 0.15
+  passMove:
+    windupDuration: 0.15
+    maxReceiverSearchRadius: 20
+    receiverSearchConeAngle: 70
+    teammateTag: Teammate
+    defenderTag: Defender
+    arcHeight: 3
+    flightDuration: 0.6
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+--- !u!114 &693508055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600202979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TackleContact
+  defenderTag: Defender
+  contactRadius: 0.8
+  baseFumbleChance: 0.5
+--- !u!114 &686348500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600202979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PossessionController
+--- !u!114 &886900884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792476062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e605245ef781483a92f1956d32b3bb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::ReceiverAI
+  moveSpeed: 6
+  routeDepth: 12
+--- !u!114 &996043787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792476062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerMovement
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  baseMaxSpeed: 8
+  baseAcceleration: 40
+  deceleration: 60
+  rotationSpeed: 720
+--- !u!114 &644878641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792476062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::InputBuffer
+  bufferWindow: 0.1
+--- !u!114 &281086690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792476062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerStateMachine
+  jukeMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.3
+    baseLateralDistance: 2.2
+    cooldownDuration: 0.2
+  hurdleMove:
+    heightCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1.0000061
+        value: 0.0023828
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.5
+    basePeakHeight: 1.4
+    baseForwardDistance: 3
+    cooldownDuration: 0.2
+    negateCheckRadius: 2
+    baseNegateChance: 0.2
+    defenderTag: Defender
+  stiffArmMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.25
+    baseForwardBurst: 2.5
+    cooldownDuration: 0.3
+    contactRange: 1.5
+    defenderTag: Defender
+    baseShedChance: 0.3
+    pushBackDistance: 2
+    shedDuration: 1
+  pitchMove:
+    windupDuration: 0.05
+    pitchRadius: 6
+    teammateTag: Teammate
+    arcHeight: 0.5
+    flightDuration: 0.15
+  passMove:
+    windupDuration: 0.15
+    maxReceiverSearchRadius: 20
+    receiverSearchConeAngle: 70
+    teammateTag: Teammate
+    defenderTag: Defender
+    arcHeight: 3
+    flightDuration: 0.6
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+--- !u!114 &530487103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792476062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TackleContact
+  defenderTag: Defender
+  contactRadius: 0.8
+  baseFumbleChance: 0.5
+--- !u!114 &391791332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792476062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PossessionController
+--- !u!114 &126103393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408248670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e605245ef781483a92f1956d32b3bb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::ReceiverAI
+  moveSpeed: 6
+  routeDepth: 12
+--- !u!114 &767475199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408248670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerMovement
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  baseMaxSpeed: 8
+  baseAcceleration: 40
+  deceleration: 60
+  rotationSpeed: 720
+--- !u!114 &761006208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408248670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::InputBuffer
+  bufferWindow: 0.1
+--- !u!114 &521968772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408248670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerStateMachine
+  jukeMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.3
+    baseLateralDistance: 2.2
+    cooldownDuration: 0.2
+  hurdleMove:
+    heightCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1.0000061
+        value: 0.0023828
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.5
+    basePeakHeight: 1.4
+    baseForwardDistance: 3
+    cooldownDuration: 0.2
+    negateCheckRadius: 2
+    baseNegateChance: 0.2
+    defenderTag: Defender
+  stiffArmMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.25
+    baseForwardBurst: 2.5
+    cooldownDuration: 0.3
+    contactRange: 1.5
+    defenderTag: Defender
+    baseShedChance: 0.3
+    pushBackDistance: 2
+    shedDuration: 1
+  pitchMove:
+    windupDuration: 0.05
+    pitchRadius: 6
+    teammateTag: Teammate
+    arcHeight: 0.5
+    flightDuration: 0.15
+  passMove:
+    windupDuration: 0.15
+    maxReceiverSearchRadius: 20
+    receiverSearchConeAngle: 70
+    teammateTag: Teammate
+    defenderTag: Defender
+    arcHeight: 3
+    flightDuration: 0.6
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+--- !u!114 &604982153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408248670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TackleContact
+  defenderTag: Defender
+  contactRadius: 0.8
+  baseFumbleChance: 0.5
+--- !u!114 &853551570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408248670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PossessionController
+--- !u!114 &885954168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195880686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e605245ef781483a92f1956d32b3bb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::ReceiverAI
+  moveSpeed: 6
+  routeDepth: 12
+--- !u!114 &427697813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195880686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerMovement
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  baseMaxSpeed: 8
+  baseAcceleration: 40
+  deceleration: 60
+  rotationSpeed: 720
+--- !u!114 &625091322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195880686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::InputBuffer
+  bufferWindow: 0.1
+--- !u!114 &171888437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195880686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerStateMachine
+  jukeMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.3
+    baseLateralDistance: 2.2
+    cooldownDuration: 0.2
+  hurdleMove:
+    heightCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1.0000061
+        value: 0.0023828
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.5
+    basePeakHeight: 1.4
+    baseForwardDistance: 3
+    cooldownDuration: 0.2
+    negateCheckRadius: 2
+    baseNegateChance: 0.2
+    defenderTag: Defender
+  stiffArmMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.25
+    baseForwardBurst: 2.5
+    cooldownDuration: 0.3
+    contactRange: 1.5
+    defenderTag: Defender
+    baseShedChance: 0.3
+    pushBackDistance: 2
+    shedDuration: 1
+  pitchMove:
+    windupDuration: 0.05
+    pitchRadius: 6
+    teammateTag: Teammate
+    arcHeight: 0.5
+    flightDuration: 0.15
+  passMove:
+    windupDuration: 0.15
+    maxReceiverSearchRadius: 20
+    receiverSearchConeAngle: 70
+    teammateTag: Teammate
+    defenderTag: Defender
+    arcHeight: 3
+    flightDuration: 0.6
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+--- !u!114 &556088124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195880686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TackleContact
+  defenderTag: Defender
+  contactRadius: 0.8
+  baseFumbleChance: 0.5
+--- !u!114 &994104425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195880686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PossessionController
+--- !u!114 &955626474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126565980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e605245ef781483a92f1956d32b3bb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::ReceiverAI
+  moveSpeed: 6
+  routeDepth: 12
+--- !u!114 &392609922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126565980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerMovement
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  baseMaxSpeed: 8
+  baseAcceleration: 40
+  deceleration: 60
+  rotationSpeed: 720
+--- !u!114 &623409178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126565980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::InputBuffer
+  bufferWindow: 0.1
+--- !u!114 &689281225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126565980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerStateMachine
+  jukeMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.3
+    baseLateralDistance: 2.2
+    cooldownDuration: 0.2
+  hurdleMove:
+    heightCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1.0000061
+        value: 0.0023828
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.5
+    basePeakHeight: 1.4
+    baseForwardDistance: 3
+    cooldownDuration: 0.2
+    negateCheckRadius: 2
+    baseNegateChance: 0.2
+    defenderTag: Defender
+  stiffArmMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.25
+    baseForwardBurst: 2.5
+    cooldownDuration: 0.3
+    contactRange: 1.5
+    defenderTag: Defender
+    baseShedChance: 0.3
+    pushBackDistance: 2
+    shedDuration: 1
+  pitchMove:
+    windupDuration: 0.05
+    pitchRadius: 6
+    teammateTag: Teammate
+    arcHeight: 0.5
+    flightDuration: 0.15
+  passMove:
+    windupDuration: 0.15
+    maxReceiverSearchRadius: 20
+    receiverSearchConeAngle: 70
+    teammateTag: Teammate
+    defenderTag: Defender
+    arcHeight: 3
+    flightDuration: 0.6
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+--- !u!114 &566931841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126565980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TackleContact
+  defenderTag: Defender
+  contactRadius: 0.8
+  baseFumbleChance: 0.5
+--- !u!114 &747522327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126565980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PossessionController
+--- !u!114 &341163668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539984037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e605245ef781483a92f1956d32b3bb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::ReceiverAI
+  moveSpeed: 6
+  routeDepth: 12
+--- !u!114 &291059463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539984037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerMovement
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  baseMaxSpeed: 8
+  baseAcceleration: 40
+  deceleration: 60
+  rotationSpeed: 720
+--- !u!114 &278471023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539984037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::InputBuffer
+  bufferWindow: 0.1
+--- !u!114 &619891828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539984037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayerStateMachine
+  jukeMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.3
+    baseLateralDistance: 2.2
+    cooldownDuration: 0.2
+  hurdleMove:
+    heightCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1.0000061
+        value: 0.0023828
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.5
+    basePeakHeight: 1.4
+    baseForwardDistance: 3
+    cooldownDuration: 0.2
+    negateCheckRadius: 2
+    baseNegateChance: 0.2
+    defenderTag: Defender
+  stiffArmMove:
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: -4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    baseDuration: 0.25
+    baseForwardBurst: 2.5
+    cooldownDuration: 0.3
+    contactRange: 1.5
+    defenderTag: Defender
+    baseShedChance: 0.3
+    pushBackDistance: 2
+    shedDuration: 1
+  pitchMove:
+    windupDuration: 0.05
+    pitchRadius: 6
+    teammateTag: Teammate
+    arcHeight: 0.5
+    flightDuration: 0.15
+  passMove:
+    windupDuration: 0.15
+    maxReceiverSearchRadius: 20
+    receiverSearchConeAngle: 70
+    teammateTag: Teammate
+    defenderTag: Defender
+    arcHeight: 3
+    flightDuration: 0.6
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+--- !u!114 &483629281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539984037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TackleContact
+  defenderTag: Defender
+  contactRadius: 0.8
+  baseFumbleChance: 0.5
+--- !u!114 &372524127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539984037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PossessionController
