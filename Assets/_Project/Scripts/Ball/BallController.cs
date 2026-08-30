@@ -93,7 +93,13 @@ public class BallController : MonoBehaviour
                 UpdateFlight();
                 break;
             case BallState.Loose:
-                CheckRecovery(); // loose ball — poll every frame for anyone close enough to scoop it up
+                // Only scramble for it while the play's actually still live — a fumble
+                // keeps IsLive true (that's the whole point of a scramble), but an
+                // incomplete pass calls EndPlay before dropping into Loose, so this
+                // correctly skips recovery for a dead ball instead of letting whoever's
+                // nearest silently pick it up after the whistle.
+                if (PlayState.Instance == null || PlayState.Instance.IsLive)
+                    CheckRecovery();
                 break;
         }
     }
@@ -172,9 +178,14 @@ public class BallController : MonoBehaviour
         }
         else
         {
-            // Incomplete pass drops straight into CheckRecovery below — no separate
-            // "incomplete" concept needed, it's just a loose ball at the miss spot.
+            // Incomplete pass is a DEAD ball, not a fumble — ends the play immediately
+            // rather than sitting there as a loose ball waiting for someone to scramble
+            // for it. Drop() still lets it visually fall at the miss spot; EndPlay is
+            // what actually stops the down (and is what makes ResetPlay's IsLive guard
+            // pass again).
             Drop();
+            if (PlayState.Instance != null)
+                PlayState.Instance.EndPlay(PlayState.PlayEndReason.Incomplete);
         }
     }
 

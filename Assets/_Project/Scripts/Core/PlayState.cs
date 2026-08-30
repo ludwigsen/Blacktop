@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayState : MonoBehaviour
 {
-    public enum PlayEndReason { Tackled, Touchdown, Interception }
+    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete }
 
     public static PlayState Instance { get; private set; }
 
