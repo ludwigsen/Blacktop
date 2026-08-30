@@ -4,34 +4,17 @@ using UnityEngine;
 // Exists to give PassMove/PitchMove something to target and to validate the pass/pitch/
 // interception pipeline before investing in real route running. Deliberately dumb — same
 // "structurally sound first, tune later" approach as everything else here.
+//
+// Position is no longer this script's responsibility — PlayState.ResetPlay() now
+// repositions every offensive player centrally via OffensiveFormationData, same pattern
+// as defenders. This class only owns route-running bookkeeping.
 public class ReceiverAI : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 6f;
     [SerializeField] float routeDepth = 12f; // distance upfield before holding position
 
-    // Where this receiver lines up relative to the line of scrimmage. Captured
-    // automatically at Start() from wherever you hand-placed it in the scene — not
-    // authored in the Inspector — so there's zero manual setup per receiver. Same
-    // LOS-relative convention as FormationData.DefenderSlot.offsetFromLOS, which is
-    // what lets HandleReset() below reuse PlayState's exact repositioning math.
-    //
-    // This is a stopgap: real offensive alignment should eventually be its own
-    // FormationData asset (mirroring the defensive one) instead of "wherever it
-    // happened to be placed in the editor." Fine for validating the pipeline with one
-    // receiver; revisit before building a real formation.
-    Vector3 offsetFromLOS;
-
     Vector3 snapPosition;
     bool routeComplete;
-
-    void Start()
-    {
-        // Start(), not Awake() — guarantees PlayState.Instance exists by now (Awake
-        // order between separate GameObjects isn't guaranteed; Start order relative to
-        // all Awakes is). Same reasoning as BallController's subscribe timing.
-        float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : transform.position.z;
-        offsetFromLOS = transform.position - new Vector3(0f, 1f, losZ);
-    }
 
     void OnEnable()
     {
@@ -47,15 +30,11 @@ public class ReceiverAI : MonoBehaviour
             PlayState.Instance.OnPlayReset -= HandleReset;
     }
 
-    // Actually moves back to the snap alignment spot now, instead of just relabeling
-    // wherever the route happened to end as the new "start" — that was the bug. Uses
-    // the exact same offset-from-LOS math PlayState.ResetPlay() already uses for
-    // defenders, so if the LOS has moved since the last play, this receiver correctly
-    // moves with it rather than staying at a fixed world position forever.
+    // By the time this fires, PlayState.ResetPlay() has already moved this transform to
+    // its formation slot — this just re-baselines the route against wherever that new
+    // position is, it doesn't move anything itself.
     void HandleReset()
     {
-        float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : transform.position.z;
-        transform.position = new Vector3(0f, 1f, losZ) + offsetFromLOS;
         snapPosition = transform.position;
         routeComplete = false;
     }

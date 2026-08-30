@@ -17,6 +17,13 @@ public class PlayState : MonoBehaviour
     [SerializeField] List<Transform> defenders = new List<Transform>();
     [SerializeField] FormationData formation;
 
+    // Same by-index convention as defenders — offensivePlayers[i] gets
+    // offensiveFormation.receiverSlots[i]'s offset. The passer (UserPlayer) is NOT in
+    // this list; it's repositioned separately via offensiveFormation.passerOffsetFromLOS,
+    // since it isn't interchangeable with the receiver slots.
+    [SerializeField] List<Transform> offensivePlayers = new List<Transform>();
+    [SerializeField] OffensiveFormationData offensiveFormation;
+
     public bool IsLive { get; private set; } = true;
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
@@ -50,9 +57,17 @@ public class PlayState : MonoBehaviour
         IsLive = false;
         lastEndReason = reason;
 
-        if ((reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception) && player != null)
+        // Reads the ACTUAL ball carrier's position, not a hardcoded reference to
+        // UserPlayer. This was the root cause of the whole team resetting to the wrong
+        // line of scrimmage: once a pass or pitch moves the ball to a receiver,
+        // player.position no longer has anything to do with where the ball ended up —
+        // it's just wherever the passer happens to be standing. Same "resolve live,
+        // don't cache" fix already applied to DefenderAI/DefenderCoordinator/
+        // CameraFollow/TouchdownZone; this was the one place it hadn't landed yet.
+        if ((reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception)
+            && BallController.Instance != null && BallController.Instance.Carrier != null)
         {
-            nextLineOfScrimmageZ = player.position.z;
+            nextLineOfScrimmageZ = BallController.Instance.Carrier.position.z;
         }
         // Touchdown doesn't touch nextLineOfScrimmageZ here — handled in ResetPlay via kickoffResetZ instead
 
@@ -64,13 +79,13 @@ public class PlayState : MonoBehaviour
         if (IsLive) return;
 
         float resetZ = lastEndReason == PlayEndReason.Touchdown ? kickoffResetZ : nextLineOfScrimmageZ;
+        Vector3 losOrigin = new Vector3(0f, 1f, resetZ);
 
         if (player != null)
         {
-            Vector3 pos = player.position;
-            pos.x = 0f;
-            pos.z = resetZ;
-            player.position = pos;
+            player.position = offensiveFormation != null
+                ? losOrigin + offensiveFormation.passerOffsetFromLOS
+                : new Vector3(0f, player.position.y, resetZ); // fallback if no formation asset assigned yet
         }
 
         // Matched by INDEX — defenders[0] gets formation.defenderSlots[0]'s offset, etc.
@@ -81,7 +96,19 @@ public class PlayState : MonoBehaviour
             for (int i = 0; i < defenders.Count && i < formation.defenderSlots.Count; i++)
             {
                 if (defenders[i] == null) continue;
-                defenders[i].position = new Vector3(0f, 1f, resetZ) + formation.defenderSlots[i].offsetFromLOS;
+                defenders[i].position = losOrigin + formation.defenderSlots[i].offsetFromLOS;
+            }
+        }
+
+        // Same by-index convention, offense side. Positioning now lives here instead of
+        // inside ReceiverAI — one authority for "where does everyone line up," matching
+        // exactly how defenders already work.
+        if (offensiveFormation != null)
+        {
+            for (int i = 0; i < offensivePlayers.Count && i < offensiveFormation.receiverSlots.Count; i++)
+            {
+                if (offensivePlayers[i] == null) continue;
+                offensivePlayers[i].position = losOrigin + offensiveFormation.receiverSlots[i].offsetFromLOS;
             }
         }
 
@@ -89,6 +116,6 @@ public class PlayState : MonoBehaviour
             nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
 
         IsLive = true;
-        OnPlayReset?.Invoke();
+        OnPlayReset?.Invoke(); // fires AFTER positions are set — ReceiverAI's route-reset logic depends on this ordering
     }
 }
