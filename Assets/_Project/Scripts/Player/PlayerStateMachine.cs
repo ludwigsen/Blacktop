@@ -42,7 +42,7 @@ public class PlayerStateMachine : MonoBehaviour
             attributes = attributes,
             inputBuffer = inputBuffer,
             getMoveInput = () => movement.CurrentMoveInput,
-            isDefenderInRange = () => defenderDetector.DefenderInRange,
+            isDefenderInRange = () => defenderDetector != null && defenderDetector.DefenderInRange,
             setTackleImmune = v => IsTackleImmune = v,
             setCooldown = t => cooldownTimer = t
         };

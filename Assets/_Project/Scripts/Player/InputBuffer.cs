@@ -26,17 +26,20 @@ public class InputBuffer : MonoBehaviour
     void Awake()
     {
         controls = new InputSystem_Actions();
-    }
 
-    void OnEnable()
-    {
-        controls.Player.Enable();
+        // Subscribed here, not in OnEnable — this component now gets repeatedly
+        // enabled/disabled as ball possession changes hands (see PossessionController),
+        // and OnEnable firing on every toggle would stack duplicate subscriptions since
+        // nothing ever unsubscribed them. Awake only runs once per object lifetime, so
+        // this stays correct no matter how many times the component toggles afterward.
         controls.Player.Juke.performed += ctx => Record("Juke");
         controls.Player.Hurdle.performed += ctx => Record("Hurdle");
         controls.Player.StiffArm.performed += ctx => Record("StiffArm");
         controls.Player.Pass.performed += ctx => Record("Pass");
         controls.Player.Pitch.performed += ctx => Record("Pitch");
     }
+
+    void OnEnable() => controls.Player.Enable();
 
     void OnDisable() => controls.Player.Disable();
 
