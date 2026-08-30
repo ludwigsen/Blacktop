@@ -30,6 +30,14 @@ public class BallController : MonoBehaviour
     public Transform Carrier => carrier;
     public bool IsHeld => State == BallState.Held;
 
+    // Fired ONLY on a clean pass/pitch catch (see ResolveArrival) — never on fumble
+    // recovery, never on interception. This is the single hook OffenseControlManager
+    // uses to decide "should the player now be piloting this body." Keeping it this
+    // narrow is deliberate: a defender recovering a fumble should obviously never grant
+    // control, and even a teammate scooping a loose ball mid-scramble shouldn't yank
+    // control away mid-chaos — only a deliberate completed throw should.
+    public event System.Action<Transform> OnControlEligibleCatch;
+
     // --- Pass/pitch flight state ---
     Vector3 launchPoint, targetPoint;
     Transform intendedReceiver;
