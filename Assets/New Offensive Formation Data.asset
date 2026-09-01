@@ -12,17 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0f54bdeee4ac4d05bd4a332b415893d, type: 3}
   m_Name: New Offensive Formation Data
   m_EditorClassIdentifier: Blacktop::OffensiveFormationData
-  passerOffsetFromLOS: {x: 0, y: 0, z: 0}
+  passerOffsetFromLOS: {x: 0, y: 0, z: -2}
   receiverSlots:
-  - label: 
-    offsetFromLOS: {x: 0, y: 0, z: 0}
-  - label: 
-    offsetFromLOS: {x: 0, y: 0, z: 0}
-  - label: 
-    offsetFromLOS: {x: 0, y: 0, z: 0}
-  - label: 
-    offsetFromLOS: {x: 0, y: 0, z: 0}
-  - label: 
-    offsetFromLOS: {x: 0, y: 0, z: 0}
-  - label: 
-    offsetFromLOS: {x: 0, y: 0, z: 0}
+  - label: RB
+    offsetFromLOS: {x: 0, y: 0, z: -5}
+  - label: WR-L
+    offsetFromLOS: {x: -6, y: 0, z: -1}
+  - label: WR-R
+    offsetFromLOS: {x: 6, y: 0, z: -2}
+  - label: C
+    offsetFromLOS: {x: 0, y: 0, z: -0.5}
+  - label: OL
+    offsetFromLOS: {x: -1.5, y: 0, z: -0.5}
+  - label: OL
+    offsetFromLOS: {x: 1.5, y: 0, z: -0.5}
