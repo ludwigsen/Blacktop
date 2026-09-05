@@ -2627,6 +2627,7 @@ GameObject:
   - component: {fileID: 1064215539}
   - component: {fileID: 1064215540}
   - component: {fileID: 1064215541}
+  - component: {fileID: 1064215542}
   m_Layer: 0
   m_Name: UserPlayer
   m_TagString: Player
@@ -2964,7 +2965,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cfaf8d26966440f6aa95edb408988c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::TouchdownZone
-  endZoneZ: 25
 --- !u!114 &1064215540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2996,6 +2996,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::PossessionController
+--- !u!114 &1064215542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064215527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d81488ba65ea84f67b32ca2a40eb4d59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::SidelineCheck
 --- !u!4 &1099329970 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
@@ -3105,8 +3117,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayState
   player: {fileID: 1064215533}
-  initialPlayerZ: -10
-  kickoffResetZ: -5
+  initialPlayerZ: -15
+  kickoffResetZ: -15
   defenders:
   - {fileID: 670707746}
   - {fileID: 1099329970}
@@ -3260,7 +3272,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 1, z: 4.5}
+  m_LocalScale: {x: 3, y: 1, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

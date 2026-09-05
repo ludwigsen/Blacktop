@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayState : MonoBehaviour
 {
-    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete }
+    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, OutOfBounds }
 
     public static PlayState Instance { get; private set; }
 
@@ -64,10 +64,14 @@ public class PlayState : MonoBehaviour
         // it's just wherever the passer happens to be standing. Same "resolve live,
         // don't cache" fix already applied to DefenderAI/DefenderCoordinator/
         // CameraFollow/TouchdownZone; this was the one place it hadn't landed yet.
-        if ((reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception)
-            && BallController.Instance != null && BallController.Instance.Carrier != null)
+        if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
-            nextLineOfScrimmageZ = BallController.Instance.Carrier.position.z;
+            // Out of bounds spots the ball where it crossed, not where the player is standing —
+            // matters once a receiver can go OOB independent of the ball carrier's position.
+            // Tackled/Interception keep the existing player-position behavior untouched.
+            nextLineOfScrimmageZ = (reason == PlayEndReason.OutOfBounds && BallController.Instance != null)
+                ? BallController.Instance.transform.position.z
+                : player.position.z;
         }
         // Touchdown doesn't touch nextLineOfScrimmageZ here — handled in ResetPlay via kickoffResetZ instead
 
