@@ -16,7 +16,6 @@ using UnityEngine;
 [RequireComponent(typeof(InputBuffer))]
 [RequireComponent(typeof(PlayerStateMachine))]
 [RequireComponent(typeof(TackleContact))]
-[RequireComponent(typeof(ReceiverAI))]
 public class PossessionController : MonoBehaviour
 {
     PlayerMovement playerMovement;
