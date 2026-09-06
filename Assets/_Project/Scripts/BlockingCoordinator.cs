@@ -37,14 +37,19 @@ public class BlockingCoordinator : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
-        // Ball not possessed, or mid-pass/pitch — no blocking assignments exist at all.
-        // Design call: blocking only matters once the ball has crossed the LOS and is
-        // possessed; during a throw, everyone's role is receiver/coverage, not blocking.
+        // Ball not possessed, mid-pass/pitch, or hasn't crossed the LOS yet — no blocking
+        // assignments exist. Design call: blocking only matters once the carrier has
+        // crossed the line of scrimmage AND the ball is possessed; before that, WR/TE/RB
+        // are still running routes via ReceiverAI and shouldn't be fighting AllyBlocker
+        // for control of their own transform.
         bool ballHeldAndPossessed = BallController.Instance != null
             && BallController.Instance.Carrier != null
             && BallController.Instance.State == BallController.BallState.Held;
 
-        if (!ballHeldAndPossessed)
+        bool pastLOS = ballHeldAndPossessed && PlayState.Instance != null
+            && BallController.Instance.Carrier.position.z > PlayState.Instance.CurrentLineOfScrimmageZ;
+
+        if (!ballHeldAndPossessed || !pastLOS)
         {
             if (defenderAssignments.Count > 0 || AnyBlockerHasTarget())
             {

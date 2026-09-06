@@ -1,13 +1,11 @@
 using UnityEngine;
 
 // Minimal offensive teammate — no route tree, just a fixed streak upfield from the snap.
-// Exists to give PassMove/PitchMove something to target and to validate the pass/pitch/
-// interception pipeline before investing in real route running. Deliberately dumb — same
-// "structurally sound first, tune later" approach as everything else here.
-//
-// Position is no longer this script's responsibility — PlayState.ResetPlay() now
-// repositions every offensive player centrally via OffensiveFormationData, same pattern
-// as defenders. This class only owns route-running bookkeeping.
+// Exists purely to give PassMove/PitchMove a real target and validate the throw/catch/
+// interception pipeline before investing in actual route running or play calling.
+// Deliberately dumb, same "structurally sound first, tune later" approach as the rest
+// of the project. Needs the "Teammate" tag (add in TagManager — not something I can do
+// for you from here).
 public class ReceiverAI : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 6f;
@@ -15,6 +13,12 @@ public class ReceiverAI : MonoBehaviour
 
     Vector3 snapPosition;
     bool routeComplete;
+
+    // Exposed so AllyBlocker (on RB/WR/TE slots, which carry both components) can defer
+    // movement control until the route has actually finished — prevents both components
+    // fighting over transform.position in the rare case blocking engages before a route
+    // wraps up.
+    public bool RouteComplete => routeComplete;
 
     void OnEnable()
     {
@@ -30,9 +34,6 @@ public class ReceiverAI : MonoBehaviour
             PlayState.Instance.OnPlayReset -= HandleReset;
     }
 
-    // By the time this fires, PlayState.ResetPlay() has already moved this transform to
-    // its formation slot — this just re-baselines the route against wherever that new
-    // position is, it doesn't move anything itself.
     void HandleReset()
     {
         snapPosition = transform.position;

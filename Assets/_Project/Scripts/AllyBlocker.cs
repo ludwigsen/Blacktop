@@ -33,9 +33,22 @@ public class AllyBlocker : MonoBehaviour
     Vector3 pushBackTarget;
     float pushBackTimer;
 
+    // Present only on RB/WR/TE slots (the ones that also carry ReceiverAI). Null on OL
+    // — GetComponent returning null there is expected and harmless.
+    ReceiverAI receiverAI;
+
+    void Awake()
+    {
+        receiverAI = GetComponent<ReceiverAI>();
+    }
+
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+
+        // Defer to an in-progress route — only relevant on RB/WR/TE slots. OL have no
+        // ReceiverAI component, so receiverAI is null and this never blocks them.
+        if (receiverAI != null && !receiverAI.RouteComplete) return;
 
         // Only engage if ball is possessed and held (not in flight) — mirrors the
         // BlockingCoordinator's own gate, checked again here since a blocker could
