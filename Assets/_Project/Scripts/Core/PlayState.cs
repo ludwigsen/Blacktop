@@ -120,6 +120,14 @@ public class PlayState : MonoBehaviour
             nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
 
         IsLive = true;
-        OnPlayReset?.Invoke(); // fires AFTER positions are set — ReceiverAI's route-reset logic depends on this ordering
+        OnPlayReset?.Invoke(); 
+        
+        // fires AFTER positions are set — ReceiverAI's route-reset logic depends on this ordering
+        // Register offensive players with BlockingCoordinator so they get fresh
+        // target assignments starting this play.
+        if (BlockingCoordinator.Instance != null)
+        {
+            BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
+        }
     }
 }
