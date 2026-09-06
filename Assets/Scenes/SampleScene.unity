@@ -591,7 +591,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 5
+      value: Defender__CB2
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
@@ -2594,7 +2594,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 4
+      value: Defender__CB1
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
@@ -3075,7 +3075,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 3
+      value: Defender__LB2
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
@@ -3337,7 +3337,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 2
+      value: Defender__LB1
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
@@ -3398,7 +3398,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 1
+      value: Defender__EDGE2
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
@@ -3539,7 +3539,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 6
+      value: Defender__S
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
@@ -3720,7 +3720,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7023810201760991134, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: m_Name
-      value: Defender 0
+      value: Defender__EDGE1
       objectReference: {fileID: 0}
     - target: {fileID: 8017883637706955287, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
       propertyPath: target
