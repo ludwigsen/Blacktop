@@ -15,7 +15,7 @@ public class BallController : MonoBehaviour
     public static BallController Instance { get; private set; }
 
     [SerializeField] Transform carrier;
-    [SerializeField] Vector3 carryOffset = new Vector3(0.4f, 1f, 0.3f);
+    [SerializeField] Vector3 carryOffset = new(0.4f, 1f, 0.3f);
 
     // How close a player/defender/teammate needs to get to a loose ball to scoop it up.
     // Generous on purpose — same arcade-forgiveness reasoning as every other
@@ -117,8 +117,7 @@ public class BallController : MonoBehaviour
         if (carrier == null) return; // shouldn't happen while Held, but cheap to guard
 
         Vector3 forwardUp = carrier.TransformDirection(new Vector3(0f, carryOffset.y, carryOffset.z));
-        transform.position = carrier.position + forwardUp + carrier.right * carryOffset.x;
-        transform.rotation = carrier.rotation;
+        transform.SetPositionAndRotation(carrier.position + forwardUp + carrier.right * carryOffset.x, carrier.rotation);
     }
 
     // Entry point called by PassMove/PitchMove on Exit. arcHeight/duration are supplied

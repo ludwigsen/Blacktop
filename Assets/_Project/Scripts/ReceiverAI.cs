@@ -45,7 +45,7 @@ public class ReceiverAI : MonoBehaviour
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
         if (routeComplete) return;
 
-        transform.position += transform.forward * moveSpeed * Time.deltaTime;
+        transform.position += moveSpeed * Time.deltaTime * transform.forward;
 
         // Holds here once it hits route depth — good enough to be a legible, catchable
         // target. Real route shapes (slants, curls, etc.) are a deliberate later pass.

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerStateMachine))]
 public class TackleContact : MonoBehaviour
 {
     [SerializeField] string defenderTag = "Defender";

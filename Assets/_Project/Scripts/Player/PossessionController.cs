@@ -1,4 +1,5 @@
 using UnityEngine;
+[RequireComponent(typeof(PlayerMovement))]
 
 // Decides, every frame, whether THIS offensive player is the human-controlled ball
 // carrier or an AI-driven teammate. Control follows the ball rather than living on one
@@ -12,6 +13,10 @@ using UnityEngine;
 // UserPlayer legitimately has no ReceiverAI (a passer doesn't run a route after
 // throwing) — every reference below is null-guarded so this works on an object missing
 // either half of the stack.
+[RequireComponent(typeof(InputBuffer))]
+[RequireComponent(typeof(PlayerStateMachine))]
+[RequireComponent(typeof(TackleContact))]
+[RequireComponent(typeof(ReceiverAI))]
 public class PossessionController : MonoBehaviour
 {
     PlayerMovement playerMovement;

@@ -20,7 +20,7 @@ public class InputBuffer : MonoBehaviour
     // generous end since Blacktop is arcade, not precision-execution focused.
     [SerializeField] float bufferWindow = 0.1f;
 
-    List<BufferedInput> buffer = new List<BufferedInput>();
+    List<BufferedInput> buffer = new();
     InputSystem_Actions controls;
 
     void Awake()

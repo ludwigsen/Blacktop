@@ -57,10 +57,10 @@ public class ConditionData : ScriptableObject
     [TextArea] public string description;
 
     [Tooltip("Stats this condition PENALIZES. Author percent as negative, at Regular severity.")]
-    public List<StatModifier> debuffs = new List<StatModifier>();
+    public List<StatModifier> debuffs = new();
 
     [Tooltip("Stats this condition IMPROVES. Author percent as positive, at Regular severity.")]
-    public List<StatModifier> buffs = new List<StatModifier>();
+    public List<StatModifier> buffs = new();
 
     // Design-locked scale: Clean ±5%, Regular ±10%, Hard ±18% — expressed here as a
     // multiplier on the Regular-authored value rather than three separate hand-entered

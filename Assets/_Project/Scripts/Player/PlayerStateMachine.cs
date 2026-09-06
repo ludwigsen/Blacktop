@@ -1,9 +1,12 @@
 using System.Linq;
 using UnityEngine;
+[RequireComponent(typeof(PlayerMovement))]
 
 // Orchestrator only — holds current state and delegates to the active IPlayerMove.
 // Deliberately does NOT contain move implementation details; that's what IPlayerMove
 // abstracts away. This class should stay thin even as more moves get added.
+[RequireComponent(typeof(InputBuffer))]
+[RequireComponent(typeof(DefenderDetector))]
 public class PlayerStateMachine : MonoBehaviour
 {
     [SerializeField] JukeMove jukeMove;

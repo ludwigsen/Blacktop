@@ -50,7 +50,7 @@ public class JukeMove : IPlayerMove
 
         // Lateral-only displacement — no transform.forward blended in here (that was the
         // source of the diagonal drift). Pure east-west cut relative to player facing.
-        ctx.transform.position += direction * LateralDistance * delta;
+        ctx.transform.position += delta * LateralDistance * direction;
     }
 
     public bool IsComplete => timer >= Duration;

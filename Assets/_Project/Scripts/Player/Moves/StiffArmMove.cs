@@ -12,7 +12,7 @@ using UnityEngine;
 public class StiffArmMove : IPlayerMove
 {
     [SerializeField]
-    AnimationCurve curve = new AnimationCurve(
+    AnimationCurve curve = new(
         new Keyframe(0f, 1f, 0f, -4f), // starts at full value, steep negative out-tangent for a fast initial burst
         new Keyframe(1f, 0f, -1f, 0f)  // decays to 0, gentle in-tangent so it trails off rather than stopping abruptly
     );
@@ -63,7 +63,7 @@ public class StiffArmMove : IPlayerMove
         float delta = sample - lastSample;
         lastSample = sample;
 
-        ctx.transform.position += ctx.transform.forward * ForwardBurst * delta;
+        ctx.transform.position += delta * ForwardBurst * ctx.transform.forward;
 
         if (!hasResolvedContact)
             CheckContact(ctx);
@@ -80,8 +80,7 @@ public class StiffArmMove : IPlayerMove
 
             hasResolvedContact = true;
 
-            var defenderAI = hit.GetComponent<DefenderAI>();
-            if (defenderAI == null) break;
+            if (!hit.TryGetComponent<DefenderAI>(out var defenderAI)) break;
 
             // Net roll: attacker power pushes shed chance up, defender resistance pushes it back down.
             float netShedChance = Mathf.Clamp01(baseShedChance * attr.RunPower() / defenderAI.ResistMult);

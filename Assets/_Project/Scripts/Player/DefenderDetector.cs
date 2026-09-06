@@ -9,8 +9,8 @@ using UnityEngine;
 public class DefenderDetector : MonoBehaviour
 {
     [SerializeField] string defenderTag = "Defender";
-    [SerializeField] Vector3 boxSize = new Vector3(2f, 1.5f, 2f); // forward-facing zone for Hurdle — hurdling is inherently a forward move, doesn't need to detect from behind
-    [SerializeField] Vector3 boxOffset = new Vector3(0f, 0f, 1.2f); // pushed forward from player center
+    [SerializeField] Vector3 boxSize = new(2f, 1.5f, 2f); // forward-facing zone for Hurdle — hurdling is inherently a forward move, doesn't need to detect from behind
+    [SerializeField] Vector3 boxOffset = new(0f, 0f, 1.2f); // pushed forward from player center
 
     public bool DefenderInRange { get; private set; }
     public int DefenderCount { get; private set; }

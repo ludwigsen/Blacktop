@@ -14,14 +14,14 @@ public class PlayState : MonoBehaviour
     // Defenders list stays as-is — these are live scene object references, unavoidable
     // per-scene setup. What changes is where their reset OFFSETS come from: authored
     // once in a FormationData asset instead of duplicated per-PlayState-instance data entry.
-    [SerializeField] List<Transform> defenders = new List<Transform>();
+    [SerializeField] List<Transform> defenders = new();
     [SerializeField] FormationData formation;
 
     // Same by-index convention as defenders — offensivePlayers[i] gets
     // offensiveFormation.receiverSlots[i]'s offset. The passer (UserPlayer) is NOT in
     // this list; it's repositioned separately via offensiveFormation.passerOffsetFromLOS,
     // since it isn't interchangeable with the receiver slots.
-    [SerializeField] List<Transform> offensivePlayers = new List<Transform>();
+    [SerializeField] List<Transform> offensivePlayers = new();
     [SerializeField] OffensiveFormationData offensiveFormation;
 
     public bool IsLive { get; private set; } = true;
@@ -83,7 +83,7 @@ public class PlayState : MonoBehaviour
         if (IsLive) return;
 
         float resetZ = lastEndReason == PlayEndReason.Touchdown ? kickoffResetZ : nextLineOfScrimmageZ;
-        Vector3 losOrigin = new Vector3(0f, 1f, resetZ);
+        Vector3 losOrigin = new(0f, 1f, resetZ);
 
         if (player != null)
         {

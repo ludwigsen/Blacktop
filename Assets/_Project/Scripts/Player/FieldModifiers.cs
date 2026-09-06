@@ -18,7 +18,7 @@ public class FieldModifiers : ScriptableObject
     }
 
     public string fieldName; // Inspector readability only ("Slippery") — not read by code
-    public List<Entry> entries = new List<Entry>();
+    public List<Entry> entries = new();
 
     Dictionary<AttributeStat, float> lookup;
 

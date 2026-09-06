@@ -20,7 +20,7 @@ public class AttributeCurves : ScriptableObject
         public float hardCapMax;
     }
 
-    public List<Entry> entries = new List<Entry>();
+    public List<Entry> entries = new();
 
     // Built lazily, not serialized — Dictionary doesn't survive Unity serialization,
     // so this is a runtime-only lookup cache over the authored List<Entry>.
