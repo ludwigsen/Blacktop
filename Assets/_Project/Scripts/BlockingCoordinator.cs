@@ -29,7 +29,7 @@ public class BlockingCoordinator : MonoBehaviour
     // from zero — this is what makes "already engaged, move to next target" cascade
     // correctly instead of every blocker re-picking independently and potentially
     // colliding on the same defender.
-    Dictionary<Transform, AllyBlocker> defenderAssignments = new Dictionary<Transform, AllyBlocker>();
+    Dictionary<Transform, AllyBlocker> defenderAssignments = new();
 
     void Awake() => Instance = this;
 
@@ -152,8 +152,7 @@ public class BlockingCoordinator : MonoBehaviour
         foreach (var t in offensivePlayers)
         {
             if (t == null) continue;
-            var blocker = t.GetComponent<AllyBlocker>();
-            if (blocker != null) blockers.Add(blocker);
+            if (t.TryGetComponent<AllyBlocker>(out var blocker)) blockers.Add(blocker);
         }
     }
 }

@@ -58,8 +58,7 @@ public class DefenderCoordinator : MonoBehaviour
 
         foreach (var obj in defenderObjects)
         {
-            var ai = obj.GetComponent<DefenderAI>();
-            if (ai == null) continue;
+            if (!obj.TryGetComponent<DefenderAI>(out var ai)) continue;
             ai.SetRole(ai == closest ? DefenderAI.Role.Engage : DefenderAI.Role.Contain);
         }
     }

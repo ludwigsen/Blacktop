@@ -27,7 +27,7 @@ public class FormationData : ScriptableObject
         public Vector3 offsetFromLOS;
     }
 
-    public List<DefenderSlot> defenderSlots = new List<DefenderSlot>();
+    public List<DefenderSlot> defenderSlots = new();
 
     // QB gets its own dedicated field rather than living in offensiveSlots — it's the
     // one offensive position PlayState already has a direct transform reference to
@@ -35,6 +35,6 @@ public class FormationData : ScriptableObject
     // as a distinct choice: depth relative to LOS is the only thing separating them
     // with no hike/exchange in this game. Everything else (RB mesh point, OL spacing,
     // WR/TE splits) is downstream of where the QB starts.
-    public Vector3 qbOffsetFromLOS = new Vector3(0f, 0f, -5f);
-    public List<OffensiveSlot> offensiveSlots = new List<OffensiveSlot>();
+    public Vector3 qbOffsetFromLOS = new(0f, 0f, -5f);
+    public List<OffensiveSlot> offensiveSlots = new();
 }
