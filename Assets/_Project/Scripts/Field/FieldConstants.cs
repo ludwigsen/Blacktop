@@ -5,14 +5,14 @@
 public static class FieldConstants
 {
     public const float HalfWidth = 15f;          // sideline to sideline / 2 (30u total width)
-    public const float PlayLength = 40f;         // goal line to goal line
-    public const float EndZoneDepth = 10f;       // each end zone, beyond the goal lines
+    public const float PlayLength = 60f;         // end line to end line (60u total length)
+    public const float EndZoneDepth = 0f;        // retained for legacy callers; bounds now own the full playable length
 
     // How far past the sideline the ball has to travel before it's ruled dead — accounts
     // for walls/fences sitting flush at the boundary rather than exactly on it, so a
     // stumble and an out-of-bounds ruling land in the same frame instead of one preceding
     // the other by a few units.
-    public const float OutOfBoundsMargin = 0.2f;
+    public const float OutOfBoundsMargin = 2f;
 
     // Derived, not authored — keeps "goal line Z" defined in exactly one place.
     public static float NearGoalLineZ => -PlayLength / 2f;
