@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e6b8350fa4f6b423d82962a0ef6df8d9, type: 3}
-  m_Name: Attribute Curves
+  m_Name: AttributeCurves
   m_EditorClassIdentifier: Blacktop::AttributeCurves
   entries:
   - stat: 0

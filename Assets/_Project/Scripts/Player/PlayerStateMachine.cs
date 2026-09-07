@@ -67,6 +67,12 @@ public class PlayerStateMachine : MonoBehaviour
         currentState = PlayerState.Idle;
     }
 
+    void OnDestroy()
+    {
+        if (PlayState.Instance != null)
+            PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
+    }
+
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return; // play's dead — no input processed

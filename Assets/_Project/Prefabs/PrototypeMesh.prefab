@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2789128741482355714}
   - component: {fileID: 4998264942794876892}
   m_Layer: 0
-  m_Name: New Mesh
+  m_Name: PrototypeMesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

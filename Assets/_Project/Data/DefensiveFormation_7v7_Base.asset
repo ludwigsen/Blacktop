@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 82353b2c220c44c029142d07997c4d74, type: 3}
-  m_Name: 7v7_Base
+  m_Name: DefensiveFormation_7v7_Base
   m_EditorClassIdentifier: Blacktop::FormationData
   defenderSlots:
   - label: EDGE-Left

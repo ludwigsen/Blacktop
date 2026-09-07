@@ -40,17 +40,27 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         controls = new InputSystem_Actions();
+        controls.Player.Move.performed += HandleMove;
+        controls.Player.Move.canceled += HandleMoveCanceled;
     }
 
     void OnEnable()
     {
         controls.Player.Enable();
-        // performed/canceled callbacks over polling — avoids missing fast taps between Update() calls
-        controls.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-        controls.Player.Move.canceled += ctx => moveInput = Vector2.zero;
     }
 
-    void OnDisable() => controls.Player.Disable();
+    void OnDisable()
+    {
+        controls.Player.Disable();
+        moveInput = Vector2.zero;
+        currentVelocity = Vector3.zero;
+    }
+
+    void OnDestroy() => controls?.Dispose();
+
+    // Performed/canceled callbacks avoid missing very fast input changes between Update calls.
+    void HandleMove(InputAction.CallbackContext context) => moveInput = context.ReadValue<Vector2>();
+    void HandleMoveCanceled(InputAction.CallbackContext _) => moveInput = Vector2.zero;
 
     void Update()
     {

@@ -22,17 +22,30 @@ public class GamebreakerController : MonoBehaviour
     InputSystem_Actions controls;
     bool isStyling;
 
-    void Awake() => controls = new InputSystem_Actions();
+    void Awake()
+    {
+        controls = new InputSystem_Actions();
+        controls.Player.Style.performed += HandleStylePerformed;
+        controls.Player.Style.canceled += HandleStyleCanceled;
+        controls.Player.Gamebreaker.performed += HandleGamebreakerPerformed;
+    }
 
     void OnEnable()
     {
         controls.Player.Enable();
-        controls.Player.Style.performed += _ => isStyling = true;
-        controls.Player.Style.canceled += _ => isStyling = false;
-        controls.Player.Gamebreaker.performed += _ => TryActivate();
     }
 
-    void OnDisable() => controls.Player.Disable();
+    void OnDisable()
+    {
+        controls.Player.Disable();
+        isStyling = false;
+    }
+
+    void OnDestroy() => controls?.Dispose();
+
+    void HandleStylePerformed(InputAction.CallbackContext _) => isStyling = true;
+    void HandleStyleCanceled(InputAction.CallbackContext _) => isStyling = false;
+    void HandleGamebreakerPerformed(InputAction.CallbackContext _) => TryActivate();
 
     // Resolved live every frame rather than cached — same "resolve live, don't cache"
     // rule as everything else that checks ball possession. Whoever's carrying right now

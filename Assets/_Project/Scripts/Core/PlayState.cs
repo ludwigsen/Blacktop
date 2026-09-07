@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayState : MonoBehaviour
 {
@@ -74,11 +75,23 @@ public class PlayState : MonoBehaviour
 
     void OnEnable()
     {
+        controls.Player.ResetPlay.performed += HandleResetPlay;
         controls.Player.Enable();
-        controls.Player.ResetPlay.performed += ctx => ResetPlay();
     }
 
-    void OnDisable() => controls.Player.Disable();
+    void OnDisable()
+    {
+        controls.Player.ResetPlay.performed -= HandleResetPlay;
+        controls.Player.Disable();
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+        controls?.Dispose();
+    }
+
+    void HandleResetPlay(InputAction.CallbackContext _) => ResetPlay();
 
     public void EndPlay(PlayEndReason reason)
     {

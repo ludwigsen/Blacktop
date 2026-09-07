@@ -43,6 +43,8 @@ public class InputBuffer : MonoBehaviour
 
     void OnDisable() => controls.Player.Disable();
 
+    void OnDestroy() => controls?.Dispose();
+
     void Record(string action) =>
         buffer.Add(new BufferedInput { action = action, timestamp = Time.time });
 

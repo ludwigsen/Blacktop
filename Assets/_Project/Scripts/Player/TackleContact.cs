@@ -42,6 +42,9 @@ public class TackleContact : MonoBehaviour
                     BallController.Instance.Drop();
                     PlayState.Instance.AddDefensePoints(8f);
                     PlayState.Instance.NotifyFumble();
+                    // A fumble remains a live ball. BallController's recovery pass runs in
+                    // LateUpdate, so ending the play here would prevent any recovery.
+                    return;
                 }
             }
 

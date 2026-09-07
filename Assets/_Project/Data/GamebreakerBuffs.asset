@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3590c044e3964af1938db1ea2a0570f, type: 3}
-  m_Name: New Gamebreaker Buffs
+  m_Name: GamebreakerBuffs
   m_EditorClassIdentifier: Blacktop::GamebreakerBuffs
   entries:
   - stat: 1
