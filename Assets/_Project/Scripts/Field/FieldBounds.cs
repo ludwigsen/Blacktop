@@ -23,6 +23,14 @@ public enum FieldBoundsState
     OutOfBounds
 }
 
+/// <summary>Identifies a standard end zone, expressed relative to local field Z.</summary>
+public enum FieldEndZone
+{
+    None,
+    Near,
+    Far
+}
+
 /// <summary>
 /// Shared 30 x 60 playable field definition. Attach this to each FieldRoot.
 /// All checks use this transform's local X/Z plane, allowing a complete field to be
@@ -38,6 +46,8 @@ public sealed class FieldBounds : MonoBehaviour
     [SerializeField, Min(0.01f)] float playableLength = 60f;
     [Tooltip("Non-playable space outside each line. Blacktop fields should use 2.")]
     [SerializeField, Min(0f)] float safetyBandWidth = 2f;
+    [Tooltip("Playable depth overlaid at each end of the 60-unit field. Blacktop fields should use 10.")]
+    [SerializeField, Min(0f)] float endZoneDepth = 10f;
 
     [Header("Gizmos")]
     [SerializeField] bool drawGizmos = true;
@@ -46,10 +56,13 @@ public sealed class FieldBounds : MonoBehaviour
     public float PlayableWidth => playableWidth;
     public float PlayableLength => playableLength;
     public float SafetyBandWidth => safetyBandWidth;
+    public float EndZoneDepth => endZoneDepth;
     public float HalfPlayableWidth => playableWidth * 0.5f;
     public float HalfPlayableLength => playableLength * 0.5f;
     public float HalfSafetyWidth => HalfPlayableWidth + safetyBandWidth;
     public float HalfSafetyLength => HalfPlayableLength + safetyBandWidth;
+    public float NearGoalLineLocalZ => -HalfPlayableLength + endZoneDepth;
+    public float FarGoalLineLocalZ => HalfPlayableLength - endZoneDepth;
 
     /// <summary>Converts a world position to this field's local coordinate space.</summary>
     public Vector3 WorldToFieldLocal(Vector3 worldPosition) => transform.InverseTransformPoint(worldPosition);
@@ -98,6 +111,21 @@ public sealed class FieldBounds : MonoBehaviour
             : FieldBoundsState.OutOfBounds;
     }
 
+    /// <summary>
+    /// Returns the end zone containing a world position. Positions outside the playable
+    /// rectangle return None, so an out-of-bounds ball cannot score as a touchdown.
+    /// </summary>
+    public FieldEndZone GetEndZone(Vector3 worldPosition)
+    {
+        Vector3 localPosition = WorldToFieldLocal(worldPosition);
+        if (!IsInsidePlayableLocal(localPosition) || endZoneDepth <= 0f) return FieldEndZone.None;
+        if (localPosition.z <= NearGoalLineLocalZ) return FieldEndZone.Near;
+        if (localPosition.z >= FarGoalLineLocalZ) return FieldEndZone.Far;
+        return FieldEndZone.None;
+    }
+
+    public bool IsInEndZone(Vector3 worldPosition) => GetEndZone(worldPosition) != FieldEndZone.None;
+
     bool IsInsidePlayableLocal(Vector3 localPosition)
     {
         return Mathf.Abs(localPosition.x) <= HalfPlayableWidth
@@ -127,6 +155,7 @@ public sealed class FieldBounds : MonoBehaviour
         playableWidth = Mathf.Max(0.01f, playableWidth);
         playableLength = Mathf.Max(0.01f, playableLength);
         safetyBandWidth = Mathf.Max(0f, safetyBandWidth);
+        endZoneDepth = Mathf.Clamp(endZoneDepth, 0f, playableLength * 0.5f);
         gizmoHeight = Mathf.Max(0.01f, gizmoHeight);
     }
 
@@ -146,10 +175,12 @@ public sealed class FieldBounds : MonoBehaviour
         Gizmos.color = new Color(0.15f, 1f, 0.35f, 1f);
         Gizmos.DrawWireCube(Vector3.zero, new Vector3(playableWidth, gizmoHeight, playableLength));
 
-        // White is the center line; cyan lines identify both playable end lines.
+        // Blue overlays identify the two end zones. White is the centre line, cyan the goal lines.
+        DrawFlatRect(HalfPlayableWidth, endZoneDepth * 0.5f, new Vector3(0f, 0f, -HalfPlayableLength + endZoneDepth * 0.5f), new Color(0.1f, 0.5f, 1f, 0.2f));
+        DrawFlatRect(HalfPlayableWidth, endZoneDepth * 0.5f, new Vector3(0f, 0f, HalfPlayableLength - endZoneDepth * 0.5f), new Color(0.1f, 0.5f, 1f, 0.2f));
         DrawLine(new Vector3(-HalfPlayableWidth, 0f, 0f), new Vector3(HalfPlayableWidth, 0f, 0f), Color.white);
-        DrawLine(new Vector3(-HalfPlayableWidth, 0f, -HalfPlayableLength), new Vector3(HalfPlayableWidth, 0f, -HalfPlayableLength), Color.cyan);
-        DrawLine(new Vector3(-HalfPlayableWidth, 0f, HalfPlayableLength), new Vector3(HalfPlayableWidth, 0f, HalfPlayableLength), Color.cyan);
+        DrawLine(new Vector3(-HalfPlayableWidth, 0f, NearGoalLineLocalZ), new Vector3(HalfPlayableWidth, 0f, NearGoalLineLocalZ), Color.cyan);
+        DrawLine(new Vector3(-HalfPlayableWidth, 0f, FarGoalLineLocalZ), new Vector3(HalfPlayableWidth, 0f, FarGoalLineLocalZ), Color.cyan);
 
         Gizmos.matrix = previousMatrix;
         Gizmos.color = previousColor;
@@ -157,8 +188,14 @@ public sealed class FieldBounds : MonoBehaviour
 
     void DrawFlatRect(float halfWidth, float halfLength, Color color)
     {
+        DrawFlatRect(halfWidth, halfLength, Vector3.zero, color);
+    }
+
+    void DrawFlatRect(float halfWidth, float halfLength, Vector3 center, Color color)
+    {
+        if (halfLength <= 0f) return;
         Gizmos.color = color;
-        Gizmos.DrawCube(Vector3.zero, new Vector3(halfWidth * 2f, gizmoHeight, halfLength * 2f));
+        Gizmos.DrawCube(center, new Vector3(halfWidth * 2f, gizmoHeight, halfLength * 2f));
     }
 
     static void DrawLine(Vector3 from, Vector3 to, Color color)
