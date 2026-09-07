@@ -1,28 +1,23 @@
 using UnityEngine;
 
-// Minimal offensive teammate — no route tree, just a fixed streak upfield from the snap.
-// Exists purely to give PassMove/PitchMove a real target and validate the throw/catch/
-// interception pipeline before investing in actual route running or play calling.
-// Deliberately dumb, same "structurally sound first, tune later" approach as the rest
-// of the project. Needs the "Teammate" tag (add in TagManager — not something I can do
-// for you from here).
 public class ReceiverAI : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 6f;
-    [SerializeField] float routeDepth = 12f; // distance upfield before holding position
+    [SerializeField] float routeDepth = 12f;
+    [SerializeField] float slantDistance = 4f; // lateral distance for Slant
+    [SerializeField] float hitchDepth = 4f;   // distance upfield for Hitch before settling
 
     Vector3 snapPosition;
+    Vector3 targetPosition;
+    RoutePattern assignedRoute = RoutePattern.None;
     bool routeComplete;
 
-    // Exposed so AllyBlocker (on RB/WR/TE slots, which carry both components) can defer
-    // movement control until the route has actually finished — prevents both components
-    // fighting over transform.position in the rare case blocking engages before a route
-    // wraps up.
     public bool RouteComplete => routeComplete;
 
     void OnEnable()
     {
         snapPosition = transform.position;
+        targetPosition = snapPosition;
         routeComplete = false;
         if (PlayState.Instance != null)
             PlayState.Instance.OnPlayReset += HandleReset;
@@ -37,7 +32,46 @@ public class ReceiverAI : MonoBehaviour
     void HandleReset()
     {
         snapPosition = transform.position;
+        targetPosition = snapPosition;
         routeComplete = false;
+        assignedRoute = RoutePattern.None;
+    }
+
+    // Called by PlayState when distributing routes
+    public void SetRoute(RoutePattern route)
+    {
+        assignedRoute = route;
+        CalculateTargetPosition();
+    }
+
+    void CalculateTargetPosition()
+    {
+        // Default to forward streak
+        targetPosition = snapPosition + transform.forward * routeDepth;
+
+        switch (assignedRoute)
+        {
+            case RoutePattern.Go:
+                targetPosition = snapPosition + transform.forward * routeDepth;
+                break;
+            case RoutePattern.Slant:
+                targetPosition = snapPosition + (transform.forward * routeDepth * 0.7f) + (transform.right * slantDistance);
+                break;
+            case RoutePattern.Hitch:
+                targetPosition = snapPosition + transform.forward * hitchDepth;
+                break;
+            case RoutePattern.Wheel:
+                // Curved path — for now, just go out to sideline then forward
+                targetPosition = snapPosition + (transform.right * 5f) + (transform.forward * routeDepth * 0.5f);
+                break;
+            case RoutePattern.Comeback:
+                // Go deep then come back toward snap spot
+                targetPosition = snapPosition + transform.forward * routeDepth + (-transform.forward * routeDepth * 0.4f);
+                break;
+            case RoutePattern.None:
+                targetPosition = snapPosition; // stay at snap point
+                break;
+        }
     }
 
     void Update()
@@ -45,11 +79,12 @@ public class ReceiverAI : MonoBehaviour
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
         if (routeComplete) return;
 
-        transform.position += moveSpeed * Time.deltaTime * transform.forward;
+        // Move toward target
+        Vector3 toTarget = (targetPosition - transform.position).normalized;
+        transform.position += moveSpeed * Time.deltaTime * toTarget;
 
-        // Holds here once it hits route depth — good enough to be a legible, catchable
-        // target. Real route shapes (slants, curls, etc.) are a deliberate later pass.
-        if (Vector3.Distance(snapPosition, transform.position) >= routeDepth)
+        // Check if arrived at target
+        if (Vector3.Distance(transform.position, targetPosition) < 0.5f)
             routeComplete = true;
     }
 }

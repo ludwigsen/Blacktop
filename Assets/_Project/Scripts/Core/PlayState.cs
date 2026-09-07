@@ -29,6 +29,8 @@ public class PlayState : MonoBehaviour
     [SerializeField] GamebreakerBuffs gamebreakerBuffs;
     [SerializeField] int gamebreakerPossessionLimit = 3;
 
+    [SerializeField] PlayCallData playCall;
+
     public bool IsLive { get; private set; } = true;
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
@@ -146,12 +148,9 @@ public class PlayState : MonoBehaviour
         {
             player.position = offensiveFormation != null
                 ? losOrigin + offensiveFormation.passerOffsetFromLOS
-                : new Vector3(0f, player.position.y, resetZ); // fallback if no formation asset assigned yet
+                : new Vector3(0f, player.position.y, resetZ);
         }
 
-        // Matched by INDEX — defenders[0] gets formation.defenderSlots[0]'s offset, etc.
-        // Same sync-by-index contract as before, but now count mismatches are visible in
-        // ONE place (the formation asset) rather than two duplicated lists drifting apart.
         if (formation != null)
         {
             for (int i = 0; i < defenders.Count && i < formation.defenderSlots.Count; i++)
@@ -161,9 +160,6 @@ public class PlayState : MonoBehaviour
             }
         }
 
-        // Same by-index convention, offense side. Positioning lives here instead of inside
-        // ReceiverAI — one authority for "where does everyone line up," matching exactly
-        // how defenders already work.
         if (offensiveFormation != null)
         {
             for (int i = 0; i < offensivePlayers.Count && i < offensiveFormation.receiverSlots.Count; i++)
@@ -173,13 +169,23 @@ public class PlayState : MonoBehaviour
             }
         }
 
-        if (lastEndReason == PlayEndReason.Touchdown)
-            nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
+        // NEW: Distribute route assignments
+        if (playCall != null)
+        {
+            for (int i = 0; i < offensivePlayers.Count; i++)
+            {
+                var receiver = offensivePlayers[i].GetComponent<ReceiverAI>();
+                if (receiver != null)
+                {
+                    RoutePattern route = playCall.GetRouteForReceiver(i);
+                    receiver.SetRoute(route);
+                }
+            }
+        }
 
-        // "Lasts 3 possessions" — this project has no multi-play drive concept (every stop
-        // is effectively a turnover-on-downs), so a possession is approximated as one play
-        // (one ResetPlay call). Decremented here, AFTER the play that just ended, so an
-        // activation made mid-play still gets the full count starting from the next snap.
+        if (lastEndReason == PlayEndReason.Touchdown)
+            nextLineOfScrimmageZ = kickoffResetZ;
+
         if (IsOffenseGamebreakerActive)
         {
             offensePossessionsRemaining--;
@@ -187,14 +193,17 @@ public class PlayState : MonoBehaviour
         }
 
         IsLive = true;
-        OnPlayReset?.Invoke(); // fires AFTER positions are set — ReceiverAI's route-reset logic depends on this ordering
+        OnPlayReset?.Invoke();
 
-        // Register offensive players with BlockingCoordinator so they get fresh
-        // target assignments starting this play.
         if (BlockingCoordinator.Instance != null)
         {
             BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
         }
+
+        // NEW: Reset receiver selection UI
+        var selectionUI = FindObjectOfType<ReceiverSelectionUI>();
+        if (selectionUI != null)
+            selectionUI.ResetSelection();
     }
 
     // --- Gamebreaker API ---

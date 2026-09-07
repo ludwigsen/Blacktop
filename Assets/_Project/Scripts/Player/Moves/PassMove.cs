@@ -50,25 +50,39 @@ public class PassMove : IPlayerMove
 
     Transform FindBestReceiver(PlayerContext ctx)
     {
-        var candidates = GameObject.FindGameObjectsWithTag(teammateTag);
+        // Check if there's an explicit selection
+        var selectionUI = FindObjectOfType<ReceiverSelectionUI>();
+        if (selectionUI != null)
+        {
+            int selectedIdx = selectionUI.GetSelectedReceiverIndex();
+            if (selectedIdx >= 0)
+            {
+                var candidates = GameObject.FindGameObjectsWithTag(teammateTag);
+                if (selectedIdx < candidates.Length)
+                {
+                    var selected = candidates[selectedIdx];
+                    if (IsValidTarget(ctx, selected.transform))
+                    {
+                        Debug.Log($"Throwing to selected receiver {selectedIdx + 1}");
+                        return selected.transform;
+                    }
+                }
+            }
+        }
+
+        // Fall back to auto-select if no valid selection
+        var allCandidates = GameObject.FindGameObjectsWithTag(teammateTag);
         Transform best = null;
         float bestScore = float.MinValue;
 
-        foreach (var c in candidates)
+        foreach (var c in allCandidates)
         {
-            Vector3 toReceiver = c.transform.position - ctx.transform.position;
-            float dist = toReceiver.magnitude;
-            if (dist > maxReceiverSearchRadius) continue;
-
-            float angle = Vector3.Angle(ctx.transform.forward, toReceiver);
-            if (angle > receiverSearchConeAngle) continue;
+            if (!IsValidTarget(ctx, c.transform)) continue;
 
             float openness = NearestDefenderDistance(c.transform.position);
-
-            // Weight openness heavily over raw distance — a wide-open receiver 15 units
-            // out should usually beat a covered one 3 units out. Pure placeholder ratio,
-            // needs real playtesting once there's more than one teammate to choose from.
+            float dist = Vector3.Distance(c.transform.position, ctx.transform.position);
             float score = openness * 2f - dist * 0.1f;
+
             if (score > bestScore)
             {
                 bestScore = score;
@@ -76,6 +90,18 @@ public class PassMove : IPlayerMove
             }
         }
         return best;
+    }
+
+    bool IsValidTarget(PlayerContext ctx, Transform receiver)
+    {
+        Vector3 toReceiver = receiver.position - ctx.transform.position;
+        float dist = toReceiver.magnitude;
+        if (dist > maxReceiverSearchRadius) return false;
+
+        float angle = Vector3.Angle(ctx.transform.forward, toReceiver);
+        if (angle > receiverSearchConeAngle) return false;
+
+        return true;
     }
 
     float NearestDefenderDistance(Vector3 pos)
