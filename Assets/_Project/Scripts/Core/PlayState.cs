@@ -24,6 +24,10 @@ public class PlayState : MonoBehaviour
     [SerializeField] List<Transform> offensivePlayers = new();
     [SerializeField] OffensiveFormationData offensiveFormation;
 
+    [Header("Gamebreaker")]
+    [SerializeField] GamebreakerBuffs gamebreakerBuffs;
+    [SerializeField] int gamebreakerPossessionLimit = 3;
+
     public bool IsLive { get; private set; } = true;
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
@@ -35,6 +39,31 @@ public class PlayState : MonoBehaviour
     // PlayState needing to know anything about defender logic itself.
     public float CurrentLineOfScrimmageZ => nextLineOfScrimmageZ;
     PlayEndReason lastEndReason;
+
+    // Exposed so TackleContact can identify "the passer" for sack scoring — only the
+    // designated passer (UserPlayer) getting tackled behind the LOS counts as a sack,
+    // not any teammate who happens to be carrying after a pitch/pass downfield.
+    public Transform Passer => player;
+
+    // --- Gamebreaker state ---
+    // Offense meter fills via GamebreakerController (Styling, continuous) and point-award
+    // hooks scattered through the move scripts (Juke/Hurdle/StiffArm) plus Touchdown
+    // (handled inline below, since PlayState already owns EndPlay). Defense meter fills
+    // via TackleContact (sack) and BallController (interception/forced fumble). Both are
+    // 0-100; activation consumes the respective meter to zero.
+    float offenseMeter;
+    float defenseMeter;
+    int offensePossessionsRemaining;
+    bool defenseGuaranteedTurnoverPending;
+
+    public float OffenseMeter => offenseMeter;
+    public float DefenseMeter => defenseMeter;
+    public bool IsOffenseGamebreakerActive { get; private set; }
+
+    public event System.Action<float> OnOffenseMeterChanged;
+    public event System.Action<float> OnDefenseMeterChanged;
+    public event System.Action OnOffenseGamebreakerActivated;
+    public event System.Action OnOffenseGamebreakerEnded;
 
     void Awake()
     {
@@ -58,12 +87,8 @@ public class PlayState : MonoBehaviour
         lastEndReason = reason;
 
         // Reads the ACTUAL ball carrier's position, not a hardcoded reference to
-        // UserPlayer. This was the root cause of the whole team resetting to the wrong
-        // line of scrimmage: once a pass or pitch moves the ball to a receiver,
-        // player.position no longer has anything to do with where the ball ended up —
-        // it's just wherever the passer happens to be standing. Same "resolve live,
-        // don't cache" fix already applied to DefenderAI/DefenderCoordinator/
-        // CameraFollow/TouchdownZone; this was the one place it hadn't landed yet.
+        // UserPlayer. Same "resolve live, don't cache" rule already applied to
+        // DefenderAI/DefenderCoordinator/CameraFollow/TouchdownZone.
         if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
             // Out of bounds spots the ball where it crossed, not where the player is standing —
@@ -75,8 +100,27 @@ public class PlayState : MonoBehaviour
         }
         // Touchdown doesn't touch nextLineOfScrimmageZ here — handled in ResetPlay via kickoffResetZ instead
 
+        // Touchdown and Interception both end offensive Gamebreaker outright — a score or
+        // a turnover closes the window regardless of possessions remaining. A fumble ends
+        // it too, but that's signaled separately via NotifyFumble() since a fumble doesn't
+        // change PlayEndReason (still resolves as Tackled per TackleContact's design).
+        if (reason == PlayEndReason.Touchdown)
+        {
+            AddOffensePoints(10f); // flat TD bonus, not Swagger-scaled — a score is a score regardless of style
+            EndOffenseGamebreaker();
+        }
+        else if (reason == PlayEndReason.Interception)
+        {
+            EndOffenseGamebreaker();
+        }
+
         OnPlayEnded?.Invoke(reason);
     }
+
+    // Called by TackleContact the instant a fumble roll succeeds — turnover-by-fumble ends
+    // offensive Gamebreaker immediately, same as an interception, even though the play
+    // itself still resolves as PlayEndReason.Tackled.
+    public void NotifyFumble() => EndOffenseGamebreaker();
 
     public void ResetPlay()
     {
@@ -104,9 +148,9 @@ public class PlayState : MonoBehaviour
             }
         }
 
-        // Same by-index convention, offense side. Positioning now lives here instead of
-        // inside ReceiverAI — one authority for "where does everyone line up," matching
-        // exactly how defenders already work.
+        // Same by-index convention, offense side. Positioning lives here instead of inside
+        // ReceiverAI — one authority for "where does everyone line up," matching exactly
+        // how defenders already work.
         if (offensiveFormation != null)
         {
             for (int i = 0; i < offensivePlayers.Count && i < offensiveFormation.receiverSlots.Count; i++)
@@ -119,15 +163,92 @@ public class PlayState : MonoBehaviour
         if (lastEndReason == PlayEndReason.Touchdown)
             nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
 
+        // "Lasts 3 possessions" — this project has no multi-play drive concept (every stop
+        // is effectively a turnover-on-downs), so a possession is approximated as one play
+        // (one ResetPlay call). Decremented here, AFTER the play that just ended, so an
+        // activation made mid-play still gets the full count starting from the next snap.
+        if (IsOffenseGamebreakerActive)
+        {
+            offensePossessionsRemaining--;
+            if (offensePossessionsRemaining <= 0) EndOffenseGamebreaker();
+        }
+
         IsLive = true;
-        OnPlayReset?.Invoke(); 
-        
-        // fires AFTER positions are set — ReceiverAI's route-reset logic depends on this ordering
+        OnPlayReset?.Invoke(); // fires AFTER positions are set — ReceiverAI's route-reset logic depends on this ordering
+
         // Register offensive players with BlockingCoordinator so they get fresh
         // target assignments starting this play.
         if (BlockingCoordinator.Instance != null)
         {
             BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
         }
+    }
+
+    // --- Gamebreaker API ---
+
+    public void AddOffensePoints(float pts)
+    {
+        offenseMeter = Mathf.Clamp(offenseMeter + pts, 0f, 100f);
+        OnOffenseMeterChanged?.Invoke(offenseMeter);
+    }
+
+    public void AddDefensePoints(float pts)
+    {
+        defenseMeter = Mathf.Clamp(defenseMeter + pts, 0f, 100f);
+        OnDefenseMeterChanged?.Invoke(defenseMeter);
+    }
+
+    public bool TryActivateOffenseGamebreaker()
+    {
+        if (IsOffenseGamebreakerActive || offenseMeter < 100f) return false;
+
+        IsOffenseGamebreakerActive = true;
+        offensePossessionsRemaining = gamebreakerPossessionLimit;
+        offenseMeter = 0f;
+        OnOffenseMeterChanged?.Invoke(offenseMeter);
+        OnOffenseGamebreakerActivated?.Invoke();
+        return true;
+    }
+
+    void EndOffenseGamebreaker()
+    {
+        if (!IsOffenseGamebreakerActive) return;
+        IsOffenseGamebreakerActive = false;
+        OnOffenseGamebreakerEnded?.Invoke();
+    }
+
+    // Defense has no human-controlled activation path yet — there's no player-controllable
+    // defender in the project. This auto-arms the guaranteed-turnover flag the instant the
+    // meter caps, consumed by whichever fumble/interception roll happens next. Replace with
+    // a real input-driven TryActivateDefenseGamebreaker() once defense is human-playable;
+    // the flag/consumption plumbing below already supports it as-is.
+    void CheckDefenseAutoActivate()
+    {
+        if (!defenseGuaranteedTurnoverPending && defenseMeter >= 100f)
+        {
+            defenseGuaranteedTurnoverPending = true;
+            defenseMeter = 0f;
+            OnDefenseMeterChanged?.Invoke(defenseMeter);
+        }
+    }
+
+    // Consumed by TackleContact's fumble roll and BallController's interception roll —
+    // whichever physical contest happens next after the meter caps wins automatically.
+    // One-shot: calling this clears the flag, so only that single next contest is guaranteed.
+    public bool ConsumeGuaranteedTurnover()
+    {
+        CheckDefenseAutoActivate();
+        if (!defenseGuaranteedTurnoverPending) return false;
+        defenseGuaranteedTurnoverPending = false;
+        return true;
+    }
+
+    // Multiplicative stat buff while offensive Gamebreaker is active — returns 1f (no-op)
+    // otherwise. Callers pass this straight into PlayerAttributes.Speed(field, gb) etc.,
+    // same pattern as FieldModifiers, just multiplicative instead of additive per design.
+    public float GetGamebreakerMult(AttributeStat stat)
+    {
+        if (!IsOffenseGamebreakerActive || gamebreakerBuffs == null) return 1f;
+        return gamebreakerBuffs.Get(stat);
     }
 }

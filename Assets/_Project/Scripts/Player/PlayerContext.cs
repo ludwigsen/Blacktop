@@ -31,4 +31,9 @@ public class PlayerContext
     // at move EXIT, not at trigger — a 0.3s move with a 0.2s cooldown measured from trigger
     // would expire before the move even finished playing out.
     public System.Action<float> setCooldown;
+
+    // Routes to PlayState.AddOffensePoints. Moves call this to award style points on
+    // successful execution (Juke, Hurdle, broken tackles) — centralized here rather than
+    // each move reaching into PlayState directly, same pattern as setCooldown.
+    public System.Action<float> addOffensePoints;
 }

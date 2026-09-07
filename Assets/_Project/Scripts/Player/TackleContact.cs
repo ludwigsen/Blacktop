@@ -26,21 +26,27 @@ public class TackleContact : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);
         foreach (var hit in hits)
         {
-            if (hit.CompareTag(defenderTag))
+            if (!hit.CompareTag(defenderTag)) continue;
+
+            // Sack — specifically the designated passer, tackled behind the current LOS,
+            // before ever throwing. Not "any tackle for loss" — a receiver tackled behind
+            // the LOS after a catch doesn't count.
+            if (PlayState.Instance.Passer == transform && transform.position.z < PlayState.Instance.CurrentLineOfScrimmageZ)
+                PlayState.Instance.AddDefensePoints(8f);
+
+            if (BallController.Instance != null && BallController.Instance.IsHeld)
             {
-                // Roll BEFORE ending the play — a fumble still ends the play as Tackled
-                // (turnover-on-downs style stoppage), it just also drops the ball first.
-                // Recovery/pickup logic doesn't exist yet — ball just sits wherever
-                // BallController.Drop() leaves it (its last-followed position).
-                if (BallController.Instance != null && BallController.Instance.IsHeld
-                    && Random.value < baseFumbleChance)
+                bool guaranteed = PlayState.Instance.ConsumeGuaranteedTurnover();
+                if (guaranteed || Random.value < baseFumbleChance)
                 {
                     BallController.Instance.Drop();
+                    PlayState.Instance.AddDefensePoints(8f);
+                    PlayState.Instance.NotifyFumble();
                 }
-
-                PlayState.Instance.EndPlay(PlayState.PlayEndReason.Tackled);
-                return;
             }
+
+            PlayState.Instance.EndPlay(PlayState.PlayEndReason.Tackled);
+            return;
         }
     }
 

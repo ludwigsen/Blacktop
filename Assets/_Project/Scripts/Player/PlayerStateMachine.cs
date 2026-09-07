@@ -47,7 +47,8 @@ public class PlayerStateMachine : MonoBehaviour
             getMoveInput = () => movement.CurrentMoveInput,
             isDefenderInRange = () => defenderDetector != null && defenderDetector.DefenderInRange,
             setTackleImmune = v => IsTackleImmune = v,
-            setCooldown = t => cooldownTimer = t
+            setCooldown = t => cooldownTimer = t,
+            addOffensePoints = pts => PlayState.Instance?.AddOffensePoints(pts),
         };
 
         // Subscribes to PlayState so an in-progress move gets cut short the instant the

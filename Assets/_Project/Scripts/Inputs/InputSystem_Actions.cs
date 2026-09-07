@@ -191,6 +191,26 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Style"",
+                    ""type"": ""Button"",
+                    ""id"": ""ea592275-3096-4018-9242-968780e8ea4b"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Gamebreaker"",
+                    ""type"": ""Button"",
+                    ""id"": ""cb707bf9-317a-4d3a-a028-30bf6bcee3f7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -488,6 +508,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Pitch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b4f9ca80-7e1f-4d80-b93d-cee6cf17299b"",
+                    ""path"": ""<Gamepad>/buttonWest"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Style"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""96adac73-aaf2-4910-a82a-d4c2dec4d567"",
+                    ""path"": ""<Keyboard>/t"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Style"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f6aadc43-5486-4d4c-990d-3a1a33461b13"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Gamebreaker"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1095,6 +1148,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_ResetPlay = m_Player.FindAction("Reset Play", throwIfNotFound: true);
         m_Player_Pass = m_Player.FindAction("Pass", throwIfNotFound: true);
         m_Player_Pitch = m_Player.FindAction("Pitch", throwIfNotFound: true);
+        m_Player_Style = m_Player.FindAction("Style", throwIfNotFound: true);
+        m_Player_Gamebreaker = m_Player.FindAction("Gamebreaker", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1198,6 +1253,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_ResetPlay;
     private readonly InputAction m_Player_Pass;
     private readonly InputAction m_Player_Pitch;
+    private readonly InputAction m_Player_Style;
+    private readonly InputAction m_Player_Gamebreaker;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1249,6 +1306,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Pitch".
         /// </summary>
         public InputAction @Pitch => m_Wrapper.m_Player_Pitch;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Style".
+        /// </summary>
+        public InputAction @Style => m_Wrapper.m_Player_Style;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Gamebreaker".
+        /// </summary>
+        public InputAction @Gamebreaker => m_Wrapper.m_Player_Gamebreaker;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1305,6 +1370,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Pitch.started += instance.OnPitch;
             @Pitch.performed += instance.OnPitch;
             @Pitch.canceled += instance.OnPitch;
+            @Style.started += instance.OnStyle;
+            @Style.performed += instance.OnStyle;
+            @Style.canceled += instance.OnStyle;
+            @Gamebreaker.started += instance.OnGamebreaker;
+            @Gamebreaker.performed += instance.OnGamebreaker;
+            @Gamebreaker.canceled += instance.OnGamebreaker;
         }
 
         /// <summary>
@@ -1346,6 +1417,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Pitch.started -= instance.OnPitch;
             @Pitch.performed -= instance.OnPitch;
             @Pitch.canceled -= instance.OnPitch;
+            @Style.started -= instance.OnStyle;
+            @Style.performed -= instance.OnStyle;
+            @Style.canceled -= instance.OnStyle;
+            @Gamebreaker.started -= instance.OnGamebreaker;
+            @Gamebreaker.performed -= instance.OnGamebreaker;
+            @Gamebreaker.canceled -= instance.OnGamebreaker;
         }
 
         /// <summary>
@@ -1716,6 +1793,20 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPitch(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Style" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnStyle(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Gamebreaker" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGamebreaker(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

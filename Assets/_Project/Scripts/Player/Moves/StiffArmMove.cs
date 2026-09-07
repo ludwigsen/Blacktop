@@ -42,7 +42,8 @@ public class StiffArmMove : IPlayerMove
 
     float Duration => baseDuration;
     float ForwardBurst => baseForwardBurst * attr.Speed();
-    float ShedChance => Mathf.Clamp01(baseShedChance * attr.RunPower());
+    float ShedChance => Mathf.Clamp01(baseShedChance * attr.RunPower(null, GB(AttributeStat.RunPower)));
+    static float GB(AttributeStat stat) => PlayState.Instance != null ? PlayState.Instance.GetGamebreakerMult(stat) : 1f;
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
         => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;
@@ -87,12 +88,10 @@ public class StiffArmMove : IPlayerMove
             float netPushDistance = pushBackDistance * attr.RunPower() / defenderAI.ResistMult;
             bool shed = Random.value < netShedChance;
 
-            if (shed)
-            {
+            if (shed) {
                 defenderAI.ApplyShed(shedDuration);
-            }
-            else
-            {
+                ctx.addOffensePoints?.Invoke(1f); // broken tackle via stiff arm
+            } else {
                 Vector3 pushDir = (hit.transform.position - ctx.transform.position).normalized;
                 defenderAI.ApplyPushBack(pushDir, netPushDistance);
             }

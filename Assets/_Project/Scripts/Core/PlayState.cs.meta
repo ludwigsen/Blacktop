@@ -1,2 +1,15 @@
 fileFormatVersion: 2
 guid: 950331eeb80f24b468deaed97603716f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - player: {instanceID: 0}
+  - formation: {instanceID: 0}
+  - offensiveFormation: {instanceID: 0}
+  - gamebreakerBuffs: {fileID: 11400000, guid: 76e927b1011834942a4cf33a3b538f95, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

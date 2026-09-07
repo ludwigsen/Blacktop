@@ -25,7 +25,9 @@ public class HurdleMove : IPlayerMove
     float timer, lastHeightSample, lastForwardSample;
     PlayerAttributes attr;
 
-    float PeakHeight => basePeakHeight * attr.Agility();
+    float PeakHeight => basePeakHeight * attr.Agility(null, GB(AttributeStat.Agility));
+    static float GB(AttributeStat stat) => PlayState.Instance != null ? PlayState.Instance.GetGamebreakerMult(stat) : 1f;
+
     float Duration => baseDuration;
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
@@ -38,9 +40,8 @@ public class HurdleMove : IPlayerMove
         lastHeightSample = 0f;
         lastForwardSample = 0f;
 
-        // Check for a nearby defender ONCE, at trigger time — this is what the negation
-        // roll is conditioned on, per design: "20% + multiplier chance IF within 2f of
-        // the tackling defender." Not a gate on whether Hurdle fires at all.
+        ctx.addOffensePoints?.Invoke(1f); // style point for hurdling itself
+
         bool defenderClose = false;
         Collider[] nearby = Physics.OverlapSphere(ctx.transform.position, negateCheckRadius);
         foreach (var c in nearby)
@@ -53,10 +54,11 @@ public class HurdleMove : IPlayerMove
             float netChance = Mathf.Clamp01(baseNegateChance * attr.Agility());
             bool negates = Random.value < netChance;
             ctx.setTackleImmune(negates);
+            if (negates) ctx.addOffensePoints?.Invoke(1f); // extra point for the broken tackle
         }
         else
         {
-            ctx.setTackleImmune(false); // no defender in range — nothing to negate, immunity stays off
+            ctx.setTackleImmune(false);
         }
     }
 

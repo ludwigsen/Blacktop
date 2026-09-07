@@ -164,11 +164,16 @@ public class BallController : MonoBehaviour
             if (!hit.CompareTag(defenderTag)) continue;
 
             interceptionResolved = true;
-            if (Random.value < baseInterceptChance)
+            bool guaranteed = PlayState.Instance != null && PlayState.Instance.ConsumeGuaranteedTurnover();
+
+            if (guaranteed || Random.value < baseInterceptChance)
             {
                 AttachTo(hit.transform);
                 if (PlayState.Instance != null)
+                {
+                    PlayState.Instance.AddDefensePoints(8f);
                     PlayState.Instance.EndPlay(PlayState.PlayEndReason.Interception);
+                }
             }
             break;
         }
