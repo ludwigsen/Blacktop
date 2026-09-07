@@ -961,6 +961,7 @@ GameObject:
   - component: {fileID: 1064215541}
   - component: {fileID: 1064215542}
   - component: {fileID: 1064215543}
+  - component: {fileID: 1064215544}
   m_Layer: 0
   m_Name: UserPlayer
   m_TagString: Player
@@ -1355,6 +1356,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::ReceiverAI
   moveSpeed: 6
   routeDepth: 12
+--- !u!114 &1064215544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064215527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33d67016fcebf4fe384b48313ab79193, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::GamebreakerController
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  basePointsPerSecond: 2.5
 --- !u!1001 &1077463906
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1674,6 +1689,7 @@ GameObject:
   - component: {fileID: 1314477355}
   - component: {fileID: 1314477357}
   - component: {fileID: 1314477358}
+  - component: {fileID: 1314477359}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1713,6 +1729,8 @@ MonoBehaviour:
   - {fileID: 837275645}
   - {fileID: 172831028}
   offensiveFormation: {fileID: 11400000, guid: 559fd06a8c292405da8a1e7dc30ef144, type: 2}
+  gamebreakerBuffs: {fileID: 0}
+  gamebreakerPossessionLimit: 3
 --- !u!4 &1314477356
 Transform:
   m_ObjectHideFlags: 0
@@ -1756,6 +1774,24 @@ MonoBehaviour:
   blockEngageRadius: 6
   switchThreshold: 1.5
   defenderTag: Defender
+--- !u!114 &1314477359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd48e88aab77a41aab594de15304f8ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::GamebreakerHUD
+  barSize: {x: 300, y: 24}
+  screenMargin: {x: 30, y: 30}
+  promptFontSize: 28
+  offenseColor: {r: 1, g: 0.6, b: 0, a: 1}
+  defenseColor: {r: 0.2, g: 0.6, b: 1, a: 1}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0
