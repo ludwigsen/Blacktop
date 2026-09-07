@@ -213,7 +213,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1038486235}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1111,12 +1112,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1038486232}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1280, y: -720, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 139281778}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1064215527
 GameObject:
@@ -1911,7 +1912,7 @@ MonoBehaviour:
   - {fileID: 837275645}
   - {fileID: 172831028}
   offensiveFormation: {fileID: 11400000, guid: 559fd06a8c292405da8a1e7dc30ef144, type: 2}
-  gamebreakerBuffs: {fileID: 0}
+  gamebreakerBuffs: {fileID: 11400000, guid: 76e927b1011834942a4cf33a3b538f95, type: 2}
   gamebreakerPossessionLimit: 3
 --- !u!4 &1314477356
 Transform:
@@ -2433,4 +2434,3 @@ SceneRoots:
   - {fileID: 1087445713}
   - {fileID: 1382229152}
   - {fileID: 139281778}
-  - {fileID: 1038486235}
