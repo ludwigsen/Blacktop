@@ -146,8 +146,9 @@ public class ReceiverSelectionUI : MonoBehaviour
 
             if (receiverCount == uiIndex)
             {
-                selectedReceiverIndex = i;
-                Debug.Log($"[ReceiverSelectionUI] Selected receiver at slot {i}, queuing Pass");
+                // Store the UI index (0-3), not the slot index
+                selectedReceiverIndex = uiIndex;  // <-- CHANGED: was "= i"
+                Debug.Log($"[ReceiverSelectionUI] Selected receiver #{uiIndex}, queuing Pass");
 
                 if (inputBuffer != null)
                 {
