@@ -1875,6 +1875,7 @@ GameObject:
   - component: {fileID: 1314477357}
   - component: {fileID: 1314477358}
   - component: {fileID: 1314477359}
+  - component: {fileID: 1314477360}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1978,6 +1979,21 @@ MonoBehaviour:
   offenseColor: {r: 1, g: 0.6, b: 0, a: 1}
   defenseColor: {r: 0.2, g: 0.6, b: 1, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
+--- !u!114 &1314477360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 837a765c241ca478991d679675da8069, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::ReceiverSelectionUI
+  uiCanvas: {fileID: 139281777}
+  playState: {fileID: 1314477355}
+  inputBuffer: {fileID: 0}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0

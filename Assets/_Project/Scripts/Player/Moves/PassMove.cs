@@ -20,14 +20,22 @@ public class PassMove : IPlayerMove
     Transform target;
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
-        => (currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run)
-           && BallController.Instance != null
-           && BallController.Instance.Carrier == ctx.transform; // only the ball carrier can throw
+    {
+        bool isCorrectState = currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;
+        bool hasBC = BallController.Instance != null;
+        bool isCarrier = hasBC && BallController.Instance.Carrier == ctx.transform;
+
+        Debug.Log($"[PassMove.CanTrigger] State: {currentState} (ok: {isCorrectState}), BC: {hasBC}, IsCarrier: {isCarrier}");
+
+        return isCorrectState && hasBC && isCarrier;
+    }
 
     public void Enter(PlayerContext ctx)
     {
+        Debug.Log("[PassMove] Enter() called");
         timer = 0f;
         target = FindBestReceiver(ctx);
+        Debug.Log($"[PassMove] Target found: {(target != null ? target.name : "NULL")}");
     }
 
     public void Tick(PlayerContext ctx, float deltaTime)
@@ -50,47 +58,56 @@ public class PassMove : IPlayerMove
 
     Transform FindBestReceiver(PlayerContext ctx)
     {
+        // Get all teammates
+        var allCandidates = GameObject.FindGameObjectsWithTag(teammateTag);
+        Debug.Log($"[PassMove] Found {allCandidates.Length} total teammates");
+
+        // Filter to only those with ReceiverAI (skip OL, QB, etc.)
+        var receivers = new System.Collections.Generic.List<Transform>();
+        foreach (var c in allCandidates)
+        {
+            if (c.GetComponent<ReceiverAI>() != null)
+                receivers.Add(c.transform);
+        }
+        Debug.Log($"[PassMove] Filtered to {receivers.Count} actual receivers");
+
         // Check if there's an explicit selection
         if (ReceiverSelectionUI.Instance != null)
         {
             int selectedIdx = ReceiverSelectionUI.Instance.GetSelectedReceiverIndex();
             Debug.Log($"[PassMove] Selected receiver index: {selectedIdx}");
-            if (selectedIdx >= 0)
-            {
-                var candidates = GameObject.FindGameObjectsWithTag(teammateTag);
-                Debug.Log($"[PassMove] Found {candidates.Length} total teammate candidates, looking for slot {selectedIdx}");
 
-                if (selectedIdx < candidates.Length)
+            if (selectedIdx >= 0 && selectedIdx < receivers.Count)
+            {
+                var selected = receivers[selectedIdx];
+                if (IsValidTarget(ctx, selected))
                 {
-                    var selected = candidates[selectedIdx];
-                    if (IsValidTarget(ctx, selected.transform))
-                    {
-                        Debug.Log($"Throwing to selected receiver {selectedIdx + 1}");
-                        return selected.transform;
-                    }
+                    Debug.Log($"[PassMove] Throwing to selected receiver {selectedIdx + 1}");
+                    return selected;
                 }
             }
         }
 
-        // Fall back to auto-select...
-        var allCandidates = GameObject.FindGameObjectsWithTag(teammateTag);
+        // Fall back to auto-select from filtered receivers
         Transform best = null;
         float bestScore = float.MinValue;
 
-        foreach (var c in allCandidates)
+        foreach (var r in receivers)
         {
-            if (!IsValidTarget(ctx, c.transform)) continue;
+            if (!IsValidTarget(ctx, r)) continue;
 
-            float openness = NearestDefenderDistance(c.transform.position);
-            float dist = Vector3.Distance(c.transform.position, ctx.transform.position);
+            float openness = NearestDefenderDistance(r.position);
+            float dist = Vector3.Distance(r.position, ctx.transform.position);
             float score = openness * 2f - dist * 0.1f;
 
             if (score > bestScore)
             {
                 bestScore = score;
-                best = c.transform;
+                best = r;
             }
         }
+
+        Debug.Log($"[PassMove] Auto-selected: {(best != null ? best.name : "NULL")}");
         return best;
     }
 
