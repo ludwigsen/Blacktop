@@ -164,28 +164,39 @@ public class ReceiverSelectionUI : MonoBehaviour
     // Pressing 1-4 triggers this: set selected receiver and queue Pass
     void TryPassToReceiver(int uiIndex)
     {
-        if (playState == null) return;
+        if (playState == null || playState.OffensivePlayers == null) return;
         if (!playState.IsLive) return;
+        if (BallController.Instance == null || BallController.Instance.Carrier == null) return;
 
-        if (uiIndex >= 0 && uiIndex < receivers.Count && receivers[uiIndex] != null)
+        int receiverCount = 0;
+        for (int i = 0; i < playState.OffensivePlayers.Count; i++)
         {
-            selectedReceiverIndex = uiIndex;
-            Debug.Log($"[ReceiverSelectionUI] Selected {receivers[uiIndex].name}");
+            if (playState.OffensivePlayers[i] == null) continue;
+            if (playState.OffensivePlayers[i].GetComponent<ReceiverAI>() == null) continue;
 
-            if (InputBuffer.Instance != null)
+            if (receiverCount == uiIndex)
             {
-                InputBuffer.Instance.QueueInput("Pass");
+                selectedReceiverIndex = uiIndex;
+                Debug.Log($"[ReceiverSelectionUI] Selected receiver #{uiIndex}");
+
+                // Resolve live — queue the Pass on the CARRIER's own InputBuffer, not a
+                // cached/global one. Only the carrier's buffer is enabled right now
+                // (PossessionController), so this has to target that specific instance.
+                var carrierBuffer = BallController.Instance.Carrier.GetComponent<InputBuffer>();
+                if (carrierBuffer != null)
+                {
+                    carrierBuffer.QueueInput("Pass");
+                }
+                else
+                {
+                    Debug.LogError("[ReceiverSelectionUI] Carrier has no InputBuffer!");
+                }
+
                 HideLabels();
+                return;
             }
-            else
-            {
-                Debug.LogError("[ReceiverSelectionUI] InputBuffer.Instance is NULL!");
-            }
-
-            return;
+            receiverCount++;
         }
-
-        Debug.LogWarning($"[ReceiverSelectionUI] No receiver found at UI index {uiIndex}");
     }
 
     // Fade out labels when pass is thrown

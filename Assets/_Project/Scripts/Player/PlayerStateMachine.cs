@@ -6,6 +6,7 @@ using UnityEngine;
 // Deliberately does NOT contain move implementation details; that's what IPlayerMove
 // abstracts away. This class should stay thin even as more moves get added.
 [RequireComponent(typeof(DefenderDetector))]
+[RequireComponent(typeof(InputBuffer))]
 public class PlayerStateMachine : MonoBehaviour
 {
     [SerializeField] JukeMove jukeMove;
@@ -35,14 +36,14 @@ public class PlayerStateMachine : MonoBehaviour
     void Awake()
     {
         movement = GetComponent<PlayerMovement>();
-        // Remove: inputBuffer = GetComponent<InputBuffer>();
+        inputBuffer = GetComponent<InputBuffer>();  // back to local, matches PossessionController's enable/disable target
         var defenderDetector = GetComponent<DefenderDetector>();
 
         ctx = new PlayerContext
         {
             transform = transform,
             attributes = attributes,
-            inputBuffer = InputBuffer.Instance,  // <-- Use singleton instead of GetComponent
+            inputBuffer = inputBuffer,
             getMoveInput = () => movement.CurrentMoveInput,
             isDefenderInRange = () => defenderDetector != null && defenderDetector.DefenderInRange,
             setTackleImmune = v => IsTackleImmune = v,
@@ -112,14 +113,14 @@ public class PlayerStateMachine : MonoBehaviour
         ("Pass", passMove)
         };
 
-        // Use global singleton InputBuffer
-        string action = InputBuffer.Instance.PeekEarliestValid(candidates.Select(c => c.action).ToArray());
+        string action = inputBuffer.PeekEarliestValid(candidates.Select(c => c.action).ToArray());
         if (action == null) return;
 
         var move = candidates.First(c => c.action == action).move;
         if (!move.CanTrigger(ctx, currentState)) return;
 
-        InputBuffer.Instance.TryConsume(action);  // <-- Use singleton
+        inputBuffer.TryConsume(action);
+        
         activeMove = move;
         activeMove.Enter(ctx);
         currentState = action switch

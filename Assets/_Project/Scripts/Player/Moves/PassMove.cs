@@ -111,7 +111,7 @@ public class PassMove : IPlayerMove
         if (dist > maxReceiverSearchRadius) return false;
 
         float angle = Vector3.Angle(ctx.transform.forward, toReceiver);
-        if (angle > receiverSearchConeAngle) return false;
+        if (angle > receiverSearchConeAngle) return false;  // 70°
 
         return true;
     }
