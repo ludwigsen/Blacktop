@@ -274,6 +274,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ally__OL2
       objectReference: {fileID: 0}
+    - target: {fileID: 9149566800909270431, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9149566800909270431, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+    - target: {fileID: 9149566800909270431, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
     m_RemovedComponents:
     - {fileID: 7346058668962149332, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
     m_RemovedGameObjects: []
@@ -1993,7 +2005,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::ReceiverSelectionUI
   uiCanvas: {fileID: 139281777}
   playState: {fileID: 1314477355}
-  inputBuffer: {fileID: 0}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0
