@@ -197,7 +197,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
   m_UseReflectionProbes: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -1539,6 +1539,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::ReceiverAI
   moveSpeed: 6
   routeDepth: 12
+  slantDistance: 4
+  hitchDepth: 4
 --- !u!114 &1064215544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1914,6 +1916,7 @@ MonoBehaviour:
   offensiveFormation: {fileID: 11400000, guid: 559fd06a8c292405da8a1e7dc30ef144, type: 2}
   gamebreakerBuffs: {fileID: 11400000, guid: 76e927b1011834942a4cf33a3b538f95, type: 2}
   gamebreakerPossessionLimit: 3
+  playCall: {fileID: 0}
 --- !u!4 &1314477356
 Transform:
   m_ObjectHideFlags: 0

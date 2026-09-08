@@ -48,6 +48,9 @@ public class PlayState : MonoBehaviour
     // not any teammate who happens to be carrying after a pitch/pass downfield.
     public Transform Passer => player;
 
+    // Public read-only access to offensive players for UI/route assignment
+    public List<Transform> OffensivePlayers => offensivePlayers;
+
     // --- Gamebreaker state ---
     // Offense meter fills via GamebreakerController (Styling, continuous) and point-award
     // hooks scattered through the move scripts (Juke/Hurdle/StiffArm) plus Touchdown
@@ -201,7 +204,7 @@ public class PlayState : MonoBehaviour
         }
 
         // NEW: Reset receiver selection UI
-        var selectionUI = FindObjectOfType<ReceiverSelectionUI>();
+        var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
         if (selectionUI != null)
             selectionUI.ResetSelection();
     }

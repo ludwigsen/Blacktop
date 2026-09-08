@@ -78,4 +78,10 @@ public class InputBuffer : MonoBehaviour
         buffer.RemoveAt(idx);
         return true;
     }
+
+    // Public API for external systems (e.g., UI) to queue inputs programmatically
+    public void QueueInput(string action)
+    {
+        Record(action);
+    }
 }

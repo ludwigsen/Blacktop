@@ -51,10 +51,9 @@ public class PassMove : IPlayerMove
     Transform FindBestReceiver(PlayerContext ctx)
     {
         // Check if there's an explicit selection
-        var selectionUI = FindObjectOfType<ReceiverSelectionUI>();
-        if (selectionUI != null)
+        if (ReceiverSelectionUI.Instance != null)
         {
-            int selectedIdx = selectionUI.GetSelectedReceiverIndex();
+            int selectedIdx = ReceiverSelectionUI.Instance.GetSelectedReceiverIndex();
             if (selectedIdx >= 0)
             {
                 var candidates = GameObject.FindGameObjectsWithTag(teammateTag);
@@ -70,7 +69,7 @@ public class PassMove : IPlayerMove
             }
         }
 
-        // Fall back to auto-select if no valid selection
+        // Fall back to auto-select...
         var allCandidates = GameObject.FindGameObjectsWithTag(teammateTag);
         Transform best = null;
         float bestScore = float.MinValue;

@@ -1,38 +1,69 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+using System.Collections.Generic;
 
-// Runtime UI — displays receiver index labels above heads, handles keyboard selection (1/2/3).
-// Sits on the GameManager or main canvas. Needs TextMesh Pro for labels.
 public class ReceiverSelectionUI : MonoBehaviour
 {
+    public static ReceiverSelectionUI Instance { get; private set; }
+
     [SerializeField] Canvas uiCanvas;
     [SerializeField] PlayState playState;
+    [SerializeField] InputBuffer inputBuffer;
 
-    int selectedReceiverIndex = -1; // -1 = auto-select (PassMove default behavior)
+    int selectedReceiverIndex = -1;
     TextMeshProUGUI[] receiverLabels;
+    CanvasGroup canvasGroup;
 
     void Awake()
     {
-        if (playState == null) playState = PlayState.Instance;
-    }
-
-    void OnEnable()
-    {
-        // Subscribe to input
-        var controls = new InputSystem_Actions();
-        controls.Player.Enable();
-        controls.Player.Juke.performed += ctx => TrySelectReceiver(0);
-        controls.Player.Hurdle.performed += ctx => TrySelectReceiver(1);
-        controls.Player.StiffArm.performed += ctx => TrySelectReceiver(2);
-        // Alternative: add explicit receiver-select actions to InputSystem_Actions if you prefer dedicated keys
+        Instance = this;
+        if (playState == null)
+            playState = FindAnyObjectByType<PlayState>();
+        if (inputBuffer == null)
+            inputBuffer = FindAnyObjectByType<InputBuffer>();
     }
 
     void Start()
     {
-        if (playState == null) return;
+        Debug.Log("ReceiverSelectionUI.Start()");
+        if (playState == null)
+        {
+            Debug.LogError("PlayState is NULL");
+            return;
+        }
+
+        canvasGroup = uiCanvas.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = uiCanvas.gameObject.AddComponent<CanvasGroup>();
+
+        Debug.Log($"PlayState found. offensivePlayers count: {playState.OffensivePlayers.Count}");
         CreateReceiverLabels();
         UpdateLabelPositions();
+
+        if (playState != null)
+        {
+            playState.OnPlayReset += ShowLabels;
+            playState.OnPlayEnded += HideLabels;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (playState != null)
+        {
+            playState.OnPlayReset -= ShowLabels;
+            playState.OnPlayEnded -= HideLabels;
+        }
+    }
+
+    void Update()
+    {
+        // Listen for 1, 2, 3, 4 key presses to pass directly
+        if (Input.GetKeyDown(KeyCode.Alpha1)) TryPassToReceiver(0);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) TryPassToReceiver(1);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) TryPassToReceiver(2);
+        if (Input.GetKeyDown(KeyCode.Alpha4)) TryPassToReceiver(3);
     }
 
     void LateUpdate()
@@ -43,63 +74,113 @@ public class ReceiverSelectionUI : MonoBehaviour
 
     void CreateReceiverLabels()
     {
-        if (playState.offensivePlayers == null) return;
+        if (playState.OffensivePlayers == null) return;
 
-        receiverLabels = new TextMeshProUGUI[playState.offensivePlayers.Count];
+        var receiversList = new List<TextMeshProUGUI>();
 
-        for (int i = 0; i < receiverLabels.Length; i++)
+        for (int i = 0; i < playState.OffensivePlayers.Count; i++)
         {
+            var player = playState.OffensivePlayers[i];
+            if (player == null) continue;
+
+            var receiverAI = player.GetComponent<ReceiverAI>();
+            if (receiverAI == null) continue;
+
             var labelObj = new GameObject($"ReceiverLabel_{i}");
             labelObj.transform.SetParent(uiCanvas.transform, false);
 
             var label = labelObj.AddComponent<TextMeshProUGUI>();
-            label.text = $"{i + 1}";
+            label.text = $"{receiversList.Count + 1}";
             label.alignment = TextAlignmentOptions.Center;
             label.fontSize = 36;
 
-            receiverLabels[i] = label;
+            receiversList.Add(label);
+            Debug.Log($"Created label {receiversList.Count} for receiver at slot {i}");
         }
+
+        receiverLabels = receiversList.ToArray();
     }
 
     void UpdateLabelPositions()
     {
-        if (receiverLabels == null || playState.offensivePlayers == null) return;
+        if (receiverLabels == null || playState.OffensivePlayers == null) return;
 
-        for (int i = 0; i < receiverLabels.Length; i++)
+        Camera mainCam = Camera.main;
+        if (mainCam == null) return;
+
+        int labelIndex = 0;
+        for (int i = 0; i < playState.OffensivePlayers.Count; i++)
         {
-            if (receiverLabels[i] == null || playState.offensivePlayers[i] == null) continue;
+            if (playState.OffensivePlayers[i] == null) continue;
+            if (playState.OffensivePlayers[i].GetComponent<ReceiverAI>() == null) continue;
+            if (labelIndex >= receiverLabels.Length) break;
 
-            Vector3 worldPos = playState.offensivePlayers[i].position + Vector3.up * 2f; // offset above head
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
+            Vector3 worldPos = playState.OffensivePlayers[i].position + Vector3.up * 2f;
+            Vector3 screenPos = mainCam.WorldToScreenPoint(worldPos);
 
-            // Only show if on-screen
-            if (screenPos.z > 0)
+            if (screenPos.z > 0 && screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height)
             {
-                receiverLabels[i].transform.position = screenPos;
-                receiverLabels[i].color = i == selectedReceiverIndex ? Color.green : Color.white;
+                RectTransform rectTransform = receiverLabels[labelIndex].GetComponent<RectTransform>();
+                rectTransform.position = screenPos;
+                receiverLabels[labelIndex].color = Color.white;
             }
             else
             {
-                receiverLabels[i].color = Color.clear;
+                receiverLabels[labelIndex].color = new Color(1, 1, 1, 0);
             }
+
+            labelIndex++;
         }
     }
 
-    void TrySelectReceiver(int index)
+    void TryPassToReceiver(int uiIndex)
     {
-        if (playState == null || playState.offensivePlayers == null) return;
+        if (playState == null || playState.OffensivePlayers == null) return;
+        if (!playState.IsLive) return;
 
-        // Clamp to valid receiver range (skip QB at index 0 if used, adjust per your lineup)
-        if (index >= 0 && index < playState.offensivePlayers.Count)
+        // Map UI index (0-3) back to actual offensivePlayers slot
+        int receiverCount = 0;
+        for (int i = 0; i < playState.OffensivePlayers.Count; i++)
         {
-            selectedReceiverIndex = index;
-            Debug.Log($"Receiver {index + 1} selected");
+            if (playState.OffensivePlayers[i] == null) continue;
+            if (playState.OffensivePlayers[i].GetComponent<ReceiverAI>() == null) continue;
+
+            if (receiverCount == uiIndex)
+            {
+                selectedReceiverIndex = i;
+                Debug.Log($"Passing to receiver at slot {i} (label {uiIndex + 1})");
+
+                // Queue Pass input through InputBuffer
+                if (inputBuffer != null)
+                {
+                    inputBuffer.QueueInput("Pass");
+                }
+
+                HideLabels();
+                return;
+            }
+            receiverCount++;
         }
     }
 
-    // Public API for PassMove to check selection
+    void HideLabels()
+    {
+        if (canvasGroup != null)
+            canvasGroup.alpha = 0f;
+    }
+
+    void HideLabels(PlayState.PlayEndReason reason)
+    {
+        HideLabels(); // Call the parameterless version
+    }
+
+    void ShowLabels()
+    {
+        if (canvasGroup != null)
+            canvasGroup.alpha = 1f;
+    }
+
     public int GetSelectedReceiverIndex() => selectedReceiverIndex;
 
-    // Call this on ResetPlay to clear selection
     public void ResetSelection() => selectedReceiverIndex = -1;
 }
