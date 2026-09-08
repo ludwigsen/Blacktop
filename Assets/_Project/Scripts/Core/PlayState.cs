@@ -78,6 +78,13 @@ public class PlayState : MonoBehaviour
         nextLineOfScrimmageZ = initialPlayerZ;
     }
 
+    void Start()
+    {
+        // IsLive begins true, so the opening rep does not pass through ResetPlay.
+        // Give the eligible receivers their test routes immediately.
+        AssignRoutes();
+    }
+
     void OnEnable()
     {
         controls.Player.ResetPlay.performed += HandleResetPlay;
@@ -172,20 +179,6 @@ public class PlayState : MonoBehaviour
             }
         }
 
-        // NEW: Distribute route assignments
-        if (playCall != null)
-        {
-            for (int i = 0; i < offensivePlayers.Count; i++)
-            {
-                var receiver = offensivePlayers[i].GetComponent<ReceiverAI>();
-                if (receiver != null)
-                {
-                    RoutePattern route = playCall.GetRouteForReceiver(i);
-                    receiver.SetRoute(route);
-                }
-            }
-        }
-
         if (lastEndReason == PlayEndReason.Touchdown)
             nextLineOfScrimmageZ = kickoffResetZ;
 
@@ -197,6 +190,7 @@ public class PlayState : MonoBehaviour
 
         IsLive = true;
         OnPlayReset?.Invoke();
+        AssignRoutes();
 
         if (BlockingCoordinator.Instance != null)
         {
@@ -207,6 +201,25 @@ public class PlayState : MonoBehaviour
         var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
         if (selectionUI != null)
             selectionUI.ResetSelection();
+    }
+
+    void AssignRoutes()
+    {
+        for (int i = 0; i < offensivePlayers.Count; i++)
+        {
+            Transform playerTransform = offensivePlayers[i];
+            if (!ReceiverTargeting.IsEligible(playerTransform)) continue;
+
+            ReceiverAI receiver = playerTransform.GetComponent<ReceiverAI>();
+            if (receiver == null) continue;
+
+            // A play call can replace the prototype go route. Until one is assigned,
+            // every eligible target runs a straight-upfield route for pass testing.
+            RoutePattern route = playCall != null
+                ? playCall.GetRouteForReceiver(i)
+                : RoutePattern.Go;
+            receiver.SetRoute(route == RoutePattern.None ? RoutePattern.Go : route);
+        }
     }
 
     // --- Gamebreaker API ---

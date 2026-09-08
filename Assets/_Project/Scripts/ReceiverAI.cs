@@ -40,7 +40,11 @@ public class ReceiverAI : MonoBehaviour
     // Called by PlayState when distributing routes
     public void SetRoute(RoutePattern route)
     {
+        // SetRoute marks the beginning of a new rep. This also makes the opening
+        // play work without requiring a prior reset event.
+        snapPosition = transform.position;
         assignedRoute = route;
+        routeComplete = false;
         CalculateTargetPosition();
     }
 
@@ -80,8 +84,10 @@ public class ReceiverAI : MonoBehaviour
         if (routeComplete) return;
 
         // Move toward target
-        Vector3 toTarget = (targetPosition - transform.position).normalized;
-        transform.position += moveSpeed * Time.deltaTime * toTarget;
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            targetPosition,
+            moveSpeed * Time.deltaTime);
 
         // Check if arrived at target
         if (Vector3.Distance(transform.position, targetPosition) < 0.5f)

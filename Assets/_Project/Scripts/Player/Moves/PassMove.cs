@@ -58,18 +58,11 @@ public class PassMove : IPlayerMove
 
     Transform FindBestReceiver(PlayerContext ctx)
     {
-        // Get all teammates
-        var allCandidates = GameObject.FindGameObjectsWithTag(teammateTag);
-        Debug.Log($"[PassMove] Found {allCandidates.Length} total teammates");
-
-        // Filter to only those with ReceiverAI (skip OL, QB, etc.)
-        var receivers = new System.Collections.Generic.List<Transform>();
-        foreach (var c in allCandidates)
-        {
-            if (c.GetComponent<ReceiverAI>() != null)
-                receivers.Add(c.transform);
-        }
-        Debug.Log($"[PassMove] Filtered to {receivers.Count} actual receivers");
+        // UI button indices must map to exactly the same transforms as this pass.
+        // Do not infer eligibility from ReceiverAI: the Ally prefab carries that
+        // component, while only WR1-3 and RB are legal pass targets.
+        var receivers = ReceiverTargeting.GetEligibleReceivers(PlayState.Instance?.OffensivePlayers);
+        Debug.Log($"[PassMove] Found {receivers.Count} eligible pass targets");
 
         // Check if there's an explicit selection
         if (ReceiverSelectionUI.Instance != null)
