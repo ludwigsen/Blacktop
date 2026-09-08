@@ -5,7 +5,6 @@ using UnityEngine;
 // Orchestrator only — holds current state and delegates to the active IPlayerMove.
 // Deliberately does NOT contain move implementation details; that's what IPlayerMove
 // abstracts away. This class should stay thin even as more moves get added.
-[RequireComponent(typeof(InputBuffer))]
 [RequireComponent(typeof(DefenderDetector))]
 public class PlayerStateMachine : MonoBehaviour
 {
@@ -36,14 +35,14 @@ public class PlayerStateMachine : MonoBehaviour
     void Awake()
     {
         movement = GetComponent<PlayerMovement>();
-        inputBuffer = GetComponent<InputBuffer>();
+        // Remove: inputBuffer = GetComponent<InputBuffer>();
         var defenderDetector = GetComponent<DefenderDetector>();
 
         ctx = new PlayerContext
         {
             transform = transform,
             attributes = attributes,
-            inputBuffer = inputBuffer,
+            inputBuffer = InputBuffer.Instance,  // <-- Use singleton instead of GetComponent
             getMoveInput = () => movement.CurrentMoveInput,
             isDefenderInRange = () => defenderDetector != null && defenderDetector.DefenderInRange,
             setTackleImmune = v => IsTackleImmune = v,
@@ -51,9 +50,6 @@ public class PlayerStateMachine : MonoBehaviour
             addOffensePoints = pts => PlayState.Instance?.AddOffensePoints(pts),
         };
 
-        // Subscribes to PlayState so an in-progress move gets cut short the instant the
-        // play ends (tackle or touchdown) — prevents a move from finishing its animation
-        // after the play is already dead.
         if (PlayState.Instance != null)
             PlayState.Instance.OnPlayEnded += HandlePlayEnded;
     }
@@ -116,19 +112,14 @@ public class PlayerStateMachine : MonoBehaviour
         ("Pass", passMove)
         };
 
-        string action = inputBuffer.PeekEarliestValid(candidates.Select(c => c.action).ToArray());
-        Debug.Log($"[PlayerStateMachine] PeekEarliestValid returned: {(action ?? "NULL")}");
-
+        // Use global singleton InputBuffer
+        string action = InputBuffer.Instance.PeekEarliestValid(candidates.Select(c => c.action).ToArray());
         if (action == null) return;
 
         var move = candidates.First(c => c.action == action).move;
-        if (!move.CanTrigger(ctx, currentState))
-        {
-            Debug.Log($"[PlayerStateMachine] {action} CanTrigger returned false");
-            return;
-        }
+        if (!move.CanTrigger(ctx, currentState)) return;
 
-        inputBuffer.TryConsume(action);
+        InputBuffer.Instance.TryConsume(action);  // <-- Use singleton
         activeMove = move;
         activeMove.Enter(ctx);
         currentState = action switch

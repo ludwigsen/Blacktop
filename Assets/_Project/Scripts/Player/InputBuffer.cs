@@ -3,35 +3,29 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Rolling input buffer so a Juke/Hurdle press slightly early (still mid-transition,
-// or polled mid-frame) isn't silently dropped. Without this, mistimed-by-a-frame
-// inputs read as "the controls dropped my input" even though nothing's technically wrong.
+// Global input buffer singleton. Queues button presses with a 100ms window
+// to forgive mistimed inputs (pressed during state transitions).
+// PlayerStateMachine checks this buffer to decide which move to trigger.
+// ReceiverSelectionUI queues "Pass" inputs programmatically when receiver selected.
 public class InputBuffer : MonoBehaviour
 {
-    // One entry per buffered-but-not-yet-consumed press.
+    public static InputBuffer Instance { get; private set; }
+
     struct BufferedInput
     {
         public string action;
-        public float timestamp; // Time.time at press — used both for expiry and FIFO priority
+        public float timestamp;
     }
 
-    // ~100ms landed as the tuned value: fighting-game buffer windows run roughly
-    // 50-160ms depending on how forgiving the game wants to feel. Went toward the
-    // generous end since Blacktop is arcade, not precision-execution focused.
     [SerializeField] float bufferWindow = 0.1f;
-
     List<BufferedInput> buffer = new();
     InputSystem_Actions controls;
 
     void Awake()
     {
-        controls = new InputSystem_Actions();
+        Instance = this;
 
-        // Subscribed here, not in OnEnable — this component now gets repeatedly
-        // enabled/disabled as ball possession changes hands (see PossessionController),
-        // and OnEnable firing on every toggle would stack duplicate subscriptions since
-        // nothing ever unsubscribed them. Awake only runs once per object lifetime, so
-        // this stays correct no matter how many times the component toggles afterward.
+        controls = new InputSystem_Actions();
         controls.Player.Juke.performed += ctx => Record("Juke");
         controls.Player.Hurdle.performed += ctx => Record("Hurdle");
         controls.Player.StiffArm.performed += ctx => Record("StiffArm");
@@ -51,30 +45,26 @@ public class InputBuffer : MonoBehaviour
         buffer.Add(new BufferedInput { action = action, timestamp = Time.time });
         Debug.Log($"[InputBuffer] Buffer now has {buffer.Count} entries");
     }
-    
+
     void Update()
     {
-        // Expire anything older than the buffer window every frame. Cheap enough at this scale (2 actions).
+        // Expire inputs older than buffer window
         buffer.RemoveAll(b => Time.time - b.timestamp > bufferWindow);
     }
 
-    // Peek without consuming — lets a caller validate eligibility (e.g. CanTrigger checks,
-    // cooldown state) BEFORE committing to consume the input. Without this split, a move
-    // that fails its own trigger condition would still eat the buffered press.
+    // Peek without consuming — lets PlayerStateMachine check CanTrigger before committing
     public string PeekEarliestValid(string[] validActions)
     {
         var next = buffer
             .Where(b => validActions.Contains(b.action))
-            .OrderBy(b => b.timestamp) // FIFO — whichever button was physically pressed first wins
+            .OrderBy(b => b.timestamp)
             .Cast<BufferedInput?>()
             .FirstOrDefault();
 
         return next?.action;
     }
 
-    // Actually removes the entry from the buffer. Callers should only call this after
-    // confirming eligibility via PeekEarliestValid + their own CanTrigger check —
-    // consuming during cooldown, for example, should never happen (input just expires instead).
+    // Remove an input from the buffer after it's been consumed
     public bool TryConsume(string action)
     {
         int idx = buffer.FindIndex(b => b.action == action);
@@ -83,7 +73,7 @@ public class InputBuffer : MonoBehaviour
         return true;
     }
 
-    // Public API for external systems (e.g., UI) to queue inputs programmatically
+    // Public API for external systems (e.g., ReceiverSelectionUI) to queue inputs programmatically
     public void QueueInput(string action)
     {
         Record(action);
