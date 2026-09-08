@@ -45,9 +45,13 @@ public class InputBuffer : MonoBehaviour
 
     void OnDestroy() => controls?.Dispose();
 
-    void Record(string action) =>
+    void Record(string action)
+    {
+        Debug.Log($"[InputBuffer] Recording action: {action}");
         buffer.Add(new BufferedInput { action = action, timestamp = Time.time });
-
+        Debug.Log($"[InputBuffer] Buffer now has {buffer.Count} entries");
+    }
+    
     void Update()
     {
         // Expire anything older than the buffer window every frame. Cheap enough at this scale (2 actions).

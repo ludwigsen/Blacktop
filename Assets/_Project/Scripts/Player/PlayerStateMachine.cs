@@ -105,24 +105,28 @@ public class PlayerStateMachine : MonoBehaviour
 
     void CheckMoveTriggers()
     {
-        if (cooldownTimer > 0f) return; // dropped, not buffered — buffering through cooldown would feel like inconsistent "why didn't my move happen" confusion
+        if (cooldownTimer > 0f) return;
 
         var candidates = new (string action, IPlayerMove move)[]
         {
-            ("Juke", jukeMove),
-            ("Hurdle", hurdleMove),
-            ("StiffArm", stiffArmMove),
-            ("Pitch", pitchMove),
-            ("Pass", passMove)
+        ("Juke", jukeMove),
+        ("Hurdle", hurdleMove),
+        ("StiffArm", stiffArmMove),
+        ("Pitch", pitchMove),
+        ("Pass", passMove)
         };
 
-        // Peek (don't consume) so we can validate CanTrigger before committing —
-        // otherwise a move that fails its own trigger condition would still eat the input.
         string action = inputBuffer.PeekEarliestValid(candidates.Select(c => c.action).ToArray());
+        Debug.Log($"[PlayerStateMachine] PeekEarliestValid returned: {(action ?? "NULL")}");
+
         if (action == null) return;
 
         var move = candidates.First(c => c.action == action).move;
-        if (!move.CanTrigger(ctx, currentState)) return;
+        if (!move.CanTrigger(ctx, currentState))
+        {
+            Debug.Log($"[PlayerStateMachine] {action} CanTrigger returned false");
+            return;
+        }
 
         inputBuffer.TryConsume(action);
         activeMove = move;
