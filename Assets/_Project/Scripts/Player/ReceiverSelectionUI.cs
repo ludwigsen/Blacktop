@@ -138,7 +138,6 @@ public class ReceiverSelectionUI : MonoBehaviour
         if (playState == null || playState.OffensivePlayers == null) return;
         if (!playState.IsLive) return;
 
-        // Map UI index (0-3) back to actual offensivePlayers slot
         int receiverCount = 0;
         for (int i = 0; i < playState.OffensivePlayers.Count; i++)
         {
@@ -148,12 +147,16 @@ public class ReceiverSelectionUI : MonoBehaviour
             if (receiverCount == uiIndex)
             {
                 selectedReceiverIndex = i;
-                Debug.Log($"Passing to receiver at slot {i} (label {uiIndex + 1})");
+                Debug.Log($"[ReceiverSelectionUI] Selected receiver at slot {i}, queuing Pass");
 
-                // Queue Pass input through InputBuffer
                 if (inputBuffer != null)
                 {
                     inputBuffer.QueueInput("Pass");
+                    Debug.Log($"[ReceiverSelectionUI] Pass queued to InputBuffer");
+                }
+                else
+                {
+                    Debug.LogError("[ReceiverSelectionUI] InputBuffer is NULL!");
                 }
 
                 HideLabels();
@@ -161,6 +164,7 @@ public class ReceiverSelectionUI : MonoBehaviour
             }
             receiverCount++;
         }
+        Debug.LogWarning($"[ReceiverSelectionUI] No receiver found at UI index {uiIndex}");
     }
 
     void HideLabels()

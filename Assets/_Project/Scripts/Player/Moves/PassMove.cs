@@ -54,9 +54,12 @@ public class PassMove : IPlayerMove
         if (ReceiverSelectionUI.Instance != null)
         {
             int selectedIdx = ReceiverSelectionUI.Instance.GetSelectedReceiverIndex();
+            Debug.Log($"[PassMove] Selected receiver index: {selectedIdx}");
             if (selectedIdx >= 0)
             {
                 var candidates = GameObject.FindGameObjectsWithTag(teammateTag);
+                Debug.Log($"[PassMove] Found {candidates.Length} total teammate candidates, looking for slot {selectedIdx}");
+
                 if (selectedIdx < candidates.Length)
                 {
                     var selected = candidates[selectedIdx];
