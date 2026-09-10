@@ -9,16 +9,18 @@ using UnityEngine;
 public class PassMove : IPlayerMove
 {
     [SerializeField] float windupDuration = 0.15f;
-
-    // 75% of field length (FieldConstants.PlayLength = 60) — was a flat 20u, way too
-    // short for a deep-ball-capable passer. Hardcoded rather than referencing
-    // FieldConstants directly so this stays tunable independent of field size changes.
     [SerializeField] float maxReceiverSearchRadius = 45f;
-
     [SerializeField] float receiverSearchConeAngle = 70f;
     [SerializeField] string teammateTag = "Teammate";
     [SerializeField] string defenderTag = "Defender";
-    [SerializeField] float arcHeight = 3f;
+
+    // Arc now scales with distance instead of a flat value — short screens should read
+    // as bullets, deep balls need real air under them. arcHeightPerDistance is the ratio
+    // (roughly: for every unit of throw distance, add this much peak height). Passing
+    // attribute flattens the arc at the top end (a gunslinger drives it in tighter) —
+    // inverse of the speed relationship, since velocity and touch are the tradeoff here.
+    [SerializeField] float baseArcHeight = 0.5f;         // floor — even the shortest pass has SOME loft
+    [SerializeField] float arcHeightPerDistance = 0.12f; // tune this to taste
 
     // Velocity-based flight time instead of a flat duration. A fixed 0.6s regardless of
     // distance meant bombs implicitly traveled faster than short hitches (same time,
@@ -62,13 +64,25 @@ public class PassMove : IPlayerMove
         if (target != null && BallController.Instance != null)
         {
             float distance = Vector3.Distance(ctx.transform.position, target.position);
-            float throwSpeed = baseThrowSpeed * ctx.attributes.Passing(); // Passing 20 ≈ 1.25x speed, Passing 0 ≈ 0.65x
+            float throwSpeed = baseThrowSpeed * ctx.attributes.Passing();
             float duration = Mathf.Max(distance / throwSpeed, minFlightDuration);
 
-            BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arcHeight, duration: duration);
+            // Arc grows with distance (more air time needed to cover ground), but a
+            // higher Passing rating flattens it back down — an elite arm can drive a
+            // 30-yard throw tighter than an average one. Inverse curve vs. throw speed:
+            // Passing 20 = flatter/faster, Passing 0 = looping and slow, both compounding
+            // in the same direction (bad passer = lob city, good passer = frozen rope).
+            float distanceArc = baseArcHeight + distance * arcHeightPerDistance;
+            float arc = distanceArc / Mathf.Lerp(1.3f, 0.8f, InverseLerpPassing(ctx.attributes.Passing()));
+
+            BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arc, duration: duration);
         }
-        // No receiver found -> pass fizzles, ball stays with carrier.
     }
+
+    // Passing() typically ranges ~0.6–1.3 per AttributeCurves. Remap to 0-1 for the Lerp
+    // above rather than hardcoding rating-based math here — keeps this decoupled from
+    // whatever the curve asset's exact bounds are.
+    float InverseLerpPassing(float passingMult) => Mathf.InverseLerp(0.6f, 1.3f, passingMult);
 
     Transform FindBestReceiver(PlayerContext ctx)
     {
