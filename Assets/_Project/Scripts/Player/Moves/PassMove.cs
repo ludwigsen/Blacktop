@@ -9,12 +9,23 @@ using UnityEngine;
 public class PassMove : IPlayerMove
 {
     [SerializeField] float windupDuration = 0.15f;
-    [SerializeField] float maxReceiverSearchRadius = 20f;
-    [SerializeField] float receiverSearchConeAngle = 70f; // degrees off forward — keeps this a FORWARD pass, distinct from PitchMove
+
+    // 75% of field length (FieldConstants.PlayLength = 60) — was a flat 20u, way too
+    // short for a deep-ball-capable passer. Hardcoded rather than referencing
+    // FieldConstants directly so this stays tunable independent of field size changes.
+    [SerializeField] float maxReceiverSearchRadius = 45f;
+
+    [SerializeField] float receiverSearchConeAngle = 70f;
     [SerializeField] string teammateTag = "Teammate";
     [SerializeField] string defenderTag = "Defender";
     [SerializeField] float arcHeight = 3f;
-    [SerializeField] float flightDuration = 0.6f;
+
+    // Velocity-based flight time instead of a flat duration. A fixed 0.6s regardless of
+    // distance meant bombs implicitly traveled faster than short hitches (same time,
+    // more ground covered) — backwards feel. baseThrowSpeed is units/sec at Passing
+    // rating 10 (neutral, attr.Passing() == 1.0). Scale up/down from there.
+    [SerializeField] float baseThrowSpeed = 35f;
+    [SerializeField] float minFlightDuration = 0.15f; // floor so a 2-yard hitch doesn't arrive in one frame
 
     float timer;
     Transform target;
@@ -50,44 +61,52 @@ public class PassMove : IPlayerMove
     {
         if (target != null && BallController.Instance != null)
         {
-            BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arcHeight, duration: flightDuration);
+            float distance = Vector3.Distance(ctx.transform.position, target.position);
+            float throwSpeed = baseThrowSpeed * ctx.attributes.Passing(); // Passing 20 ≈ 1.25x speed, Passing 0 ≈ 0.65x
+            float duration = Mathf.Max(distance / throwSpeed, minFlightDuration);
+
+            BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arcHeight, duration: duration);
         }
-        // No receiver found -> pass fizzles, ball stays with carrier. No dedicated
-        // "throwaway"/spike behavior yet — revisit if that matters once playtested.
+        // No receiver found -> pass fizzles, ball stays with carrier.
     }
 
     Transform FindBestReceiver(PlayerContext ctx)
     {
-        // UI button indices must map to exactly the same transforms as this pass.
-        // Do not infer eligibility from ReceiverAI: the Ally prefab carries that
-        // component, while only WR1-3 and RB are legal pass targets.
         var receivers = ReceiverTargeting.GetEligibleReceivers(PlayState.Instance?.OffensivePlayers);
         Debug.Log($"[PassMove] Found {receivers.Count} eligible pass targets");
 
-        // Check if there's an explicit selection
         if (ReceiverSelectionUI.Instance != null)
         {
             int selectedIdx = ReceiverSelectionUI.Instance.GetSelectedReceiverIndex();
-            Debug.Log($"[PassMove] Selected receiver index: {selectedIdx}");
 
             if (selectedIdx >= 0 && selectedIdx < receivers.Count)
             {
                 var selected = receivers[selectedIdx];
-                if (IsValidTarget(ctx, selected))
+
+                // Human picked this target explicitly — only the physical distance cap
+                // applies. No cone/angle gate here: screens, swings, and check-downs
+                // behind the LOS are legal, common throws once a player makes the call.
+                // The cone only matters for the auto-select fallback below, where there's
+                // no human judgment to defer to (or eventually, a CPU-controlled offense
+                // making its own read).
+                if (IsWithinRange(ctx, selected))
                 {
                     Debug.Log($"[PassMove] Throwing to selected receiver {selectedIdx + 1}");
                     return selected;
                 }
+
+                Debug.LogWarning($"[PassMove] Selected receiver {selectedIdx + 1} out of range, falling back to auto-select");
             }
         }
 
-        // Fall back to auto-select from filtered receivers
+        // Auto-select fallback (no explicit selection, or selection out of range) —
+        // cone angle applies here since a heuristic is making the read, not a person.
         Transform best = null;
         float bestScore = float.MinValue;
 
         foreach (var r in receivers)
         {
-            if (!IsValidTarget(ctx, r)) continue;
+            if (!IsValidAutoTarget(ctx, r)) continue;
 
             float openness = NearestDefenderDistance(r.position);
             float dist = Vector3.Distance(r.position, ctx.transform.position);
@@ -104,16 +123,19 @@ public class PassMove : IPlayerMove
         return best;
     }
 
-    bool IsValidTarget(PlayerContext ctx, Transform receiver)
+    bool IsWithinRange(PlayerContext ctx, Transform receiver)
     {
+        float dist = Vector3.Distance(receiver.position, ctx.transform.position);
+        return dist <= maxReceiverSearchRadius;
+    }
+
+    bool IsValidAutoTarget(PlayerContext ctx, Transform receiver)
+    {
+        if (!IsWithinRange(ctx, receiver)) return false;
+
         Vector3 toReceiver = receiver.position - ctx.transform.position;
-        float dist = toReceiver.magnitude;
-        if (dist > maxReceiverSearchRadius) return false;
-
         float angle = Vector3.Angle(ctx.transform.forward, toReceiver);
-        if (angle > receiverSearchConeAngle) return false;  // 70°
-
-        return true;
+        return angle <= receiverSearchConeAngle;
     }
 
     float NearestDefenderDistance(Vector3 pos)
