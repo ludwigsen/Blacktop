@@ -18,11 +18,15 @@ public class PlayState : MonoBehaviour
     [SerializeField] List<Transform> defenders = new();
     [SerializeField] FormationData formation;
 
-    // Same by-index convention as defenders — offensivePlayers[i] gets
-    // offensiveFormation.receiverSlots[i]'s offset. The passer (UserPlayer) is NOT in
-    // this list; it's repositioned separately via offensiveFormation.passerOffsetFromLOS,
-    // since it isn't interchangeable with the receiver slots.
+    // Same by-index convention as defenders — offensivePlayers[i] gets whichever
+    // OffensiveFormationData is ACTIVE for the current play (see ActiveFormation below),
+    // slot i's offset. The passer (UserPlayer) is NOT in this list; it's repositioned
+    // separately via passerOffsetFromLOS, since it isn't interchangeable with the
+    // receiver slots.
     [SerializeField] List<Transform> offensivePlayers = new();
+
+    // Fallback formation used when the current PlayCallData doesn't specify its own —
+    // NOT the only formation in play anymore. See ActiveFormation.
     [SerializeField] OffensiveFormationData offensiveFormation;
 
     [Header("Gamebreaker")]
@@ -31,7 +35,11 @@ public class PlayState : MonoBehaviour
 
     [SerializeField] PlayCallData playCall;
 
-    public bool IsLive { get; private set; } = true;
+    // Starts dead. There is no special-cased "opening play" anymore — the first snap
+    // of a session goes through ResetPlay() exactly like every other one, which is what
+    // makes the play-selection HUD, route assignment, AND blocker registration all fire
+    // correctly before ANY play, instead of only from play #2 onward.
+    public bool IsLive { get; private set; } = false;
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
 
@@ -51,9 +59,15 @@ public class PlayState : MonoBehaviour
     // Public read-only access to offensive players for UI/route assignment
     public List<Transform> OffensivePlayers => offensivePlayers;
 
+    // Whichever formation actually governs the CURRENT play — the play call's own
+    // formation if it specifies one, otherwise PlayState's fallback. This is what
+    // fixes formation-per-play: previously ResetPlay() read the fallback field
+    // unconditionally and playCall.OffensiveFormation was dead data nobody consumed.
+    OffensiveFormationData ActiveFormation =>
+        (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : offensiveFormation;
+
     // Assigned by PlayCallSelector (or any future playbook UI) before the next snap.
-    // Takes effect the next time AssignRoutes() runs — either the next ResetPlay(), or
-    // PlayState's own Start() if pushed early enough (see PlayCallSelector's Awake note).
+    // Takes effect the next time ResetPlay() runs.
     public void SetPlayCall(PlayCallData call) => playCall = call;
 
     // --- Gamebreaker state ---
@@ -83,12 +97,12 @@ public class PlayState : MonoBehaviour
         nextLineOfScrimmageZ = initialPlayerZ;
     }
 
-    void Start()
-    {
-        // IsLive begins true, so the opening rep does not pass through ResetPlay.
-        // Give the eligible receivers their test routes immediately.
-        AssignRoutes();
-    }
+    // No Start() override anymore. The first play is no longer special-cased into
+    // calling AssignRoutes() directly while IsLive sits true from frame one — it now
+    // waits for the player's first Reset Play (R) press, same as every subsequent down.
+    // This is also what was silently skipping BlockingCoordinator.RegisterBlockers()
+    // on the opening play — that call lives in ResetPlay() below, so it's now guaranteed
+    // to run before ANY play, not just play #2 onward.
 
     void OnEnable()
     {
@@ -159,10 +173,12 @@ public class PlayState : MonoBehaviour
         float resetZ = lastEndReason == PlayEndReason.Touchdown ? kickoffResetZ : nextLineOfScrimmageZ;
         Vector3 losOrigin = new(0f, 1f, resetZ);
 
+        var activeFormation = ActiveFormation;
+
         if (player != null)
         {
-            player.position = offensiveFormation != null
-                ? losOrigin + offensiveFormation.passerOffsetFromLOS
+            player.position = activeFormation != null
+                ? losOrigin + activeFormation.passerOffsetFromLOS
                 : new Vector3(0f, player.position.y, resetZ);
         }
 
@@ -175,17 +191,17 @@ public class PlayState : MonoBehaviour
             }
         }
 
-        if (offensiveFormation != null)
+        if (activeFormation != null)
         {
-            for (int i = 0; i < offensivePlayers.Count && i < offensiveFormation.receiverSlots.Count; i++)
+            for (int i = 0; i < offensivePlayers.Count && i < activeFormation.receiverSlots.Count; i++)
             {
                 if (offensivePlayers[i] == null) continue;
-                offensivePlayers[i].position = losOrigin + offensiveFormation.receiverSlots[i].offsetFromLOS;
+                offensivePlayers[i].position = losOrigin + activeFormation.receiverSlots[i].offsetFromLOS;
             }
         }
 
         if (lastEndReason == PlayEndReason.Touchdown)
-            nextLineOfScrimmageZ = kickoffResetZ;
+            nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
 
         if (IsOffenseGamebreakerActive)
         {
@@ -202,7 +218,7 @@ public class PlayState : MonoBehaviour
             BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
         }
 
-        // NEW: Reset receiver selection UI
+        // Reset receiver selection UI
         var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
         if (selectionUI != null)
             selectionUI.ResetSelection();
