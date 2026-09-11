@@ -1406,8 +1406,10 @@ MonoBehaviour:
     receiverSearchConeAngle: 70
     teammateTag: Teammate
     defenderTag: Defender
-    arcHeight: 3
-    flightDuration: 0.6
+    baseArcHeight: 0.5
+    arcHeightPerDistance: 0.12
+    baseThrowSpeed: 35
+    minFlightDuration: 0.15
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
 --- !u!114 &1064215535
 MonoBehaviour:
@@ -1888,6 +1890,7 @@ GameObject:
   - component: {fileID: 1314477358}
   - component: {fileID: 1314477359}
   - component: {fileID: 1314477360}
+  - component: {fileID: 1314477361}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2005,6 +2008,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::ReceiverSelectionUI
   uiCanvas: {fileID: 139281777}
   playState: {fileID: 1314477355}
+--- !u!114 &1314477361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74e6074823524e3e9c58575bb551d0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PlayCallSelector
+  availablePlays:
+  - {fileID: 11400000, guid: af929017321984d6f918c7588d4007b7, type: 2}
+  - {fileID: 11400000, guid: 37ee327a48b2c4d0a81dd15d7cb4c9af, type: 2}
+  - {fileID: 11400000, guid: 61fe07e9002d64df9b2e581a54ed2e6e, type: 2}
+  anchoredPosition: {x: 30, y: -30}
+  fontSize: 26
+  activeColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  inactiveColor: {r: 1, g: 1, b: 1, a: 0.6}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0

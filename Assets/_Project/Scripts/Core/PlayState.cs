@@ -51,6 +51,11 @@ public class PlayState : MonoBehaviour
     // Public read-only access to offensive players for UI/route assignment
     public List<Transform> OffensivePlayers => offensivePlayers;
 
+    // Assigned by PlayCallSelector (or any future playbook UI) before the next snap.
+    // Takes effect the next time AssignRoutes() runs — either the next ResetPlay(), or
+    // PlayState's own Start() if pushed early enough (see PlayCallSelector's Awake note).
+    public void SetPlayCall(PlayCallData call) => playCall = call;
+
     // --- Gamebreaker state ---
     // Offense meter fills via GamebreakerController (Styling, continuous) and point-award
     // hooks scattered through the move scripts (Juke/Hurdle/StiffArm) plus Touchdown
