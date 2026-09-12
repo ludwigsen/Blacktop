@@ -44,6 +44,14 @@ public class PlayState : MonoBehaviour
     float snapTimestamp;
     public bool IsPostSnapGraceActive => IsLive && (Time.time - snapTimestamp < postSnapTackleGrace);
 
+    // One-way latch, not a live position check. Real forward-pass rule: once the passer
+    // has crossed the LOS at ANY point during the play, forward passing is dead for the
+    // rest of that play — scrambling back behind it does NOT re-legalize the throw.
+    // Reset in BreakHuddle() (start of every play cycle), set permanently true in
+    // Update() the instant the passer's Z first exceeds the LOS, never cleared until then.
+    bool passerCrossedLOS;
+    public bool HasPasserCrossedLOS => passerCrossedLOS;
+
     // Starts dead. There is no special-cased "opening play" — the first snap of a
     // session goes through ResetPlay() exactly like every other one, which is what makes
     // the play-selection HUD, route assignment, AND blocker registration all fire
@@ -128,6 +136,15 @@ public class PlayState : MonoBehaviour
     }
 
     void HandleResetPlay(InputAction.CallbackContext _) => ResetPlay();
+
+    // Polls the passer's live position while the play is live to arm the LOS-crossing
+    // latch. Deliberately never un-latches here — only BreakHuddle() (next play) clears it.
+    void Update()
+    {
+        if (!IsLive || passerCrossedLOS || player == null) return;
+        if (player.position.z > nextLineOfScrimmageZ)
+            passerCrossedLOS = true;
+    }
 
     public void EndPlay(PlayEndReason reason)
     {
@@ -215,6 +232,11 @@ public class PlayState : MonoBehaviour
 
         if (possessionEnded)
             nextLineOfScrimmageZ = kickoffResetZ;
+
+        // New play cycle — clear the previous play's LOS-crossing latch. Placed here
+        // rather than in ResetPlay() so re-huddling into a different play call before
+        // the snap doesn't leave a stale latch from whatever was true a moment ago.
+        passerCrossedLOS = false;
 
         AssignRoutes();
 
