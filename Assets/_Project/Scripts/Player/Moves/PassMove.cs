@@ -38,9 +38,14 @@ public class PassMove : IPlayerMove
         bool hasBC = BallController.Instance != null;
         bool isCarrier = hasBC && BallController.Instance.Carrier == ctx.transform;
 
-        Debug.Log($"[PassMove.CanTrigger] State: {currentState} (ok: {isCorrectState}), BC: {hasBC}, IsCarrier: {isCarrier}");
+        // Real forward-pass rule: legal only if the passer is AT OR BEHIND the line of
+        // scrimmage at release — checked live, not "has ever crossed it this play." A
+        // scramble past the line and back behind it is still a legal throw.
+        bool behindLOS = PlayState.Instance == null || ctx.transform.position.z <= PlayState.Instance.CurrentLineOfScrimmageZ;
 
-        return isCorrectState && hasBC && isCarrier;
+        Debug.Log($"[PassMove.CanTrigger] State: {currentState} (ok: {isCorrectState}), BC: {hasBC}, IsCarrier: {isCarrier}, BehindLOS: {behindLOS}");
+
+        return isCorrectState && hasBC && isCarrier && behindLOS;
     }
 
     public void Enter(PlayerContext ctx)

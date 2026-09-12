@@ -82,18 +82,16 @@ public class BlockingCoordinator : MonoBehaviour
             return;
         }
 
-        // Sort candidate defenders by distance to the BALL — this defines the priority
-        // order blockers cascade through ("nearest to the ball first, then next nearest
-        // if already taken").
         var defendersByBallDistance = new List<Transform>();
         foreach (var obj in defenderObjects) defendersByBallDistance.Add(obj.transform);
         defendersByBallDistance.Sort((a, b) =>
             Vector3.Distance(ballPos, a.position).CompareTo(Vector3.Distance(ballPos, b.position)));
 
-        // Pass 1 — honor existing assignments where the target is still valid (in range,
-        // still exists). This is the "only reassign if the target breaks free" rule.
+        // Pass 1 — honor existing assignments where the target is still valid.
         foreach (var blocker in blockers)
         {
+            if (blocker.IsCarrier) continue; // the carrier is never a blocker, full stop
+
             Transform current = blocker.GetCurrentTarget();
             if (current == null) continue;
 
@@ -106,18 +104,16 @@ public class BlockingCoordinator : MonoBehaviour
             }
             else
             {
-                blocker.SetBlockingTarget(null); // target broke free — eligible for reassignment below
+                blocker.SetBlockingTarget(null);
             }
         }
 
-        // Pass 2 — any blocker without a valid target gets assigned to the nearest
-        // ball-priority defender that isn't already claimed. switchThreshold only matters
-        // here if we're comparing against a target the blocker is ALREADY holding from
-        // pass 1 — since those are skipped above, this pass is a clean "find the best
-        // available slot" rather than a fight over an existing assignment.
+        // Pass 2 — any (non-carrier) blocker without a valid target gets assigned to the
+        // nearest ball-priority defender that isn't already claimed.
         foreach (var blocker in blockers)
         {
-            if (blocker.GetCurrentTarget() != null) continue; // handled in pass 1
+            if (blocker.IsCarrier) continue;
+            if (blocker.GetCurrentTarget() != null) continue;
 
             Transform best = FindBestAvailableDefender(blocker, defendersByBallDistance);
             if (best != null)

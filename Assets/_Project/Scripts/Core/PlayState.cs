@@ -169,21 +169,18 @@ public class PlayState : MonoBehaviour
     // itself still resolves as PlayEndReason.Tackled.
     public void NotifyFumble() => EndOffenseGamebreaker();
 
-    public void ResetPlay()
+    // Positions everyone for the CURRENT play call without going live — this is the
+    // "offense breaks the huddle" moment. Safe to call repeatedly (cycling to a
+    // different play mid-huddle just re-forms into the new one), and ResetPlay() below
+    // always calls this first, so pressing Snap without ever explicitly confirming still
+    // works exactly like it always did.
+    public void BreakHuddle()
     {
         if (IsLive) return;
 
-        // Touchdown and Safety both end the previous possession outright — kickoff spot,
-        // not wherever the ball died. Everything else resumes from the LOS it died at.
         bool possessionEnded = lastEndReason == PlayEndReason.Touchdown || lastEndReason == PlayEndReason.Safety;
         float resetZ = possessionEnded ? kickoffResetZ : nextLineOfScrimmageZ;
         Vector3 losOrigin = new(0f, 1f, resetZ);
-
-        // Every offensive player faces upfield (+Z, per project convention) at the snap,
-        // full stop — no one carries stale rotation from however the previous down ended.
-        // This isn't just cosmetic: ReceiverAI reads transform.forward/right to compute
-        // its route target the instant SetRoute() runs below, so a stale facing sends a
-        // receiver running the wrong direction, not just standing there looking wrong.
         Quaternion faceUpfield = Quaternion.identity;
 
         var offense = ActiveOffensiveFormation;
@@ -217,7 +214,27 @@ public class PlayState : MonoBehaviour
         }
 
         if (possessionEnded)
-            nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
+            nextLineOfScrimmageZ = kickoffResetZ;
+
+        AssignRoutes();
+
+        if (BlockingCoordinator.Instance != null)
+            BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
+
+        var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
+        if (selectionUI != null)
+            selectionUI.ResetSelection();
+    }
+
+    // The actual snap. Breaks the huddle first (harmless no-op visually if it's already
+    // broken via Confirm), then goes live. Gamebreaker possession-count only decrements
+    // HERE, not in BreakHuddle() — re-forming into a different play pre-snap shouldn't
+    // burn a possession, only an actual snap should.
+    public void ResetPlay()
+    {
+        if (IsLive) return;
+
+        BreakHuddle();
 
         if (IsOffenseGamebreakerActive)
         {
@@ -228,17 +245,6 @@ public class PlayState : MonoBehaviour
         IsLive = true;
         snapTimestamp = Time.time;
         OnPlayReset?.Invoke();
-        AssignRoutes();
-
-        if (BlockingCoordinator.Instance != null)
-        {
-            BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
-        }
-
-        // Reset receiver selection UI
-        var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
-        if (selectionUI != null)
-            selectionUI.ResetSelection();
     }
 
     void AssignRoutes()

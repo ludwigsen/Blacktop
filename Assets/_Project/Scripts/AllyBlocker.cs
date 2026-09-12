@@ -36,6 +36,13 @@ public class AllyBlocker : MonoBehaviour
     // Present only on RB/WR/TE slots (the ones that also carry ReceiverAI). Null on OL
     // — GetComponent returning null there is expected and harmless.
     ReceiverAI receiverAI;
+    
+    // True once this transform is the live ball carrier. BlockingCoordinator uses this
+    // to skip us entirely during assignment — a carrier can't also be its own blocker,
+    // and without this, catching a pass mid-route left AllyBlocker still trying to walk
+    // toward a defender while PossessionController handed real control to the same
+    // transform at the same time.
+    public bool IsCarrier => BallController.Instance != null && BallController.Instance.Carrier == transform;
 
     void Awake()
     {
@@ -45,6 +52,12 @@ public class AllyBlocker : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+
+        if (IsCarrier)
+        {
+            currentTarget = null;
+            return;
+        }
 
         // Defer to an in-progress route — only relevant on RB/WR/TE slots. OL have no
         // ReceiverAI component, so receiverAI is null and this never blocks them.
