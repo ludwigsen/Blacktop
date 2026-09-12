@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class PlayState : MonoBehaviour
 {
-    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, OutOfBounds }
+    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, OutOfBounds, Safety }
 
     public static PlayState Instance { get; private set; }
 
@@ -19,15 +19,18 @@ public class PlayState : MonoBehaviour
     [SerializeField] FormationData formation;
 
     // Same by-index convention as defenders — offensivePlayers[i] gets whichever
-    // OffensiveFormationData is ACTIVE for the current play (see ActiveFormation below),
-    // slot i's offset. The passer (UserPlayer) is NOT in this list; it's repositioned
-    // separately via passerOffsetFromLOS, since it isn't interchangeable with the
-    // receiver slots.
+    // FormationData is ACTIVE for the current play (see ActiveFormation below) slot i's
+    // offset. The passer (UserPlayer) is NOT in this list; it's repositioned separately
+    // via qbOffsetFromLOS, since it isn't interchangeable with the offensive slots.
+    //
+    // BREAKING CHANGE: this used to be OffensiveFormationData. That type is retired —
+    // FormationData already covers offense (qbOffsetFromLOS + offensiveSlots) and is
+    // what Shotgun_Base/Pistol_Base are actually authored as. Re-point this field at
+    // Shotgun_Base or Pistol_Base in the Inspector; the old reference won't carry over.
     [SerializeField] List<Transform> offensivePlayers = new();
 
-    // Fallback formation used when the current PlayCallData doesn't specify its own —
-    // NOT the only formation in play anymore. See ActiveFormation.
-    [SerializeField] OffensiveFormationData offensiveFormation;
+    // Fallback formation used when the current PlayCallData doesn't specify its own.
+    [SerializeField] FormationData offensiveFormation;
 
     [Header("Gamebreaker")]
     [SerializeField] GamebreakerBuffs gamebreakerBuffs;
@@ -35,9 +38,9 @@ public class PlayState : MonoBehaviour
 
     [SerializeField] PlayCallData playCall;
 
-    // Starts dead. There is no special-cased "opening play" anymore — the first snap
-    // of a session goes through ResetPlay() exactly like every other one, which is what
-    // makes the play-selection HUD, route assignment, AND blocker registration all fire
+    // Starts dead. There is no special-cased "opening play" — the first snap of a
+    // session goes through ResetPlay() exactly like every other one, which is what makes
+    // the play-selection HUD, route assignment, AND blocker registration all fire
     // correctly before ANY play, instead of only from play #2 onward.
     public bool IsLive { get; private set; } = false;
     public event System.Action<PlayEndReason> OnPlayEnded;
@@ -60,10 +63,8 @@ public class PlayState : MonoBehaviour
     public List<Transform> OffensivePlayers => offensivePlayers;
 
     // Whichever formation actually governs the CURRENT play — the play call's own
-    // formation if it specifies one, otherwise PlayState's fallback. This is what
-    // fixes formation-per-play: previously ResetPlay() read the fallback field
-    // unconditionally and playCall.OffensiveFormation was dead data nobody consumed.
-    OffensiveFormationData ActiveFormation =>
+    // formation if it specifies one, otherwise PlayState's fallback.
+    FormationData ActiveFormation =>
         (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : offensiveFormation;
 
     // Assigned by PlayCallSelector (or any future playbook UI) before the next snap.
@@ -96,13 +97,6 @@ public class PlayState : MonoBehaviour
         controls = new InputSystem_Actions();
         nextLineOfScrimmageZ = initialPlayerZ;
     }
-
-    // No Start() override anymore. The first play is no longer special-cased into
-    // calling AssignRoutes() directly while IsLive sits true from frame one — it now
-    // waits for the player's first Reset Play (R) press, same as every subsequent down.
-    // This is also what was silently skipping BlockingCoordinator.RegisterBlockers()
-    // on the opening play — that call lives in ResetPlay() below, so it's now guaranteed
-    // to run before ANY play, not just play #2 onward.
 
     void OnEnable()
     {
@@ -142,19 +136,21 @@ public class PlayState : MonoBehaviour
                 ? BallController.Instance.transform.position.z
                 : player.position.z;
         }
-        // Touchdown doesn't touch nextLineOfScrimmageZ here — handled in ResetPlay via kickoffResetZ instead
+        // Touchdown/Safety don't touch nextLineOfScrimmageZ here — both reset to
+        // kickoffResetZ in ResetPlay() instead, since both end the current possession.
 
-        // Touchdown and Interception both end offensive Gamebreaker outright — a score or
-        // a turnover closes the window regardless of possessions remaining. A fumble ends
-        // it too, but that's signaled separately via NotifyFumble() since a fumble doesn't
-        // change PlayEndReason (still resolves as Tackled per TackleContact's design).
         if (reason == PlayEndReason.Touchdown)
         {
             AddOffensePoints(10f); // flat TD bonus, not Swagger-scaled — a score is a score regardless of style
             EndOffenseGamebreaker();
         }
-        else if (reason == PlayEndReason.Interception)
+        else if (reason == PlayEndReason.Interception || reason == PlayEndReason.Safety)
         {
+            // Both are bad outcomes for the offense — no style points, and any active
+            // offensive Gamebreaker window closes immediately, same as an interception.
+            // No scoreboard exists yet to actually award the defense 2 points for a
+            // safety (see BLACKTOP_STATUS backlog item #6) — this is where that hooks in
+            // once it does.
             EndOffenseGamebreaker();
         }
 
@@ -170,16 +166,28 @@ public class PlayState : MonoBehaviour
     {
         if (IsLive) return;
 
-        float resetZ = lastEndReason == PlayEndReason.Touchdown ? kickoffResetZ : nextLineOfScrimmageZ;
+        // Touchdown and Safety both end the previous possession outright — kickoff spot,
+        // not wherever the ball died. Everything else resumes from the LOS it died at.
+        bool possessionEnded = lastEndReason == PlayEndReason.Touchdown || lastEndReason == PlayEndReason.Safety;
+        float resetZ = possessionEnded ? kickoffResetZ : nextLineOfScrimmageZ;
         Vector3 losOrigin = new(0f, 1f, resetZ);
+
+        // Every offensive player faces upfield (+Z, per project convention) at the snap,
+        // full stop — no one carries stale rotation from however the previous down ended
+        // (mid-block, mid-juke, whatever). This isn't just cosmetic: ReceiverAI reads
+        // transform.forward/right to compute its route target the instant SetRoute() runs
+        // below, so a receiver left facing the wrong way runs their route in the wrong
+        // direction, not just looks wrong standing still.
+        Quaternion faceUpfield = Quaternion.identity;
 
         var activeFormation = ActiveFormation;
 
         if (player != null)
         {
             player.position = activeFormation != null
-                ? losOrigin + activeFormation.passerOffsetFromLOS
+                ? losOrigin + activeFormation.qbOffsetFromLOS
                 : new Vector3(0f, player.position.y, resetZ);
+            player.rotation = faceUpfield;
         }
 
         if (formation != null)
@@ -193,14 +201,15 @@ public class PlayState : MonoBehaviour
 
         if (activeFormation != null)
         {
-            for (int i = 0; i < offensivePlayers.Count && i < activeFormation.receiverSlots.Count; i++)
+            for (int i = 0; i < offensivePlayers.Count && i < activeFormation.offensiveSlots.Count; i++)
             {
                 if (offensivePlayers[i] == null) continue;
-                offensivePlayers[i].position = losOrigin + activeFormation.receiverSlots[i].offsetFromLOS;
+                offensivePlayers[i].position = losOrigin + activeFormation.offensiveSlots[i].offsetFromLOS;
+                offensivePlayers[i].rotation = faceUpfield;
             }
         }
 
-        if (lastEndReason == PlayEndReason.Touchdown)
+        if (possessionEnded)
             nextLineOfScrimmageZ = kickoffResetZ; // keep this in sync so a subsequent tackle-based reset (if reset is somehow called twice) still has a sane fallback
 
         if (IsOffenseGamebreakerActive)

@@ -5,8 +5,7 @@ using UnityEngine;
 // v1 (uniformRoute = true, the default): every eligible receiver runs the SAME route —
 // this is the "Play 1: Go / Play 2: Slants" style playbook PlayCallSelector cycles
 // through pre-snap. Flip uniformRoute off and use the per-receiver routes list below
-// once real route trees (actual differentiated "plays") are worth building —
-// GetRouteForReceiver already supports both, so nothing calling into this needs to change.
+// once real route trees are worth building — GetRouteForReceiver already supports both.
 [CreateAssetMenu(menuName = "Blacktop/Play Call")]
 public class PlayCallData : ScriptableObject
 {
@@ -26,16 +25,19 @@ public class PlayCallData : ScriptableObject
     [Tooltip("Only used when Uniform Route is checked.")]
     [SerializeField] RoutePattern route = RoutePattern.Go;
 
-    [SerializeField] OffensiveFormationData offensiveFormation;
+    // FormationData, not the old OffensiveFormationData — that type is retired.
+    // FormationData already covers offense via qbOffsetFromLOS + offensiveSlots; keeping
+    // two overlapping types around is exactly how Shotgun_Base/Pistol_Base ended up
+    // authored as the wrong type and silently unusable here. One play call = one
+    // formation (Shotgun, Pistol, goal-line, whatever). Leave null to fall back to
+    // PlayState's default formation.
+    [SerializeField] FormationData offensiveFormation;
     [SerializeField] List<RouteAssignment> routes = new();
 
     public string DisplayName => displayName;
-    public OffensiveFormationData OffensiveFormation => offensiveFormation;
+    public FormationData OffensiveFormation => offensiveFormation;
     public List<RouteAssignment> Routes => routes;
 
-    // Quick lookup: given a receiver index, return its assigned route (or None if no
-    // assignment). Uniform plays skip the list entirely and return the single authored
-    // route for every index — this is what makes "same route for all 4 receivers" free.
     public RoutePattern GetRouteForReceiver(int receiverIndex)
     {
         if (uniformRoute) return route;

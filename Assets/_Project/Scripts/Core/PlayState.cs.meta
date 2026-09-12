@@ -6,8 +6,9 @@ MonoImporter:
   defaultReferences:
   - player: {instanceID: 0}
   - formation: {instanceID: 0}
-  - offensiveFormation: {instanceID: 0}
+  - offensiveFormation: {fileID: 11400000, guid: 3a892ebd5ed1d491a990f419ffd69d15, type: 2}
   - gamebreakerBuffs: {fileID: 11400000, guid: 76e927b1011834942a4cf33a3b538f95, type: 2}
+  - playCall: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
