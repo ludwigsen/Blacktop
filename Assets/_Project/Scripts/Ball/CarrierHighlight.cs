@@ -1,18 +1,32 @@
 using UnityEngine;
 
-// Ground-plane indicator under the live ball carrier — red for the user-controlled
-// player, gray for anyone else (defender interception return, teammate after a
-// pitch/handoff, etc). Resolved live off BallController.Instance.Carrier every frame,
-// never cached — same "resolve live, don't cache" rule as DefenderAI/DefenderCoordinator/
-// CameraFollow/TouchdownZone.
+// Ground-plane indicator, procedurally jagged rather than a clean circle (reads like a
+// spray-stencil mark on asphalt, not a MOBA reticle). Two tracking modes share this one
+// component:
 //
-// Shape is a procedurally generated JAGGED ring, not a clean circle — inner and outer
-// radius are both perturbed by per-instance noise, so it reads like a rough spray-painted
-// stencil mark on asphalt rather than a MOBA-style selection reticle. Fits the street-court
-// aesthetic instead of looking like a UI widget bolted onto the field.
+//   BallCarrier    — follows whoever currently has the ball (existing behavior).
+//                    Color compares the carrier against UserControl.Instance.Controlled,
+//                    NOT a hardcoded tag — stays correct even once a user-controlled
+//                    Defender (not tagged "Player") can be the carrier via an interception.
+//   UserControlled — follows whoever the user is actually piloting, independent of the
+//                    ball entirely. On offense this coincides with the ball carrier most
+//                    of the time (so a second instance in this mode is redundant/harmless
+//                    to add later); on defense — once user-controlled defense exists —
+//                    this is the only way to answer "which of my 7 identical capsules is
+//                    mine" since the user won't be holding the ball.
+//
+// Both resolve live every frame, never cached — same rule as BallController.Carrier reads
+// elsewhere (DefenderAI/DefenderCoordinator/CameraFollow/TouchdownZone).
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class CarrierHighlight : MonoBehaviour
 {
+    public enum TrackingMode { BallCarrier, UserControlled }
+
+    [SerializeField] TrackingMode trackingMode = TrackingMode.BallCarrier;
+
+    // Fallback tag check ONLY used in BallCarrier mode when no UserControl singleton
+    // exists yet in the scene (e.g. before it's been added during this migration) — once
+    // UserControl is present, its live Controlled reference takes over entirely.
     [SerializeField] string playerTag = "Player";
     [SerializeField] float baseRadius = 0.9f;
     [SerializeField] float ringThickness = 0.18f;
@@ -30,6 +44,7 @@ public class CarrierHighlight : MonoBehaviour
 
     MeshRenderer meshRenderer;
     MaterialPropertyBlock mpb;
+    bool warnedMissingUserControl; // one-shot — avoids spamming every frame if the UserControl GameObject was never added to the scene
 
     void Awake()
     {
@@ -48,9 +63,22 @@ public class CarrierHighlight : MonoBehaviour
 
     void LateUpdate()
     {
-        var carrier = BallController.Instance != null ? BallController.Instance.Carrier : null;
+        if (trackingMode == TrackingMode.UserControlled && UserControl.Instance == null)
+        {
+            if (!warnedMissingUserControl)
+            {
+                Debug.LogWarning($"[CarrierHighlight] '{name}' is set to UserControlled mode but no UserControl singleton exists in the scene — this ring will stay hidden until one is added.", this);
+                warnedMissingUserControl = true;
+            }
+            SetVisible(false);
+            return;
+        }
 
-        if (carrier == null)
+        Transform target = trackingMode == TrackingMode.BallCarrier
+            ? (BallController.Instance != null ? BallController.Instance.Carrier : null)
+            : UserControl.Instance.Controlled;
+
+        if (target == null)
         {
             SetVisible(false);
             return;
@@ -58,12 +86,29 @@ public class CarrierHighlight : MonoBehaviour
 
         SetVisible(true);
 
-        Vector3 pos = carrier.position;
+        Vector3 pos = target.position;
         pos.y = groundOffset;
         transform.position = pos;
         transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
 
-        ApplyColor(carrier.CompareTag(playerTag) ? UserColor : OtherColor);
+        ApplyColor(ResolveColor(target));
+    }
+
+    Color ResolveColor(Transform target)
+    {
+        // UserControlled mode: whatever this resolved to IS the user's entity, by
+        // definition — no comparison needed.
+        if (trackingMode == TrackingMode.UserControlled) return UserColor;
+
+        // BallCarrier mode: is the carrier the same Transform the user is piloting?
+        // Compared by reference against the live UserControl singleton rather than a
+        // tag string, so this stays correct once the user can be controlling anything
+        // other than the "Player"-tagged object.
+        bool isUsersBall = UserControl.Instance != null
+            ? target == UserControl.Instance.Controlled
+            : target.CompareTag(playerTag); // fallback if UserControl hasn't been added to the scene yet
+
+        return isUsersBall ? UserColor : OtherColor;
     }
 
     void SetVisible(bool visible)
