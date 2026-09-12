@@ -21,6 +21,7 @@ public class TackleContact : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance == null || !PlayState.Instance.IsLive) return;
+        if (PlayState.Instance.IsPostSnapGraceActive) return;
         if (stateMachine != null && stateMachine.IsTackleImmune) return;
 
         Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);

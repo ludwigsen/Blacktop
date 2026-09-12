@@ -13,30 +13,36 @@ public class PlayState : MonoBehaviour
     [SerializeField] float kickoffResetZ = -5f;
 
     // Defenders list stays as-is — these are live scene object references, unavoidable
-    // per-scene setup. What changes is where their reset OFFSETS come from: authored
-    // once in a FormationData asset instead of duplicated per-PlayState-instance data entry.
+    // per-scene setup. Renamed from "formation" — sitting next to offensiveFormation with
+    // no qualifier, it wasn't obvious at a glance which side it governed.
     [SerializeField] List<Transform> defenders = new();
-    [SerializeField] FormationData formation;
+    [SerializeField] FormationData defaultDefensiveFormation;
 
-    // Same by-index convention as defenders — offensivePlayers[i] gets whichever
-    // FormationData is ACTIVE for the current play (see ActiveFormation below) slot i's
-    // offset. The passer (UserPlayer) is NOT in this list; it's repositioned separately
-    // via qbOffsetFromLOS, since it isn't interchangeable with the offensive slots.
-    //
-    // BREAKING CHANGE: this used to be OffensiveFormationData. That type is retired —
-    // FormationData already covers offense (qbOffsetFromLOS + offensiveSlots) and is
-    // what Shotgun_Base/Pistol_Base are actually authored as. Re-point this field at
-    // Shotgun_Base or Pistol_Base in the Inspector; the old reference won't carry over.
+    // Same by-index convention as defenders. Renamed from "offensiveFormation" for
+    // symmetry with defaultDefensiveFormation below.
     [SerializeField] List<Transform> offensivePlayers = new();
+    [SerializeField] FormationData defaultOffensiveFormation;
 
-    // Fallback formation used when the current PlayCallData doesn't specify its own.
-    [SerializeField] FormationData offensiveFormation;
+    // Runtime override for defense, mirroring playCall on the offensive side. Nothing
+    // sets this yet — there's no defensive playcalling system (defense is AI-only right
+    // now) — but the hook exists so a future "AI picks a package pre-snap" system, or an
+    // eventual human-playable defense, doesn't require touching PlayState again. Same
+    // shape as SetPlayCall()/ActiveOffensiveFormation on purpose.
+    FormationData defensiveFormationOverride;
+    public void SetDefensiveFormation(FormationData f) => defensiveFormationOverride = f;
 
     [Header("Gamebreaker")]
     [SerializeField] GamebreakerBuffs gamebreakerBuffs;
     [SerializeField] int gamebreakerPossessionLimit = 3;
 
     [SerializeField] PlayCallData playCall;
+
+    [Header("Snap Safety")]
+    [Tooltip("Brief window after the snap where a tackle can't register. Backstops any formation-spacing issue (defense lined up too close to the offense) from ending the play before it's even started — real football has an inherent beat between snap and first real contact, this guarantees the same here regardless of how tight the formation data is tuned.")]
+    [SerializeField] float postSnapTackleGrace = 0.25f;
+
+    float snapTimestamp;
+    public bool IsPostSnapGraceActive => IsLive && (Time.time - snapTimestamp < postSnapTackleGrace);
 
     // Starts dead. There is no special-cased "opening play" — the first snap of a
     // session goes through ResetPlay() exactly like every other one, which is what makes
@@ -62,10 +68,15 @@ public class PlayState : MonoBehaviour
     // Public read-only access to offensive players for UI/route assignment
     public List<Transform> OffensivePlayers => offensivePlayers;
 
-    // Whichever formation actually governs the CURRENT play — the play call's own
-    // formation if it specifies one, otherwise PlayState's fallback.
-    FormationData ActiveFormation =>
-        (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : offensiveFormation;
+    // Whichever formation actually governs the CURRENT play's offense — the play call's
+    // own formation if it specifies one, otherwise PlayState's default.
+    FormationData ActiveOffensiveFormation =>
+        (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : defaultOffensiveFormation;
+
+    // Whichever formation actually governs the CURRENT play's defense — the runtime
+    // override if one's been set (SetDefensiveFormation), otherwise PlayState's default.
+    FormationData ActiveDefensiveFormation =>
+        defensiveFormationOverride != null ? defensiveFormationOverride : defaultDefensiveFormation;
 
     // Assigned by PlayCallSelector (or any future playbook UI) before the next snap.
     // Takes effect the next time ResetPlay() runs.
@@ -129,9 +140,6 @@ public class PlayState : MonoBehaviour
         // DefenderAI/DefenderCoordinator/CameraFollow/TouchdownZone.
         if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
-            // Out of bounds spots the ball where it crossed, not where the player is standing —
-            // matters once a receiver can go OOB independent of the ball carrier's position.
-            // Tackled/Interception keep the existing player-position behavior untouched.
             nextLineOfScrimmageZ = (reason == PlayEndReason.OutOfBounds && BallController.Instance != null)
                 ? BallController.Instance.transform.position.z
                 : player.position.z;
@@ -147,10 +155,9 @@ public class PlayState : MonoBehaviour
         else if (reason == PlayEndReason.Interception || reason == PlayEndReason.Safety)
         {
             // Both are bad outcomes for the offense — no style points, and any active
-            // offensive Gamebreaker window closes immediately, same as an interception.
-            // No scoreboard exists yet to actually award the defense 2 points for a
-            // safety (see BLACKTOP_STATUS backlog item #6) — this is where that hooks in
-            // once it does.
+            // offensive Gamebreaker window closes immediately. No scoreboard exists yet
+            // to actually award the defense 2 points for a safety — this is where that
+            // hooks in once one does.
             EndOffenseGamebreaker();
         }
 
@@ -173,38 +180,38 @@ public class PlayState : MonoBehaviour
         Vector3 losOrigin = new(0f, 1f, resetZ);
 
         // Every offensive player faces upfield (+Z, per project convention) at the snap,
-        // full stop — no one carries stale rotation from however the previous down ended
-        // (mid-block, mid-juke, whatever). This isn't just cosmetic: ReceiverAI reads
-        // transform.forward/right to compute its route target the instant SetRoute() runs
-        // below, so a receiver left facing the wrong way runs their route in the wrong
-        // direction, not just looks wrong standing still.
+        // full stop — no one carries stale rotation from however the previous down ended.
+        // This isn't just cosmetic: ReceiverAI reads transform.forward/right to compute
+        // its route target the instant SetRoute() runs below, so a stale facing sends a
+        // receiver running the wrong direction, not just standing there looking wrong.
         Quaternion faceUpfield = Quaternion.identity;
 
-        var activeFormation = ActiveFormation;
+        var offense = ActiveOffensiveFormation;
+        var defense = ActiveDefensiveFormation;
 
         if (player != null)
         {
-            player.position = activeFormation != null
-                ? losOrigin + activeFormation.qbOffsetFromLOS
+            player.position = offense != null
+                ? losOrigin + offense.qbOffsetFromLOS
                 : new Vector3(0f, player.position.y, resetZ);
             player.rotation = faceUpfield;
         }
 
-        if (formation != null)
+        if (defense != null)
         {
-            for (int i = 0; i < defenders.Count && i < formation.defenderSlots.Count; i++)
+            for (int i = 0; i < defenders.Count && i < defense.defenderSlots.Count; i++)
             {
                 if (defenders[i] == null) continue;
-                defenders[i].position = losOrigin + formation.defenderSlots[i].offsetFromLOS;
+                defenders[i].position = losOrigin + defense.defenderSlots[i].offsetFromLOS;
             }
         }
 
-        if (activeFormation != null)
+        if (offense != null)
         {
-            for (int i = 0; i < offensivePlayers.Count && i < activeFormation.offensiveSlots.Count; i++)
+            for (int i = 0; i < offensivePlayers.Count && i < offense.offensiveSlots.Count; i++)
             {
                 if (offensivePlayers[i] == null) continue;
-                offensivePlayers[i].position = losOrigin + activeFormation.offensiveSlots[i].offsetFromLOS;
+                offensivePlayers[i].position = losOrigin + offense.offensiveSlots[i].offsetFromLOS;
                 offensivePlayers[i].rotation = faceUpfield;
             }
         }
@@ -219,6 +226,7 @@ public class PlayState : MonoBehaviour
         }
 
         IsLive = true;
+        snapTimestamp = Time.time;
         OnPlayReset?.Invoke();
         AssignRoutes();
 
