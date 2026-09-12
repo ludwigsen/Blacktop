@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Slants
   uniformRoute: 1
   route: 1
-  offensiveFormation: {fileID: 11400000, guid: 559fd06a8c292405da8a1e7dc30ef144, type: 2}
+  offensiveFormation: {fileID: 0}
   routes:
   - receiverIndex: 0
     route: 1
