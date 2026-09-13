@@ -27,13 +27,22 @@ public class PossessionController : MonoBehaviour
     enum Mode { Controlled, AI, Frozen }
     Mode currentMode;
 
+    // Single source of truth for "which Transform is the human actually piloting right
+    // now" — set/cleared at the exact point this decision already gets made for real
+    // gameplay reasons (ApplyMode), rather than duplicated as a separate guess elsewhere.
+    // Safe as a plain static: control follows the ball, so at most one PossessionController
+    // is ever in Controlled mode at a time. Null whenever nobody on offense is controlled
+    // (ball loose). Anything that needs to answer "is this the user's guy?" — highlight
+    // rings, future UI, whatever — should read this, not re-derive its own notion of it.
+    public static Transform ActivelyControlled { get; private set; }
+
     void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
         inputBuffer = GetComponent<InputBuffer>();
         stateMachine = GetComponent<PlayerStateMachine>();
         tackleContact = GetComponent<TackleContact>();
-        receiverAI = GetComponent<ReceiverAI>();
+        receiverAI = GetComponent<ReceiverAI>(); // do not RequireComponent - OL/QB does not need this
     }
 
     void Start()
@@ -51,6 +60,14 @@ public class PossessionController : MonoBehaviour
 
         ApplyMode(desired);
         currentMode = desired;
+    }
+
+    void OnDestroy()
+    {
+        // Safety net for the edge case where this object is destroyed mid-play while it
+        // happened to be the controlled one — avoids ActivelyControlled pointing at a
+        // destroyed Transform until the next possession change naturally clears it.
+        if (ActivelyControlled == transform) ActivelyControlled = null;
     }
 
     Mode DetermineMode()
@@ -76,6 +93,9 @@ public class PossessionController : MonoBehaviour
         if (stateMachine != null) stateMachine.enabled = controlled;
         if (tackleContact != null) tackleContact.enabled = controlled; // only the live carrier needs to check for being tackled
         if (receiverAI != null) receiverAI.enabled = ai;
+
+        if (controlled) ActivelyControlled = transform;
+        else if (ActivelyControlled == transform) ActivelyControlled = null; // don't clear a DIFFERENT object's claim if this instance never held it
 
         // Frozen: everything off. Object just sits wherever it is until this flips back
         // to Controlled or AI once someone recovers the ball.
