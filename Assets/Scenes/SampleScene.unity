@@ -653,37 +653,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 872224120808341969, guid: ad319ad53bf2d4939ba11508889dfb3f, type: 3}
   m_PrefabInstance: {fileID: 1921861412}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &513183072
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 513183073}
-  m_Layer: 0
-  m_Name: UserControl
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &513183073
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 513183072}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0464, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &516365139
 GameObject:
   m_ObjectHideFlags: 0
@@ -843,14 +812,23 @@ MonoBehaviour:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0
-      value: 0
+      time: 0.024388382
+      value: 0.000002944842
       inSlope: 0
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
+    - serializedVersion: 3
+      time: 0.47888237
+      value: 1
+      inSlope: 0.14064509
+      outSlope: 0.14064509
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     - serializedVersion: 3
       time: 1
       value: 0
@@ -1033,7 +1011,7 @@ GameObject:
   - component: {fileID: 981725419}
   - component: {fileID: 981725418}
   - component: {fileID: 981725417}
-  - component: {fileID: 981725416}
+  - component: {fileID: 981725420}
   m_Layer: 0
   m_Name: UserControlHighlight
   m_TagString: Untagged
@@ -1041,26 +1019,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &981725416
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 981725415}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d53fb092ab0d34fe2a0da8f3f63b3cea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Blacktop::CarrierHighlight
-  trackingMode: 1
-  playerTag: Player
-  baseRadius: 1.1
-  ringThickness: 0.13
-  jaggedness: 0.18
-  segments: 40
-  groundOffset: 0.05
-  spinSpeed: -7
 --- !u!23 &981725417
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1133,6 +1091,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &981725420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981725415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d53fb092ab0d34fe2a0da8f3f63b3cea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::CarrierHighlight
+  trackingMode: 1
+  baseRadius: 0.9
+  ringThickness: 0.18
+  jaggedness: 0.12
+  segments: 40
+  groundOffset: 0.05
+  spinSpeed: 12
 --- !u!1001 &1004196103
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1863,7 +1840,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::CarrierHighlight
   trackingMode: 0
-  playerTag: Player
   baseRadius: 0.9
   ringThickness: 0.18
   jaggedness: 0.12
@@ -2741,6 +2717,5 @@ SceneRoots:
   - {fileID: 1087445713}
   - {fileID: 1382229152}
   - {fileID: 139281778}
-  - {fileID: 513183073}
   - {fileID: 1111384451}
   - {fileID: 981725419}

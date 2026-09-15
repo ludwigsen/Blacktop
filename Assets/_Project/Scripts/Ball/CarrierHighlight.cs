@@ -8,10 +8,17 @@ using UnityEngine;
 //   UserControlled — follows whoever the user is actually piloting right now
 //                    (PossessionController.ActivelyControlled).
 //
-// On offense today these usually coincide, since control follows the ball — but they are
-// NOT the same concept and must not be conflated. The instant the ball leaves the user's
-// hands (a completed pass or pitch), BallCarrier jumps to the new (possibly CPU) holder
-// while UserControlled correctly stays on the passer, who the user is still piloting.
+// CORRECTION vs an earlier version of this comment: these two do NOT currently diverge.
+// PossessionController defines "controlled" as literally Carrier == transform, so the
+// instant a pass/pitch leaves the passer's hands, the passer goes inert — there's no
+// window where the user keeps piloting someone without the ball. So today, BallCarrier
+// and UserControlled targets are ALWAYS equal (or both null). The UserControlled ring
+// self-suppresses to avoid a redundant double ring because of this (see LateUpdate).
+// This will start meaning something once a future system decouples control from
+// possession — defensive player-switching, most likely, since a controlled defender
+// is never the ball carrier — at which point the self-suppression naturally stops
+// triggering and both rings do real, distinct work with zero further changes needed here.
+//
 // PossessionController is the single, already-correct source of truth for "who's the
 // user" — it's the component that LITERALLY makes that decision every frame for real
 // gameplay reasons. This deliberately does not maintain its own notion of "the user's
@@ -21,7 +28,14 @@ using UnityEngine;
 // Both targets resolve live every frame, never cached — same rule as every other
 // BallController.Carrier read in the project (DefenderAI/DefenderCoordinator/
 // CameraFollow/TouchdownZone).
+//
+// DefaultExecutionOrder(200): must read AFTER PossessionController (100) has finished
+// updating ActivelyControlled for this frame, which itself must read AFTER
+// BallController's carrier transitions (unordered/default 0). Without this, catching a
+// pass showed a one-frame flicker (gray, then red) since this component was reading
+// stale possession state from before the catch resolved.
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[DefaultExecutionOrder(200)]
 public class CarrierHighlight : MonoBehaviour
 {
     public enum TrackingMode { BallCarrier, UserControlled }
@@ -36,8 +50,8 @@ public class CarrierHighlight : MonoBehaviour
 
     // Future settings-menu hook: assign these directly (CarrierHighlight.UserColor = x)
     // without this script needing to know a settings system exists at all.
-    public static Color UserColor = new(0.85f, 0.1f, 0.1f);
-    public static Color OtherColor = new(0.55f, 0.55f, 0.55f);
+    public static Color UserColor = new Color(0.85f, 0.1f, 0.1f);
+    public static Color OtherColor = new Color(0.55f, 0.55f, 0.55f);
 
     MeshRenderer meshRenderer;
     MaterialPropertyBlock mpb;
@@ -68,6 +82,26 @@ public class CarrierHighlight : MonoBehaviour
             SetVisible(false);
             return;
         }
+
+        // Self-suppression: under today's rules, control is always exactly tied to
+        // ball possession (see PossessionController), so the UserControlled ring's
+        // target will ALWAYS equal the ball carrier — showing both is a redundant
+        // double ring on the same guy. Rather than delete this instance, it just goes
+        // quiet whenever it would coincide with the ball-carrier ring, and will
+        // correctly reappear on its own the moment anything (future defensive
+        // player-switching, a "keep controlling the passer" feature, etc.) actually
+        // decouples the two concepts.
+        if (trackingMode == TrackingMode.UserControlled)
+        {
+            Transform carrier = BallController.Instance != null ? BallController.Instance.Carrier : null;
+            if (target == carrier)
+            {
+                SetVisible(false);
+                return;
+            }
+        }
+
+        SetVisible(true);
 
         Vector3 pos = target.position;
         pos.y = groundOffset;
