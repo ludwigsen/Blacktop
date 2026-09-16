@@ -81,7 +81,17 @@ public class FieldLines : MonoBehaviour
             : losWorldZ;
 
         SetLocalZ(losLine, losZ);
-        SetLocalZ(firstDownLine, losZ + firstDownYards);
+        // don't build first down line if LOS is at or beyond goal line
+        if (losZ + firstDownYards >= FarGoalZ)
+        {
+            firstDownLine.gameObject.SetActive(false);
+        }
+        else
+        {
+            firstDownLine.gameObject.SetActive(true);
+            SetLocalZ(firstDownLine, losZ + firstDownYards);
+        }
+
     }
 
     static void SetLocalZ(Transform t, float z)
