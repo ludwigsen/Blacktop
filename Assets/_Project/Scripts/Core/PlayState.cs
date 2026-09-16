@@ -176,10 +176,11 @@ public class PlayState : MonoBehaviour
 
         phase = HuddlePhase.GatheringToHuddle;
         playClockTimer = playClockDuration;
-        StopAllCoroutines();
-        StartCoroutine(GatherToHuddleRoutine());
-
+        
         OnPlayEnded?.Invoke(reason);
+
+        StopAllCoroutines();
+        StartCoroutine(RegularPlayEndDelay());
     }
 
     public void NotifyFumble() => EndOffenseGamebreaker();
@@ -239,6 +240,17 @@ public class PlayState : MonoBehaviour
         foreach (var t in offensivePlayers)
             if (t != null) roster.Add(t);
         return roster;
+    }
+
+    // delays the next huddle until after the current play's end animation finishes
+    private IEnumerator RegularPlayEndDelay()
+    {
+        yield return new WaitForSeconds(3f);
+
+        phase = HuddlePhase.GatheringToHuddle;
+        playClockTimer = playClockDuration;
+
+        StartCoroutine(GatherToHuddleRoutine());
     }
 
     IEnumerator GatherToHuddleRoutine()
