@@ -22,7 +22,7 @@ public class TouchdownZone : MonoBehaviour
     void Awake()
     {
         if (fieldBounds == null) fieldBounds = GetComponentInParent<FieldBounds>();
-        if (fieldBounds == null) fieldBounds = FindFirstObjectByType<FieldBounds>();
+        if (fieldBounds == null) fieldBounds = FindAnyObjectByType<FieldBounds>();
     }
 
     void Update()
