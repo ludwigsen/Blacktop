@@ -151,16 +151,13 @@ public class PlayState : MonoBehaviour
 
         if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
-            nextLineOfScrimmageZ = (reason == PlayEndReason.OutOfBounds && BallController.Instance != null)
-                ? BallController.Instance.transform.position.z
-                : player.position.z;
+            if (BallController.Instance != null)
+            {
+                nextLineOfScrimmageZ = BallController.Instance.transform.position.z;
+            }
         }
         else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
         {
-            // Consolidated here (previously deferred to BreakHuddle/ResetPlay) so
-            // CurrentLineOfScrimmageZ — and therefore FieldLines' visual LOS marker —
-            // is correct starting the instant the whistle blows, not just once the
-            // offense finishes walking into the next formation.
             nextLineOfScrimmageZ = kickoffResetZ;
         }
 
