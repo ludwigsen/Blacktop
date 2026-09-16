@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -12,22 +13,12 @@ public class PlayState : MonoBehaviour
     [SerializeField] float initialPlayerZ = -5f;
     [SerializeField] float kickoffResetZ = -5f;
 
-    // Defenders list stays as-is — these are live scene object references, unavoidable
-    // per-scene setup. Renamed from "formation" — sitting next to offensiveFormation with
-    // no qualifier, it wasn't obvious at a glance which side it governed.
     [SerializeField] List<Transform> defenders = new();
     [SerializeField] FormationData defaultDefensiveFormation;
 
-    // Same by-index convention as defenders. Renamed from "offensiveFormation" for
-    // symmetry with defaultDefensiveFormation below.
     [SerializeField] List<Transform> offensivePlayers = new();
     [SerializeField] FormationData defaultOffensiveFormation;
 
-    // Runtime override for defense, mirroring playCall on the offensive side. Nothing
-    // sets this yet — there's no defensive playcalling system (defense is AI-only right
-    // now) — but the hook exists so a future "AI picks a package pre-snap" system, or an
-    // eventual human-playable defense, doesn't require touching PlayState again. Same
-    // shape as SetPlayCall()/ActiveOffensiveFormation on purpose.
     FormationData defensiveFormationOverride;
     public void SetDefensiveFormation(FormationData f) => defensiveFormationOverride = f;
 
@@ -38,64 +29,57 @@ public class PlayState : MonoBehaviour
     [SerializeField] PlayCallData playCall;
 
     [Header("Snap Safety")]
-    [Tooltip("Brief window after the snap where a tackle can't register. Backstops any formation-spacing issue (defense lined up too close to the offense) from ending the play before it's even started — real football has an inherent beat between snap and first real contact, this guarantees the same here regardless of how tight the formation data is tuned.")]
+    [Tooltip("Brief window after the snap where a tackle can't register.")]
     [SerializeField] float postSnapTackleGrace = 0.25f;
 
     float snapTimestamp;
     public bool IsPostSnapGraceActive => IsLive && (Time.time - snapTimestamp < postSnapTackleGrace);
 
-    // One-way latch, not a live position check. Real forward-pass rule: once the passer
-    // has crossed the LOS at ANY point during the play, forward passing is dead for the
-    // rest of that play — scrambling back behind it does NOT re-legalize the throw.
-    // Reset in BreakHuddle() (start of every play cycle), set permanently true in
-    // Update() the instant the passer's Z first exceeds the LOS, never cleared until then.
+    // --- Huddle / pre-snap flow ---
+    // GatheringToHuddle: automatic, starts the instant the whistle blows, no input needed.
+    // InHuddle: PlayCallSelector cycles freely here; nothing moves until Confirm.
+    // BreakingToFormation: animated walk to the selected play's spots (offense AND defense).
+    // SetAtLOS: arrived and set — this is the ONLY phase ResetPlay() (the snap) will act on.
+    enum HuddlePhase { GatheringToHuddle, InHuddle, BreakingToFormation, SetAtLOS }
+    HuddlePhase phase;
+
+    [Header("Huddle / Formation")]
+    [SerializeField] float huddleRadius = 1.5f;
+    [SerializeField] float huddleDistanceBehindLOS = 2f;
+    [SerializeField] float formationMoveSpeed = 6f;
+    [SerializeField] float formationArrivalTolerance = 0.15f;
+    [Tooltip("Delay-of-game clock. Runs continuously from the whistle; force-completes whatever step is in progress and snaps if it hits zero.")]
+    [SerializeField] float playClockDuration = 40f;
+
+    float playClockTimer;
+    public bool IsInHuddle => !IsLive && phase == HuddlePhase.InHuddle;
+    public bool IsSetAtLOS => !IsLive && phase == HuddlePhase.SetAtLOS;
+    public float PlayClockRemaining => playClockTimer;
+
     bool passerCrossedLOS;
     public bool HasPasserCrossedLOS => passerCrossedLOS;
 
-    // Starts dead. There is no special-cased "opening play" — the first snap of a
-    // session goes through ResetPlay() exactly like every other one, which is what makes
-    // the play-selection HUD, route assignment, AND blocker registration all fire
-    // correctly before ANY play, instead of only from play #2 onward.
     public bool IsLive { get; private set; } = false;
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
 
     InputSystem_Actions controls;
     float nextLineOfScrimmageZ;
-    // Exposed so DefenderCoordinator (and potentially other systems later) can compare
-    // the ball carrier's live position against the current line of scrimmage without
-    // PlayState needing to know anything about defender logic itself.
     public float CurrentLineOfScrimmageZ => nextLineOfScrimmageZ;
     PlayEndReason lastEndReason;
 
-    // Exposed so TackleContact can identify "the passer" for sack scoring — only the
-    // designated passer (UserPlayer) getting tackled behind the LOS counts as a sack,
-    // not any teammate who happens to be carrying after a pitch/pass downfield.
     public Transform Passer => player;
-
-    // Public read-only access to offensive players for UI/route assignment
     public List<Transform> OffensivePlayers => offensivePlayers;
 
-    // Whichever formation actually governs the CURRENT play's offense — the play call's
-    // own formation if it specifies one, otherwise PlayState's default.
     FormationData ActiveOffensiveFormation =>
         (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : defaultOffensiveFormation;
 
-    // Whichever formation actually governs the CURRENT play's defense — the runtime
-    // override if one's been set (SetDefensiveFormation), otherwise PlayState's default.
     FormationData ActiveDefensiveFormation =>
         defensiveFormationOverride != null ? defensiveFormationOverride : defaultDefensiveFormation;
 
-    // Assigned by PlayCallSelector (or any future playbook UI) before the next snap.
-    // Takes effect the next time ResetPlay() runs.
     public void SetPlayCall(PlayCallData call) => playCall = call;
 
     // --- Gamebreaker state ---
-    // Offense meter fills via GamebreakerController (Styling, continuous) and point-award
-    // hooks scattered through the move scripts (Juke/Hurdle/StiffArm) plus Touchdown
-    // (handled inline below, since PlayState already owns EndPlay). Defense meter fills
-    // via TackleContact (sack) and BallController (interception/forced fumble). Both are
-    // 0-100; activation consumes the respective meter to zero.
     float offenseMeter;
     float defenseMeter;
     int offensePossessionsRemaining;
@@ -115,6 +99,12 @@ public class PlayState : MonoBehaviour
         Instance = this;
         controls = new InputSystem_Actions();
         nextLineOfScrimmageZ = initialPlayerZ;
+
+        // No special-cased first play logically — but visually, there's nothing to
+        // gather FROM before the first snap, so skip straight to InHuddle instead of
+        // animating a walk from wherever the scene happened to place everyone.
+        phase = HuddlePhase.InHuddle;
+        playClockTimer = playClockDuration;
     }
 
     void OnEnable()
@@ -137,13 +127,20 @@ public class PlayState : MonoBehaviour
 
     void HandleResetPlay(InputAction.CallbackContext _) => ResetPlay();
 
-    // Polls the passer's live position while the play is live to arm the LOS-crossing
-    // latch. Deliberately never un-latches here — only BreakHuddle() (next play) clears it.
     void Update()
     {
-        if (!IsLive || passerCrossedLOS || player == null) return;
-        if (player.position.z > nextLineOfScrimmageZ)
-            passerCrossedLOS = true;
+        if (IsLive)
+        {
+            if (!passerCrossedLOS && player != null && player.position.z > nextLineOfScrimmageZ)
+                passerCrossedLOS = true;
+            return;
+        }
+
+        if (playClockTimer > 0f)
+        {
+            playClockTimer -= Time.deltaTime;
+            if (playClockTimer <= 0f) ForceThroughPlayClock();
+        }
     }
 
     public void EndPlay(PlayEndReason reason)
@@ -152,112 +149,65 @@ public class PlayState : MonoBehaviour
         IsLive = false;
         lastEndReason = reason;
 
-        // Reads the ACTUAL ball carrier's position, not a hardcoded reference to
-        // UserPlayer. Same "resolve live, don't cache" rule already applied to
-        // DefenderAI/DefenderCoordinator/CameraFollow/TouchdownZone.
         if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
             nextLineOfScrimmageZ = (reason == PlayEndReason.OutOfBounds && BallController.Instance != null)
                 ? BallController.Instance.transform.position.z
                 : player.position.z;
         }
-        // Touchdown/Safety don't touch nextLineOfScrimmageZ here — both reset to
-        // kickoffResetZ in ResetPlay() instead, since both end the current possession.
+        else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
+        {
+            // Consolidated here (previously deferred to BreakHuddle/ResetPlay) so
+            // CurrentLineOfScrimmageZ — and therefore FieldLines' visual LOS marker —
+            // is correct starting the instant the whistle blows, not just once the
+            // offense finishes walking into the next formation.
+            nextLineOfScrimmageZ = kickoffResetZ;
+        }
 
         if (reason == PlayEndReason.Touchdown)
         {
-            AddOffensePoints(10f); // flat TD bonus, not Swagger-scaled — a score is a score regardless of style
+            AddOffensePoints(10f);
             EndOffenseGamebreaker();
         }
         else if (reason == PlayEndReason.Interception || reason == PlayEndReason.Safety)
         {
-            // Both are bad outcomes for the offense — no style points, and any active
-            // offensive Gamebreaker window closes immediately. No scoreboard exists yet
-            // to actually award the defense 2 points for a safety — this is where that
-            // hooks in once one does.
             EndOffenseGamebreaker();
         }
+
+        phase = HuddlePhase.GatheringToHuddle;
+        playClockTimer = playClockDuration;
+        StopAllCoroutines();
+        StartCoroutine(GatherToHuddleRoutine());
 
         OnPlayEnded?.Invoke(reason);
     }
 
-    // Called by TackleContact the instant a fumble roll succeeds — turnover-by-fumble ends
-    // offensive Gamebreaker immediately, same as an interception, even though the play
-    // itself still resolves as PlayEndReason.Tackled.
     public void NotifyFumble() => EndOffenseGamebreaker();
 
-    // Positions everyone for the CURRENT play call without going live — this is the
-    // "offense breaks the huddle" moment. Safe to call repeatedly (cycling to a
-    // different play mid-huddle just re-forms into the new one), and ResetPlay() below
-    // always calls this first, so pressing Snap without ever explicitly confirming still
-    // works exactly like it always did.
+    // Entry point for PlayCallSelector's Confirm. Animated, non-blocking — returns
+    // immediately, formation coroutine runs in the background. No-op while still
+    // walking INTO the huddle (nothing to break yet) or while already live.
     public void BreakHuddle()
     {
         if (IsLive) return;
+        if (phase == HuddlePhase.GatheringToHuddle) return;
 
-        bool possessionEnded = lastEndReason == PlayEndReason.Touchdown || lastEndReason == PlayEndReason.Safety;
-        float resetZ = possessionEnded ? kickoffResetZ : nextLineOfScrimmageZ;
-        Vector3 losOrigin = new(0f, 1f, resetZ);
-        Quaternion faceUpfield = Quaternion.identity;
-
-        var offense = ActiveOffensiveFormation;
-        var defense = ActiveDefensiveFormation;
-
-        if (player != null)
-        {
-            player.position = offense != null
-                ? losOrigin + offense.qbOffsetFromLOS
-                : new Vector3(0f, player.position.y, resetZ);
-            player.rotation = faceUpfield;
-        }
-
-        if (defense != null)
-        {
-            for (int i = 0; i < defenders.Count && i < defense.defenderSlots.Count; i++)
-            {
-                if (defenders[i] == null) continue;
-                defenders[i].position = losOrigin + defense.defenderSlots[i].offsetFromLOS;
-            }
-        }
-
-        if (offense != null)
-        {
-            for (int i = 0; i < offensivePlayers.Count && i < offense.offensiveSlots.Count; i++)
-            {
-                if (offensivePlayers[i] == null) continue;
-                offensivePlayers[i].position = losOrigin + offense.offensiveSlots[i].offsetFromLOS;
-                offensivePlayers[i].rotation = faceUpfield;
-            }
-        }
-
-        if (possessionEnded)
-            nextLineOfScrimmageZ = kickoffResetZ;
-
-        // New play cycle — clear the previous play's LOS-crossing latch. Placed here
-        // rather than in ResetPlay() so re-huddling into a different play call before
-        // the snap doesn't leave a stale latch from whatever was true a moment ago.
-        passerCrossedLOS = false;
-
-        AssignRoutes();
-
-        if (BlockingCoordinator.Instance != null)
-            BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
-
-        var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
-        if (selectionUI != null)
-            selectionUI.ResetSelection();
+        StopAllCoroutines();
+        StartCoroutine(BreakToFormationRoutine());
     }
 
-    // The actual snap. Breaks the huddle first (harmless no-op visually if it's already
-    // broken via Confirm), then goes live. Gamebreaker possession-count only decrements
-    // HERE, not in BreakHuddle() — re-forming into a different play pre-snap shouldn't
-    // burn a possession, only an actual snap should.
+    // The actual snap. Only does something once you're actually SET at the line —
+    // no more implicit "also break the huddle for you" fallback. Real football
+    // doesn't let you snap out of the huddle either.
     public void ResetPlay()
     {
         if (IsLive) return;
+        if (phase != HuddlePhase.SetAtLOS) return;
+        DoSnap();
+    }
 
-        BreakHuddle();
-
+    void DoSnap()
+    {
         if (IsOffenseGamebreakerActive)
         {
             offensePossessionsRemaining--;
@@ -267,6 +217,152 @@ public class PlayState : MonoBehaviour
         IsLive = true;
         snapTimestamp = Time.time;
         OnPlayReset?.Invoke();
+    }
+
+    // Delay-of-game. Forces whatever step is in progress to complete INSTANTLY
+    // (no point animating a panic snap) and goes live immediately after.
+    // BreakToFormationRoutine(instant: true) has no yield in its instant path, so it
+    // runs fully to completion synchronously before StartCoroutine even returns —
+    // phase is already SetAtLOS by the time DoSnap() is called below, regardless of
+    // which phase we were stuck in when the clock hit zero.
+    void ForceThroughPlayClock()
+    {
+        StopAllCoroutines();
+        StartCoroutine(BreakToFormationRoutine(instant: true));
+        DoSnap();
+    }
+
+    List<Transform> GetOffenseRoster()
+    {
+        var roster = new List<Transform>();
+        if (player != null) roster.Add(player);
+        foreach (var t in offensivePlayers)
+            if (t != null) roster.Add(t);
+        return roster;
+    }
+
+    IEnumerator GatherToHuddleRoutine()
+    {
+        phase = HuddlePhase.GatheringToHuddle;
+
+        var members = GetOffenseRoster();
+        if (members.Count == 0) { phase = HuddlePhase.InHuddle; yield break; }
+
+        Vector3 huddleCenter = new(0f, 1f, nextLineOfScrimmageZ - huddleDistanceBehindLOS);
+        var targets = CircleTargets(members.Count, huddleCenter, huddleRadius);
+
+        yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance, instant: false);
+
+        for (int i = 0; i < members.Count; i++)
+        {
+            Vector3 dir = huddleCenter - members[i].position;
+            if (dir.sqrMagnitude > 0.01f) members[i].rotation = Quaternion.LookRotation(dir.normalized);
+        }
+
+        phase = HuddlePhase.InHuddle;
+    }
+
+    IEnumerator BreakToFormationRoutine(bool instant = false)
+    {
+        phase = HuddlePhase.BreakingToFormation;
+
+        // New play cycle — clear the previous play's LOS-crossing latch here, same
+        // reasoning as before: re-confirming a different play before the snap
+        // shouldn't leave a stale latch from a moment ago.
+        passerCrossedLOS = false;
+
+        Vector3 losOrigin = new(0f, 1f, nextLineOfScrimmageZ);
+        var offense = ActiveOffensiveFormation;
+        var defense = ActiveDefensiveFormation;
+
+        var members = new List<Transform>();
+        var targets = new List<Vector3>();
+
+        if (player != null)
+        {
+            members.Add(player);
+            targets.Add(offense != null ? losOrigin + offense.qbOffsetFromLOS : new Vector3(0f, player.position.y, nextLineOfScrimmageZ));
+        }
+
+        for (int i = 0; i < offensivePlayers.Count; i++)
+        {
+            if (offensivePlayers[i] == null) continue;
+            members.Add(offensivePlayers[i]);
+            targets.Add(offense != null && i < offense.offensiveSlots.Count
+                ? losOrigin + offense.offensiveSlots[i].offsetFromLOS
+                : offensivePlayers[i].position); // no slot defined -> hold, don't yank to origin
+        }
+
+        for (int i = 0; i < defenders.Count; i++)
+        {
+            if (defenders[i] == null) continue;
+            members.Add(defenders[i]);
+            targets.Add(defense != null && i < defense.defenderSlots.Count
+                ? losOrigin + defense.defenderSlots[i].offsetFromLOS
+                : defenders[i].position);
+        }
+
+        yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance, instant);
+
+        if (player != null) player.rotation = Quaternion.identity;
+        foreach (var t in offensivePlayers)
+            if (t != null) t.rotation = Quaternion.identity;
+
+        // Fires only once everyone's actually standing in their final spot —
+        // ReceiverAI.SetRoute() calculates route depth from current position, so
+        // calling this any earlier (e.g. at the start of the walk) would point every
+        // route at the wrong depth.
+        AssignRoutes();
+
+        if (BlockingCoordinator.Instance != null)
+            BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
+
+        var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
+        if (selectionUI != null)
+            selectionUI.ResetSelection();
+
+        phase = HuddlePhase.SetAtLOS;
+    }
+
+    // Shared walk helper. instant=true assigns final positions directly with zero
+    // yields, so a caller can StartCoroutine() it and rely on it being fully complete
+    // by the time StartCoroutine() returns (see ForceThroughPlayClock).
+    IEnumerator MoveGroupTo(List<Transform> members, List<Vector3> targets, float speed, float tolerance, bool instant)
+    {
+        if (instant)
+        {
+            for (int i = 0; i < members.Count && i < targets.Count; i++)
+                if (members[i] != null) members[i].position = targets[i];
+            yield break;
+        }
+
+        bool anyMoving = true;
+        while (anyMoving)
+        {
+            anyMoving = false;
+            for (int i = 0; i < members.Count && i < targets.Count; i++)
+            {
+                if (members[i] == null) continue;
+                Vector3 pos = members[i].position;
+                if (Vector3.Distance(pos, targets[i]) > tolerance)
+                {
+                    members[i].position = Vector3.MoveTowards(pos, targets[i], speed * Time.deltaTime);
+                    anyMoving = true;
+                }
+            }
+            yield return null;
+        }
+    }
+
+    static List<Vector3> CircleTargets(int count, Vector3 center, float radius)
+    {
+        var result = new List<Vector3>(count);
+        for (int i = 0; i < count; i++)
+        {
+            float angle = (360f / count) * i * Mathf.Deg2Rad;
+            result.Add(center + new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) * radius);
+        }
+        return result;
     }
 
     void AssignRoutes()
@@ -279,8 +375,6 @@ public class PlayState : MonoBehaviour
             ReceiverAI receiver = playerTransform.GetComponent<ReceiverAI>();
             if (receiver == null) continue;
 
-            // A play call can replace the prototype go route. Until one is assigned,
-            // every eligible target runs a straight-upfield route for pass testing.
             RoutePattern route = playCall != null
                 ? playCall.GetRouteForReceiver(i)
                 : RoutePattern.Go;
@@ -288,7 +382,7 @@ public class PlayState : MonoBehaviour
         }
     }
 
-    // --- Gamebreaker API ---
+    // --- Gamebreaker API (unchanged) ---
 
     public void AddOffensePoints(float pts)
     {
@@ -321,11 +415,6 @@ public class PlayState : MonoBehaviour
         OnOffenseGamebreakerEnded?.Invoke();
     }
 
-    // Defense has no human-controlled activation path yet — there's no player-controllable
-    // defender in the project. This auto-arms the guaranteed-turnover flag the instant the
-    // meter caps, consumed by whichever fumble/interception roll happens next. Replace with
-    // a real input-driven TryActivateDefenseGamebreaker() once defense is human-playable;
-    // the flag/consumption plumbing below already supports it as-is.
     void CheckDefenseAutoActivate()
     {
         if (!defenseGuaranteedTurnoverPending && defenseMeter >= 100f)
@@ -336,9 +425,6 @@ public class PlayState : MonoBehaviour
         }
     }
 
-    // Consumed by TackleContact's fumble roll and BallController's interception roll —
-    // whichever physical contest happens next after the meter caps wins automatically.
-    // One-shot: calling this clears the flag, so only that single next contest is guaranteed.
     public bool ConsumeGuaranteedTurnover()
     {
         CheckDefenseAutoActivate();
@@ -347,9 +433,6 @@ public class PlayState : MonoBehaviour
         return true;
     }
 
-    // Multiplicative stat buff while offensive Gamebreaker is active — returns 1f (no-op)
-    // otherwise. Callers pass this straight into PlayerAttributes.Speed(field, gb) etc.,
-    // same pattern as FieldModifiers, just multiplicative instead of additive per design.
     public float GetGamebreakerMult(AttributeStat stat)
     {
         if (!IsOffenseGamebreakerActive || gamebreakerBuffs == null) return 1f;
