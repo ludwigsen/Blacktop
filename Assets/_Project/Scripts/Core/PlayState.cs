@@ -173,9 +173,6 @@ public class PlayState : MonoBehaviour
         {
             EndOffenseGamebreaker();
         }
-
-        phase = HuddlePhase.GatheringToHuddle;
-        playClockTimer = playClockDuration;
         
         OnPlayEnded?.Invoke(reason);
 
