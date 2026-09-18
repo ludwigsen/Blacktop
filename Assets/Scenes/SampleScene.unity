@@ -2141,8 +2141,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayState
   player: {fileID: 1064215533}
-  initialPlayerZ: -15
-  kickoffResetZ: -15
+  initialPlayerZ: -10
+  kickoffResetZ: -10
   defenders:
   - {fileID: 670707746}
   - {fileID: 1099329970}
@@ -2164,6 +2164,11 @@ MonoBehaviour:
   gamebreakerPossessionLimit: 3
   playCall: {fileID: 0}
   postSnapTackleGrace: 0.25
+  huddleRadius: 1.5
+  huddleDistanceBehindLOS: 2
+  formationMoveSpeed: 6
+  formationArrivalTolerance: 0.15
+  playClockDuration: 40
 --- !u!4 &1314477356
 Transform:
   m_ObjectHideFlags: 0

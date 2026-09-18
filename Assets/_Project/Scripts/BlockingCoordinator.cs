@@ -37,19 +37,17 @@ public class BlockingCoordinator : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
-        // Ball not possessed, mid-pass/pitch, or hasn't crossed the LOS yet — no blocking
-        // assignments exist. Design call: blocking only matters once the carrier has
-        // crossed the line of scrimmage AND the ball is possessed; before that, WR/TE/RB
-        // are still running routes via ReceiverAI and shouldn't be fighting AllyBlocker
-        // for control of their own transform.
+        // Gated on possession alone — NOT on the carrier having crossed the LOS. That gate
+        // was backwards: run blocking has to clear a lane AT and BEFORE the LOS to matter,
+        // and pass protection has to start at the snap too (a pocket passer often never
+        // crosses the LOS at all). The old pastLOS check meant OL never engaged on a run
+        // until the runner had already broken through unblocked, and never engaged on a
+        // clean dropback pass.
         bool ballHeldAndPossessed = BallController.Instance != null
             && BallController.Instance.Carrier != null
             && BallController.Instance.State == BallController.BallState.Held;
 
-        bool pastLOS = ballHeldAndPossessed && PlayState.Instance != null
-            && BallController.Instance.Carrier.position.z > PlayState.Instance.CurrentLineOfScrimmageZ;
-
-        if (!ballHeldAndPossessed || !pastLOS)
+        if (!ballHeldAndPossessed)
         {
             if (defenderAssignments.Count > 0 || AnyBlockerHasTarget())
             {

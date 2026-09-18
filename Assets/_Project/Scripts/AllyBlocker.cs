@@ -18,8 +18,16 @@ public class AllyBlocker : MonoBehaviour
     [SerializeField] float stopDistance = 0.5f;
     [SerializeField] float contactDetectRadius = 1.2f; // OverlapSphere radius for contact resolution
     [SerializeField] float pushBackDistance = 0.8f;
-    [SerializeField] float pushBackDuration = 0.15f; // lerp duration for pushback effect
+    [SerializeField] float pushBackDuration = 0.15f;
     [SerializeField] string defenderTag = "Defender";
+
+    // Debounce between block-contact rolls. Without this, CheckBlockContact re-rolls
+    // almost every frame while blocker and defender stay within contactDetectRadius
+    // (the pushback distance is small relative to close speed), producing rapid
+    // alternating win/loss outcomes on the same engagement. Set on ANY resolution
+    // (win or loss), not just the loser's pushBackTimer.
+    [SerializeField] float contactCooldownDuration = 0.4f;
+    float contactCooldownTimer;
 
     // Attributes — assign the same PlayerAttributes asset as the ball carrier for now,
     // or create ally-specific variants once blocking feel needs differentiation from
@@ -52,6 +60,7 @@ public class AllyBlocker : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (contactCooldownTimer > 0f) contactCooldownTimer -= Time.deltaTime;
 
         if (IsCarrier)
         {
@@ -85,7 +94,7 @@ public class AllyBlocker : MonoBehaviour
         if (currentTarget == null) return;
 
         MoveTowardTarget();
-        CheckBlockContact();
+        if (contactCooldownTimer <= 0f) CheckBlockContact();
     }
 
     void MoveTowardTarget()
@@ -120,6 +129,8 @@ public class AllyBlocker : MonoBehaviour
     // so neither side can ever hit 0% or 100% regardless of how lopsided the attributes get.
     void ResolveBlockContact(Transform defender, DefenderAI defenderAI)
     {
+        contactCooldownTimer = contactCooldownDuration;
+
         float blockerPower = attributes.RunPower();
         float defenderResist = defenderAI.ResistMult;
         float blockWinChance = blockerPower / (blockerPower + defenderResist);
