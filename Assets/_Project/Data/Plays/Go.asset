@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Go
   uniformRoute: 1
   route: 0
-  offensiveFormation: {fileID: 0}
+  offensiveFormation: {fileID: 11400000, guid: 59fd00977477b498fbc262dadeae11cd, type: 2}
   routes:
   - receiverIndex: 0
     route: 0
@@ -23,3 +23,5 @@ MonoBehaviour:
     route: 0
   - receiverIndex: 0
     route: 0
+  playType: 0
+  handoffReceiverSlot: 1
