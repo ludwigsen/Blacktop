@@ -10,6 +10,7 @@ using UnityEngine;
 // this is what makes defenders track the ball itself (and whoever's currently carrying
 // it) instead of a hardcoded reference to the player. Once fumbles/interceptions change
 // possession mid-play, a cached reference would go stale immediately; this doesn't.
+[RequireComponent(typeof(TeamMember))]
 public class DefenderAI : MonoBehaviour
 {
     public enum Role { Engage, Contain }
@@ -19,7 +20,6 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float stopDistance = 1f;
     [SerializeField] float separationRadius = 1.2f;
     [SerializeField] float separationStrength = 3f;
-    [SerializeField] string defenderTag = "Defender";
 
     // How close the ball carrier needs to get to THIS defender before a Contain defender
     // drops the "hold position" behavior and chases directly, same as Engage would.
@@ -31,6 +31,8 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float containLeadDistance = 3f;
 
     public Role CurrentRole { get; private set; } = Role.Engage; // default Engage so a scene without a coordinator behaves sanely
+
+    TeamMember teamMember;
 
     float MoveSpeed => baseMoveSpeed * (attributes != null ? attributes.speedMult : 1f);
     public float ResistMult => attributes != null ? attributes.resistMult : 1f;
@@ -45,6 +47,11 @@ public class DefenderAI : MonoBehaviour
     float pushBackTimer;
     const float pushBackDuration = 0.15f;
     float shedTimer;
+
+    void Awake()
+    {
+        teamMember = GetComponent<TeamMember>();
+    }
 
     // Called by DefenderCoordinator once per frame — external assignment rather than
     // this script deciding its own role, since "who's closest" requires comparing
@@ -113,14 +120,18 @@ public class DefenderAI : MonoBehaviour
         return direction * MoveSpeed;
     }
 
+    // Spacing is measured against same-team players (excluding self), not a hardcoded
+    // Defender tag — same "don't stack on your own guys" effect as before, but it no
+    // longer assumes this component only ever lives on one permanently-defensive group.
     Vector3 CalculateSeparation()
     {
         Vector3 push = Vector3.zero;
-        GameObject[] allDefenders = GameObject.FindGameObjectsWithTag(defenderTag);
+        var allMembers = FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
-        foreach (var other in allDefenders)
+        foreach (var other in allMembers)
         {
             if (other.transform == transform) continue;
+            if (other.teamId != teamMember.teamId) continue;
 
             float dist = Vector3.Distance(transform.position, other.transform.position);
             if (dist < separationRadius && dist > 0.001f)

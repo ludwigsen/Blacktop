@@ -1,41 +1,42 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// The four pass targets for the current prototype. Keeping the roster rule in one
-// place prevents the UI and passing code from disagreeing about what button means what.
+// The four pass targets for the current prototype. Eligibility keys off each player's
+// TeamMember.slot rather than GameObject name — this is what makes any player on the
+// roster controllable without hardcoding "Ally__WR1"-style names into pass logic.
 public static class ReceiverTargeting
 {
-    static readonly string[] targetNames =
+    static readonly TeamMember.RosterSlot[] targetSlots =
     {
-        "Ally__WR1",
-        "Ally__WR2",
-        "Ally__WR3",
-        "Ally__RB"
+        TeamMember.RosterSlot.WR1,
+        TeamMember.RosterSlot.WR2,
+        TeamMember.RosterSlot.WR3,
+        TeamMember.RosterSlot.RB
     };
 
     public static bool IsEligible(Transform player)
     {
         if (player == null) return false;
+        if (!player.TryGetComponent<TeamMember>(out var member)) return false;
 
-        foreach (string targetName in targetNames)
+        foreach (var slot in targetSlots)
         {
-            if (player.name == targetName) return true;
+            if (member.slot == slot) return true;
         }
-
         return false;
     }
 
     // Always return the targets in their button order: 1=WR1, 2=WR2, 3=WR3, 4=RB.
     public static List<Transform> GetEligibleReceivers(IList<Transform> players)
     {
-        var receivers = new List<Transform>(targetNames.Length);
+        var receivers = new List<Transform>(targetSlots.Length);
         if (players == null) return receivers;
 
-        foreach (string targetName in targetNames)
+        foreach (var slot in targetSlots)
         {
             foreach (Transform player in players)
             {
-                if (player != null && player.name == targetName)
+                if (player != null && player.TryGetComponent<TeamMember>(out var member) && member.slot == slot)
                 {
                     receivers.Add(player);
                     break;

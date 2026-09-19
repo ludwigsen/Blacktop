@@ -1,18 +1,14 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// Sits on GameManager, alongside PlayState. Every frame, finds all Defender-tagged
-// objects, measures distance to the ball carrier, and marks the single closest one
-// Engage — everyone else gets Contain. Deliberately simple (no role stickiness/hysteresis,
-// no formation-aware zone assignment) — smallest version that produces "one defender
-// commits, others hold shape."
-//
-// Carrier is resolved live from BallController rather than cached — same reasoning as
-// DefenderAI's Target property. A hardcoded Player reference would go stale the moment
-// possession changes (fumble, eventual interception).
+// Sits on GameManager, alongside PlayState. Every frame, finds every player NOT on the
+// ball carrier's team, measures distance to the carrier, and marks the closest one
+// Engage — everyone else gets Contain. Resolves "who's on defense" from
+// TeamMember.teamId rather than a hardcoded Defender tag, so this works regardless of
+// which team currently has the ball — required for symmetric T1/T2 rosters where
+// either side can snap the ball.
 public class DefenderCoordinator : MonoBehaviour
 {
-    [SerializeField] string defenderTag = "Defender";
-
     Transform Carrier => BallController.Instance != null ? BallController.Instance.Carrier : null;
 
     void Update()
@@ -21,9 +17,15 @@ public class DefenderCoordinator : MonoBehaviour
 
         var carrier = Carrier;
         if (carrier == null) return; // loose ball — no one to assign roles relative to yet
+        if (!carrier.TryGetComponent<TeamMember>(out var carrierTeam)) return;
 
-        GameObject[] defenderObjects = GameObject.FindGameObjectsWithTag(defenderTag);
-        if (defenderObjects.Length == 0) return;
+        var defenders = new List<DefenderAI>();
+        foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (member.teamId == carrierTeam.teamId) continue; // same team as carrier — not a defender
+            if (member.TryGetComponent<DefenderAI>(out var ai)) defenders.Add(ai);
+        }
+        if (defenders.Count == 0) return;
 
         // Once the carrier has advanced past the line of scrimmage, "holding a lane"
         // no longer makes sense — everyone converges. Assumes offense moves toward +Z,
@@ -32,23 +34,16 @@ public class DefenderCoordinator : MonoBehaviour
 
         if (pastLOS)
         {
-            foreach (var obj in defenderObjects)
-            {
-                var ai = obj.GetComponent<DefenderAI>();
-                if (ai != null) ai.SetRole(DefenderAI.Role.Engage);
-            }
-            return; // skip the closest-only assignment below entirely once past LOS
+            foreach (var ai in defenders) ai.SetRole(DefenderAI.Role.Engage);
+            return;
         }
 
         DefenderAI closest = null;
         float closestDist = float.MaxValue;
 
-        foreach (var obj in defenderObjects)
+        foreach (var ai in defenders)
         {
-            var ai = obj.GetComponent<DefenderAI>();
-            if (ai == null) continue;
-
-            float dist = Vector3.Distance(obj.transform.position, carrier.position);
+            float dist = Vector3.Distance(ai.transform.position, carrier.position);
             if (dist < closestDist)
             {
                 closestDist = dist;
@@ -56,10 +51,7 @@ public class DefenderCoordinator : MonoBehaviour
             }
         }
 
-        foreach (var obj in defenderObjects)
-        {
-            if (!obj.TryGetComponent<DefenderAI>(out var ai)) continue;
+        foreach (var ai in defenders)
             ai.SetRole(ai == closest ? DefenderAI.Role.Engage : DefenderAI.Role.Contain);
-        }
     }
 }

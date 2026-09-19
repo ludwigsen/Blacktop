@@ -17,14 +17,16 @@ public class BallController : MonoBehaviour
     [SerializeField] Transform carrier;
     [SerializeField] Vector3 carryOffset = new(0.4f, 1f, 0.3f);
 
-    // How close a player/defender/teammate needs to get to a loose ball to scoop it up.
-    // Generous on purpose — same arcade-forgiveness reasoning as every other
-    // OverlapSphere check in the project (TackleContact, StiffArmMove's contact range).
-    // Also doubles as "close enough to complete a catch" for pass/pitch arrival.
+    // No "starting offense" concept exists yet anywhere in the project — every new
+    // play resets possession to this team's QB. Once alternating possession/kickoff
+    // logic exists, this is the one place that needs to change.
+    [SerializeField] int defaultOffenseTeamId = 0;
+
+    // How close a player needs to get to a loose ball to scoop it up. Generous on
+    // purpose — same arcade-forgiveness reasoning as every other OverlapSphere check in
+    // the project (TackleContact, StiffArmMove's contact range). Also doubles as "close
+    // enough to complete a catch" for pass/pitch arrival.
     [SerializeField] float recoveryRadius = 1f;
-    [SerializeField] string playerTag = "Player";
-    [SerializeField] string defenderTag = "Defender";
-    [SerializeField] string teammateTag = "Teammate"; // offensive AI receivers — add this tag in TagManager
 
     public BallState State { get; private set; } = BallState.Held;
     public Transform Carrier => carrier;
@@ -45,6 +47,11 @@ public class BallController : MonoBehaviour
     bool isPitchInFlight;
     bool interceptionResolved; // single-roll-per-throw guard, same pattern as StiffArmMove's hasResolvedContact
 
+    // Captured from the thrower's TeamMember at Throw() time, before carrier is nulled.
+    // Only a member of the OTHER team can intercept a given throw — without this, a
+    // thrower's own teammate standing near the flight path could "intercept" their own pass.
+    int? throwingTeamId;
+
     // Author as a 0→1→0 arc shape in Inspector — same idiom as HurdleMove's heightCurve.
     [SerializeField] AnimationCurve flightArcCurve = AnimationCurve.EaseInOut(0, 0, 1, 0);
     [SerializeField] float interceptCheckRadius = 1.2f;
@@ -59,8 +66,8 @@ public class BallController : MonoBehaviour
 
         if (carrier == null)
         {
-            var player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null) carrier = player.transform;
+            var qb = FindQuarterback(defaultOffenseTeamId);
+            if (qb != null) carrier = qb;
         }
     }
 
@@ -81,13 +88,22 @@ public class BallController : MonoBehaviour
     }
 
     // Every new play (previous one ended via tackle, touchdown, fumble, incomplete pass,
-    // or interception) re-establishes possession with the player. No offense-vs-defense
-    // possession flip exists yet, so "new play" always means "ball goes back to the
-    // offense's ball carrier" — currently always UserPlayer.
+    // or interception) re-establishes possession with defaultOffenseTeamId's QB. No
+    // alternating-possession logic exists yet — see the field comment above.
     void HandlePlayReset()
     {
-        var player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null) AttachTo(player.transform);
+        var qb = FindQuarterback(defaultOffenseTeamId);
+        if (qb != null) AttachTo(qb);
+    }
+
+    static Transform FindQuarterback(int teamId)
+    {
+        foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (member.teamId == teamId && member.slot == TeamMember.RosterSlot.QB)
+                return member.transform;
+        }
+        return null;
     }
 
     void LateUpdate()
@@ -133,6 +149,13 @@ public class BallController : MonoBehaviour
         flightDuration = duration;
         flightTimer = 0f;
         interceptionResolved = false;
+
+        // Capture BEFORE clearing carrier below — this is the only point where we still
+        // know who threw it.
+        throwingTeamId = (carrier != null && carrier.TryGetComponent<TeamMember>(out var throwerTeam))
+            ? throwerTeam.teamId
+            : (int?)null;
+
         carrier = null;
         State = BallState.InFlight;
     }
@@ -161,7 +184,10 @@ public class BallController : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, interceptCheckRadius);
         foreach (var hit in hits)
         {
-            if (!hit.CompareTag(defenderTag)) continue;
+            if (!hit.TryGetComponent<TeamMember>(out var member)) continue;
+            // Same team as the thrower — that's just a teammate near the flight path,
+            // not a defensive play on the ball. Keep looking.
+            if (throwingTeamId.HasValue && member.teamId == throwingTeamId.Value) continue;
 
             interceptionResolved = true;
             bool guaranteed = PlayState.Instance != null && PlayState.Instance.ConsumeGuaranteedTurnover();
@@ -202,20 +228,18 @@ public class BallController : MonoBehaviour
     }
 
     // Polled via OverlapSphere, same pattern as TackleContact/StiffArmMove — no
-    // Rigidbody/trigger-callback reliance anywhere in this project. First Player,
-    // Defender, or Teammate tag found within range recovers the ball; whichever happens
-    // to be first in the hits array wins on a tie (no tie-breaking logic — extremely
-    // rare in practice given frame-rate granularity, revisit only if it's ever visibly bad).
+    // Rigidbody/trigger-callback reliance anywhere in this project. First player found
+    // within range recovers, regardless of team — whichever happens to be first in the
+    // hits array wins on a tie (no tie-breaking logic, flagged separately in project
+    // status notes).
     void CheckRecovery()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, recoveryRadius);
         foreach (var hit in hits)
         {
-            if (hit.CompareTag(playerTag) || hit.CompareTag(defenderTag) || hit.CompareTag(teammateTag))
-            {
-                AttachTo(hit.transform);
-                return;
-            }
+            if (!hit.TryGetComponent<TeamMember>(out _)) continue;
+            AttachTo(hit.transform);
+            return;
         }
     }
 

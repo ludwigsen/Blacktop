@@ -1,9 +1,9 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerStateMachine))]
+[RequireComponent(typeof(TeamMember))]
 public class TackleContact : MonoBehaviour
 {
-    [SerializeField] string defenderTag = "Defender";
     [SerializeField] float contactRadius = 0.8f;
 
     // Testing value — no ballSecurity-style attribute exists yet, so this is a flat
@@ -12,10 +12,12 @@ public class TackleContact : MonoBehaviour
     [SerializeField] float baseFumbleChance = 0.5f;
 
     PlayerStateMachine stateMachine;
+    TeamMember teamMember;
 
     void Awake()
     {
         stateMachine = GetComponent<PlayerStateMachine>();
+        teamMember = GetComponent<TeamMember>();
     }
 
     void Update()
@@ -27,7 +29,11 @@ public class TackleContact : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);
         foreach (var hit in hits)
         {
-            if (!hit.CompareTag(defenderTag)) continue;
+            // Anyone on a different team can tackle you — this is what makes tackling
+            // work regardless of which side is currently on offense, instead of only
+            // ever recognizing a hardcoded "Defender" tag.
+            if (!hit.TryGetComponent<TeamMember>(out var otherTeam)) continue;
+            if (otherTeam.teamId == teamMember.teamId) continue;
 
             // Sack — specifically the designated passer, tackled behind the current LOS,
             // before ever throwing. Not "any tackle for loss" — a receiver tackled behind

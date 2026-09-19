@@ -2,33 +2,36 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Mirrors DefenderCoordinator on the offensive side. Each frame, assigns every blocker to
-// the nearest unassigned defender relative to the BALL (not the blocker itself) — per
-// design, "all offensive parties engage with the defender nearest to the ball; if that
-// defender is already engaged, move to the next target." Assignment cascades outward from
-// the ball rather than each blocker independently picking its own closest defender, which
-// is what actually produces "block the guy near the play" instead of every blocker just
-// grabbing whoever happens to be standing next to THEM.
+// the nearest unassigned member of the OPPOSING team relative to the BALL (not the blocker
+// itself) — per design, "all offensive parties engage with the defender nearest to the
+// ball; if that defender is already engaged, move to the next target." Assignment cascades
+// outward from the ball rather than each blocker independently picking its own closest
+// opponent, which is what actually produces "block the guy near the play" instead of every
+// blocker just grabbing whoever happens to be standing next to THEM.
 //
 // Reassignment only happens when a blocker's current target breaks free (leaves blocking
 // range or stops existing) — per design, contact-based commitment, not per-frame closest-
 // wins. switchThreshold adds hysteresis on TOP of that for the reassignment moment itself,
-// so a fresh assignment doesn't flicker between two nearly-equidistant defenders frame to
+// so a fresh assignment doesn't flicker between two nearly-equidistant targets frame to
 // frame while the blocker is still closing the gap.
+//
+// "Opposing team" is resolved live from TeamMember.teamId against the ball carrier's
+// team, not from a Defender tag — this is what lets either T1 or T2 be on offense on a
+// given play instead of assuming one team is permanently defense.
 public class BlockingCoordinator : MonoBehaviour
 {
     public static BlockingCoordinator Instance { get; private set; }
 
-    [SerializeField] float blockEngageRadius = 6f; // max distance from a defender for a blocker to be assignable to them at all
+    [SerializeField] float blockEngageRadius = 6f; // max distance from an opponent for a blocker to be assignable to them at all
     [SerializeField] float switchThreshold = 1.5f; // new target must be this much closer than the old one to steal an assignment
-    [SerializeField] string defenderTag = "Defender";
 
     List<AllyBlocker> blockers = new List<AllyBlocker>();
 
-    // Defender -> blocker currently assigned to them. Rebuilt fresh every frame from
+    // Opponent -> blocker currently assigned to them. Rebuilt fresh every frame from
     // scratch based on each blocker's CURRENT target (kept or dropped), not recomputed
     // from zero — this is what makes "already engaged, move to next target" cascade
     // correctly instead of every blocker re-picking independently and potentially
-    // colliding on the same defender.
+    // colliding on the same target.
     Dictionary<Transform, AllyBlocker> defenderAssignments = new();
 
     void Awake() => Instance = this;
@@ -37,17 +40,19 @@ public class BlockingCoordinator : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
-        // Gated on possession alone — NOT on the carrier having crossed the LOS. That gate
-        // was backwards: run blocking has to clear a lane AT and BEFORE the LOS to matter,
-        // and pass protection has to start at the snap too (a pocket passer often never
-        // crosses the LOS at all). The old pastLOS check meant OL never engaged on a run
-        // until the runner had already broken through unblocked, and never engaged on a
-        // clean dropback pass.
+        // Ball not possessed, mid-pass/pitch, or hasn't crossed the LOS yet — no blocking
+        // assignments exist. Design call: blocking only matters once the carrier has
+        // crossed the line of scrimmage AND the ball is possessed; before that, WR/TE/RB
+        // are still running routes via ReceiverAI and shouldn't be fighting AllyBlocker
+        // for control of their own transform.
         bool ballHeldAndPossessed = BallController.Instance != null
             && BallController.Instance.Carrier != null
             && BallController.Instance.State == BallController.BallState.Held;
 
-        if (!ballHeldAndPossessed)
+        bool pastLOS = ballHeldAndPossessed && PlayState.Instance != null
+            && BallController.Instance.Carrier.position.z > PlayState.Instance.CurrentLineOfScrimmageZ;
+
+        if (!ballHeldAndPossessed || !pastLOS)
         {
             if (defenderAssignments.Count > 0 || AnyBlockerHasTarget())
             {
@@ -72,16 +77,28 @@ public class BlockingCoordinator : MonoBehaviour
     {
         defenderAssignments.Clear();
 
-        Vector3 ballPos = BallController.Instance.transform.position;
-        GameObject[] defenderObjects = GameObject.FindGameObjectsWithTag(defenderTag);
-        if (defenderObjects.Length == 0)
+        Transform carrier = BallController.Instance.Carrier;
+        if (!carrier.TryGetComponent<TeamMember>(out var carrierTeam))
         {
             foreach (var blocker in blockers) blocker.SetBlockingTarget(null);
             return;
         }
 
+        Vector3 ballPos = BallController.Instance.transform.position;
+
         var defendersByBallDistance = new List<Transform>();
-        foreach (var obj in defenderObjects) defendersByBallDistance.Add(obj.transform);
+        foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (member.teamId != carrierTeam.teamId)
+                defendersByBallDistance.Add(member.transform);
+        }
+
+        if (defendersByBallDistance.Count == 0)
+        {
+            foreach (var blocker in blockers) blocker.SetBlockingTarget(null);
+            return;
+        }
+
         defendersByBallDistance.Sort((a, b) =>
             Vector3.Distance(ballPos, a.position).CompareTo(Vector3.Distance(ballPos, b.position)));
 
@@ -107,7 +124,7 @@ public class BlockingCoordinator : MonoBehaviour
         }
 
         // Pass 2 — any (non-carrier) blocker without a valid target gets assigned to the
-        // nearest ball-priority defender that isn't already claimed.
+        // nearest ball-priority opposing player that isn't already claimed.
         foreach (var blocker in blockers)
         {
             if (blocker.IsCarrier) continue;

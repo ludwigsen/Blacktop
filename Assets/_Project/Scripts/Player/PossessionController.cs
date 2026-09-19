@@ -1,21 +1,23 @@
 using UnityEngine;
 [RequireComponent(typeof(PlayerMovement))]
 
-// Decides, every frame, whether THIS offensive player is the human-controlled ball
-// carrier or an AI-driven teammate. Control follows the ball rather than living on one
-// fixed "the player" object — sits on UserPlayer and on every ReceiverAI teammate.
+// Decides, every frame, whether THIS player is the human-controlled ball carrier or an
+// AI-driven teammate. Control follows the ball rather than living on one fixed "the
+// player" object — sits on every T1/T2 roster player, offense or defense, so either
+// team's carrier can be the human-controlled one.
 //
 // This is also the fix for TackleContact/PlayerStateMachine going stale after a
 // completed pass or pitch: those components check THEIR OWN transform, so as long as
 // only the live carrier's copy is enabled, "their own transform" is automatically
 // correct without those scripts needing to know anything about possession themselves.
 //
-// UserPlayer legitimately has no ReceiverAI (a passer doesn't run a route after
-// throwing) — every reference below is null-guarded so this works on an object missing
-// either half of the stack.
+// Not every roster slot has a ReceiverAI (a QB/OL doesn't run a route) — every
+// reference below is null-guarded so this works on an object missing either half of
+// the stack.
 [RequireComponent(typeof(InputBuffer))]
 [RequireComponent(typeof(PlayerStateMachine))]
 [RequireComponent(typeof(TackleContact))]
+[RequireComponent(typeof(TeamMember))]
 public class PossessionController : MonoBehaviour
 {
     PlayerMovement playerMovement;
@@ -23,6 +25,7 @@ public class PossessionController : MonoBehaviour
     PlayerStateMachine stateMachine;
     TackleContact tackleContact;
     ReceiverAI receiverAI;
+    TeamMember teamMember;
 
     enum Mode { Controlled, AI, Frozen }
     Mode currentMode;
@@ -31,10 +34,15 @@ public class PossessionController : MonoBehaviour
     // now" — set/cleared at the exact point this decision already gets made for real
     // gameplay reasons (ApplyMode), rather than duplicated as a separate guess elsewhere.
     // Safe as a plain static: control follows the ball, so at most one PossessionController
-    // is ever in Controlled mode at a time. Null whenever nobody on offense is controlled
-    // (ball loose). Anything that needs to answer "is this the user's guy?" — highlight
-    // rings, future UI, whatever — should read this, not re-derive its own notion of it.
+    // is ever in Controlled mode at a time. Null whenever nobody is controlled (ball loose).
+    // Anything that needs to answer "is this the user's guy?" — highlight rings, future
+    // UI, whatever — should read this, not re-derive its own notion of it.
     public static Transform ActivelyControlled { get; private set; }
+
+    // Which team's player is currently controlled, if any — null when the ball is loose.
+    // Exists for future control-switching UI ("cycle to another guy on MY team") so that
+    // feature doesn't need to re-derive team membership from scratch.
+    public static int? ActivelyControlledTeamId { get; private set; }
 
     void Awake()
     {
@@ -42,6 +50,7 @@ public class PossessionController : MonoBehaviour
         inputBuffer = GetComponent<InputBuffer>();
         stateMachine = GetComponent<PlayerStateMachine>();
         tackleContact = GetComponent<TackleContact>();
+        teamMember = GetComponent<TeamMember>();
         receiverAI = GetComponent<ReceiverAI>(); // do not RequireComponent - OL/QB does not need this
     }
 
@@ -67,14 +76,18 @@ public class PossessionController : MonoBehaviour
         // Safety net for the edge case where this object is destroyed mid-play while it
         // happened to be the controlled one — avoids ActivelyControlled pointing at a
         // destroyed Transform until the next possession change naturally clears it.
-        if (ActivelyControlled == transform) ActivelyControlled = null;
+        if (ActivelyControlled == transform)
+        {
+            ActivelyControlled = null;
+            ActivelyControlledTeamId = null;
+        }
     }
 
     Mode DetermineMode()
     {
         if (BallController.Instance == null) return Mode.Frozen;
 
-        // Fumble — nobody on offense is human-controlled until someone recovers it.
+        // Fumble — nobody is human-controlled until someone recovers it.
         // Same convention DefenderAI already uses for a loose ball (hold position,
         // don't invent pursuit behavior that doesn't exist yet).
         if (BallController.Instance.State == BallController.BallState.Loose)
@@ -94,8 +107,17 @@ public class PossessionController : MonoBehaviour
         if (tackleContact != null) tackleContact.enabled = controlled; // only the live carrier needs to check for being tackled
         if (receiverAI != null) receiverAI.enabled = ai;
 
-        if (controlled) ActivelyControlled = transform;
-        else if (ActivelyControlled == transform) ActivelyControlled = null; // don't clear a DIFFERENT object's claim if this instance never held it
+        if (controlled)
+        {
+            ActivelyControlled = transform;
+            ActivelyControlledTeamId = teamMember != null ? teamMember.teamId : (int?)null;
+        }
+        else if (ActivelyControlled == transform)
+        {
+            // don't clear a DIFFERENT object's claim if this instance never held it
+            ActivelyControlled = null;
+            ActivelyControlledTeamId = null;
+        }
 
         // Frozen: everything off. Object just sits wherever it is until this flips back
         // to Controlled or AI once someone recovers the ball.
