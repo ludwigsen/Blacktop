@@ -78,6 +78,7 @@ public class PlayState : MonoBehaviour
         defensiveFormationOverride != null ? defensiveFormationOverride : defaultDefensiveFormation;
 
     public void SetPlayCall(PlayCallData call) => playCall = call;
+    public PlayCallData CurrentPlayCall => playCall;
 
     // --- Gamebreaker state ---
     float offenseMeter;
@@ -384,7 +385,7 @@ public class PlayState : MonoBehaviour
             RoutePattern route = playCall != null
                 ? playCall.GetRouteForReceiver(i)
                 : RoutePattern.Go;
-            receiver.SetRoute(route == RoutePattern.None ? RoutePattern.Go : route);
+            receiver.SetRoute(route); // None now means "stay and block," not "silently became Go"
         }
     }
 

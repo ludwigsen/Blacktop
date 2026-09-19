@@ -38,6 +38,16 @@ public class PlayCallData : ScriptableObject
     public FormationData OffensiveFormation => offensiveFormation;
     public List<RouteAssignment> Routes => routes;
 
+    [Header("Run Game")]
+    [Tooltip("Pass or Run. Run plays auto-transfer the ball to Handoff Receiver Slot via mesh-point autopath instead of being thrown, and flip blocking assignments for skill positions (see BlockingCoordinator).")]
+    [SerializeField] PlayType playType = PlayType.Pass;
+
+    [Tooltip("Who receives the automatic handoff on a run play. RB for a dive/draw. Ignored when Play Type is Pass.")]
+    [SerializeField] TeamMember.RosterSlot handoffReceiverSlot = TeamMember.RosterSlot.RB;
+
+    public PlayType PlayType => playType;
+    public TeamMember.RosterSlot HandoffReceiverSlot => handoffReceiverSlot;
+
     public RoutePattern GetRouteForReceiver(int receiverIndex)
     {
         if (uniformRoute) return route;
@@ -45,8 +55,8 @@ public class PlayCallData : ScriptableObject
         foreach (var assignment in routes)
         {
             if (assignment.receiverIndex == receiverIndex)
-                return assignment.route;
+                return assignment.route; // explicit assignment, including an explicit None, respected as-is
         }
-        return RoutePattern.None;
+        return RoutePattern.Go; // not listed at all — safety fallback, no longer conflated with explicit None
     }
 }

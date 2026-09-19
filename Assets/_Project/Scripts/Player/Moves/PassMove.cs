@@ -38,15 +38,19 @@ public class PassMove : IPlayerMove
         bool hasBC = BallController.Instance != null;
         bool isCarrier = hasBC && BallController.Instance.Carrier == ctx.transform;
 
+        // Only the QB can throw — on both run and pass plays. A run play can hand the
+        // ball to the RB; that doesn't make the RB a passer.
+        bool isQB = ctx.transform.TryGetComponent<TeamMember>(out var member) && member.slot == TeamMember.RosterSlot.QB;
+
         // Real forward-pass rule: once the passer has crossed the LOS at ANY point this
         // play, forward passing is dead for the rest of the play — a scramble back behind
         // it does NOT re-legalize the throw. This reads a one-way latch on PlayState
         // (HasPasserCrossedLOS), not the passer's live position, on purpose.
         bool eligibleToPass = PlayState.Instance == null || !PlayState.Instance.HasPasserCrossedLOS;
 
-        Debug.Log($"[PassMove.CanTrigger] State: {currentState} (ok: {isCorrectState}), BC: {hasBC}, IsCarrier: {isCarrier}, EligibleToPass: {eligibleToPass}");
+        Debug.Log($"[PassMove.CanTrigger] State: {currentState} (ok: {isCorrectState}), BC: {hasBC}, IsCarrier: {isCarrier}, IsQB: {isQB}, EligibleToPass: {eligibleToPass}");
 
-        return isCorrectState && hasBC && isCarrier && eligibleToPass;
+        return isCorrectState && hasBC && isCarrier && isQB && eligibleToPass;
     }
 
     public void Enter(PlayerContext ctx)

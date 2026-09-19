@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8866627923474403367}
   - component: {fileID: 9146346687968502740}
   - component: {fileID: 8017883637706955287}
+  - component: {fileID: 3482746543670124319}
   m_Layer: 0
   m_Name: Defender
   m_TagString: Defender
@@ -127,6 +128,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e476568d12b3c411aac940724e2517be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::DefenderAI
-  target: {fileID: 0}
-  moveSpeed: 5
+  attributes: {fileID: 0}
+  baseMoveSpeed: 5
   stopDistance: 1
+  separationRadius: 1.2
+  separationStrength: 3
+  containBreakRadius: 4
+  containLeadDistance: 3
+--- !u!114 &3482746543670124319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7023810201760991134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TeamMember
+  teamId: 0
+  slot: 0

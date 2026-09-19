@@ -1,37 +1,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Mirrors DefenderCoordinator on the offensive side. Each frame, assigns every blocker to
-// the nearest unassigned member of the OPPOSING team relative to the BALL (not the blocker
-// itself) — per design, "all offensive parties engage with the defender nearest to the
-// ball; if that defender is already engaged, move to the next target." Assignment cascades
-// outward from the ball rather than each blocker independently picking its own closest
-// opponent, which is what actually produces "block the guy near the play" instead of every
-// blocker just grabbing whoever happens to be standing next to THEM.
+// Mirrors DefenderCoordinator on the offensive side. Each frame, assigns every ELIGIBLE
+// blocker to the nearest unassigned member of the OPPOSING team relative to the BALL —
+// cascading outward from the ball rather than each blocker independently picking its own
+// closest opponent, which is what produces "block the guy near the play" instead of
+// every blocker grabbing whoever's standing next to THEM.
 //
-// Reassignment only happens when a blocker's current target breaks free (leaves blocking
-// range or stops existing) — per design, contact-based commitment, not per-frame closest-
-// wins. switchThreshold adds hysteresis on TOP of that for the reassignment moment itself,
-// so a fresh assignment doesn't flicker between two nearly-equidistant targets frame to
-// frame while the blocker is still closing the gap.
-//
-// "Opposing team" is resolved live from TeamMember.teamId against the ball carrier's
-// team, not from a Defender tag — this is what lets either T1 or T2 be on offense on a
-// given play instead of assuming one team is permanently defense.
+// Eligibility is play-type-aware (see IsEligibleBlocker):
+//   - OL always blocks, every play, from the snap. No LOS gate, no play-type gate.
+//   - Skill positions (WR/RB) only block on designed RUN plays, and never the player
+//     who's about to receive the handoff — that player autopaths to the QB instead
+//     (see HandoffCoordinator), it doesn't block.
+// On a pass play, skill positions run their assigned routes via ReceiverAI instead;
+// AllyBlocker's own RouteComplete gate keeps them out of blocking until their route
+// (if any) finishes.
 public class BlockingCoordinator : MonoBehaviour
 {
     public static BlockingCoordinator Instance { get; private set; }
 
     [SerializeField] float blockEngageRadius = 6f; // max distance from an opponent for a blocker to be assignable to them at all
-    [SerializeField] float switchThreshold = 1.5f; // new target must be this much closer than the old one to steal an assignment
+    [SerializeField] float switchThreshold = 1.5f; // pre-existing field — currently unused by the assignment logic below, left as-is, not this pass's problem to fix
 
     List<AllyBlocker> blockers = new List<AllyBlocker>();
 
     // Opponent -> blocker currently assigned to them. Rebuilt fresh every frame from
     // scratch based on each blocker's CURRENT target (kept or dropped), not recomputed
     // from zero — this is what makes "already engaged, move to next target" cascade
-    // correctly instead of every blocker re-picking independently and potentially
-    // colliding on the same target.
+    // correctly instead of every blocker re-picking independently.
     Dictionary<Transform, AllyBlocker> defenderAssignments = new();
 
     void Awake() => Instance = this;
@@ -40,19 +36,11 @@ public class BlockingCoordinator : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
-        // Ball not possessed, mid-pass/pitch, or hasn't crossed the LOS yet — no blocking
-        // assignments exist. Design call: blocking only matters once the carrier has
-        // crossed the line of scrimmage AND the ball is possessed; before that, WR/TE/RB
-        // are still running routes via ReceiverAI and shouldn't be fighting AllyBlocker
-        // for control of their own transform.
-        bool ballHeldAndPossessed = BallController.Instance != null
+        bool ballHeld = BallController.Instance != null
             && BallController.Instance.Carrier != null
             && BallController.Instance.State == BallController.BallState.Held;
 
-        bool pastLOS = ballHeldAndPossessed && PlayState.Instance != null
-            && BallController.Instance.Carrier.position.z > PlayState.Instance.CurrentLineOfScrimmageZ;
-
-        if (!ballHeldAndPossessed || !pastLOS)
+        if (!ballHeld)
         {
             if (defenderAssignments.Count > 0 || AnyBlockerHasTarget())
             {
@@ -84,6 +72,7 @@ public class BlockingCoordinator : MonoBehaviour
             return;
         }
 
+        var playCall = PlayState.Instance != null ? PlayState.Instance.CurrentPlayCall : null;
         Vector3 ballPos = BallController.Instance.transform.position;
 
         var defendersByBallDistance = new List<Transform>();
@@ -102,10 +91,13 @@ public class BlockingCoordinator : MonoBehaviour
         defendersByBallDistance.Sort((a, b) =>
             Vector3.Distance(ballPos, a.position).CompareTo(Vector3.Distance(ballPos, b.position)));
 
-        // Pass 1 — honor existing assignments where the target is still valid.
+        // Pass 1 — honor existing assignments where the target is still valid AND the
+        // blocker is still eligible (e.g. a run play's WR1 was blocking, the play reset
+        // into a pass play — they lose eligibility and drop their target right here).
         foreach (var blocker in blockers)
         {
             if (blocker.IsCarrier) continue; // the carrier is never a blocker, full stop
+            if (!IsEligibleBlocker(blocker, playCall)) { blocker.SetBlockingTarget(null); continue; }
 
             Transform current = blocker.GetCurrentTarget();
             if (current == null) continue;
@@ -123,11 +115,12 @@ public class BlockingCoordinator : MonoBehaviour
             }
         }
 
-        // Pass 2 — any (non-carrier) blocker without a valid target gets assigned to the
-        // nearest ball-priority opposing player that isn't already claimed.
+        // Pass 2 — any eligible (non-carrier) blocker without a valid target gets
+        // assigned to the nearest ball-priority opposing player that isn't already claimed.
         foreach (var blocker in blockers)
         {
             if (blocker.IsCarrier) continue;
+            if (!IsEligibleBlocker(blocker, playCall)) continue; // already cleared in Pass 1
             if (blocker.GetCurrentTarget() != null) continue;
 
             Transform best = FindBestAvailableDefender(blocker, defendersByBallDistance);
@@ -137,6 +130,25 @@ public class BlockingCoordinator : MonoBehaviour
                 defenderAssignments[best] = blocker;
             }
         }
+    }
+
+    // OL blocks on every play, unconditionally, from the snap. Skill positions
+    // (WR/RB) only block on designed run plays, and never the player who's about to
+    // receive (or already received) the handoff — that player is running the ball or
+    // autopathing to get it, not blocking for someone else.
+    static bool IsEligibleBlocker(AllyBlocker blocker, PlayCallData playCall)
+    {
+        if (!blocker.TryGetComponent<TeamMember>(out var member)) return false;
+
+        if (member.slot == TeamMember.RosterSlot.OL1 || member.slot == TeamMember.RosterSlot.OL2)
+            return true;
+
+        bool isRunPlay = playCall != null && playCall.PlayType == PlayType.Run;
+        if (!isRunPlay) return false;
+
+        if (playCall.HandoffReceiverSlot == member.slot) return false;
+
+        return true;
     }
 
     Transform FindBestAvailableDefender(AllyBlocker blocker, List<Transform> defendersByBallDistance)
