@@ -17,11 +17,6 @@ public class BallController : MonoBehaviour
     [SerializeField] Transform carrier;
     [SerializeField] Vector3 carryOffset = new(0.4f, 1f, 0.3f);
 
-    // No "starting offense" concept exists yet anywhere in the project — every new
-    // play resets possession to this team's QB. Once alternating possession/kickoff
-    // logic exists, this is the one place that needs to change.
-    [SerializeField] int defaultOffenseTeamId = 0;
-
     // How close a player needs to get to a loose ball to scoop it up. Generous on
     // purpose — same arcade-forgiveness reasoning as every other OverlapSphere check in
     // the project (TackleContact, StiffArmMove's contact range). Also doubles as "close
@@ -63,12 +58,8 @@ public class BallController : MonoBehaviour
     void Awake()
     {
         Instance = this;
-
-        if (carrier == null)
-        {
-            var qb = FindQuarterback(defaultOffenseTeamId);
-            if (qb != null) carrier = qb;
-        }
+        // Initial carrier is resolved in Start() from PlayState's possession team —
+        // PlayState.Instance isn't guaranteed to exist yet during Awake.
     }
 
     // Subscribed in Start(), not OnEnable() — Unity guarantees all Awake() calls run
@@ -81,6 +72,10 @@ public class BallController : MonoBehaviour
         {
             PlayState.Instance.OnPlayReset += HandlePlayReset;
             PlayState.Instance.OnHuddleStarted += HandleHuddleStarted;
+
+            // PlayState owns possession, so it also decides who starts with the ball. The
+            // serialized carrier above is now only a fallback for scenes with no PlayState.
+            AttachToPossessionQuarterback();
         }
     }
 
@@ -94,33 +89,22 @@ public class BallController : MonoBehaviour
     }
 
     // Every new play (previous one ended via tackle, touchdown, fumble, incomplete pass,
-    // or interception) re-establishes possession with defaultOffenseTeamId's QB. No
-    // alternating-possession logic exists yet — see the field comment above.
-    void HandlePlayReset()
-    {
-        var qb = FindQuarterback(defaultOffenseTeamId);
-        if (qb != null) AttachTo(qb);
-    }
+    // or interception) puts the ball in the possession team's QB's hands. Who that is
+    // comes from PlayState.PossessionTeamId — which flips on turnovers — not a fixed team.
+    void HandlePlayReset() => AttachToPossessionQuarterback();
 
     // Ball has no business sitting at a fumble/incomplete/interception spot once the
     // team starts huddling back up — snap it straight to the QB. No visual handoff;
     // the huddle is about to be covered by playcalling UI anyway, so there's nothing
-    // to sell here. Same target-finding as HandlePlayReset, just fired earlier in the
-    // pre-snap sequence.
-    void HandleHuddleStarted()
-    {
-        var qb = FindQuarterback(defaultOffenseTeamId);
-        if (qb != null) AttachTo(qb);
-    }
+    // to sell here. PlayState resolves possession BEFORE firing OnHuddleStarted, so after
+    // a turnover this is already the new offense's QB.
+    void HandleHuddleStarted() => AttachToPossessionQuarterback();
 
-    static Transform FindQuarterback(int teamId)
+    void AttachToPossessionQuarterback()
     {
-        foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-        {
-            if (member.teamId == teamId && member.slot == TeamMember.RosterSlot.QB)
-                return member.transform;
-        }
-        return null;
+        if (PlayState.Instance == null) return;
+        var qb = PlayState.Instance.Passer;
+        if (qb != null) AttachTo(qb);
     }
 
     void LateUpdate()

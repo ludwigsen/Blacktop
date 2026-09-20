@@ -81,17 +81,15 @@ public class FieldLines : MonoBehaviour
             : losWorldZ;
 
         SetLocalZ(losLine, losZ);
-        // don't build first down line if LOS is at or beyond goal line
-        if (losZ + firstDownYards >= FarGoalZ)
-        {
-            firstDownLine.gameObject.SetActive(false);
-        }
-        else
-        {
-            firstDownLine.gameObject.SetActive(true);
-            SetLocalZ(firstDownLine, losZ + firstDownYards);
-        }
 
+        // First down sits firstDownYards ahead of the LOS in the direction the offense is
+        // attacking, and hides when that would land at/past the goal line it's attacking.
+        FieldDirection dir = PlayState.Instance.AttackDirection;
+        float firstDownZ = dir.Advance(losZ, firstDownYards);
+        bool pastGoalLine = dir.Sign > 0f ? firstDownZ >= FarGoalZ : firstDownZ <= NearGoalZ;
+
+        firstDownLine.gameObject.SetActive(!pastGoalLine);
+        if (!pastGoalLine) SetLocalZ(firstDownLine, firstDownZ);
     }
 
     static void SetLocalZ(Transform t, float z)

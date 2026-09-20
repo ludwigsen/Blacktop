@@ -110,7 +110,11 @@ public class DefenderAI : MonoBehaviour
         // formation backward with them. LOS is the fixed anchor; only the break-radius
         // check above should react to where the carrier currently is.
         float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : target.position.z;
-        Vector3 holdPosition = new(transform.position.x, transform.position.y, losZ + containLeadDistance);
+        // "Downfield" = the direction the offense is attacking, so the lead flips with possession.
+        float holdZ = PlayState.Instance != null
+            ? PlayState.Instance.AttackDirection.Advance(losZ, containLeadDistance)
+            : losZ + containLeadDistance;
+        Vector3 holdPosition = new(transform.position.x, transform.position.y, holdZ);
         float distanceToHold = Vector3.Distance(transform.position, holdPosition);
 
         if (distanceToHold <= stopDistance) return Vector3.zero;

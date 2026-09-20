@@ -38,7 +38,7 @@ public class TackleContact : MonoBehaviour
             // Sack — specifically the designated passer, tackled behind the current LOS,
             // before ever throwing. Not "any tackle for loss" — a receiver tackled behind
             // the LOS after a catch doesn't count.
-            if (PlayState.Instance.Passer == transform && transform.position.z < PlayState.Instance.CurrentLineOfScrimmageZ)
+            if (PlayState.Instance.Passer == transform && PlayState.Instance.YardsPastLineOfScrimmage(transform.position.z) < 0f)
                 PlayState.Instance.AddDefensePoints(8f);
 
             if (BallController.Instance != null && BallController.Instance.IsHeld)

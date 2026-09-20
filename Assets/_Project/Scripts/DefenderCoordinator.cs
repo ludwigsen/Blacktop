@@ -28,9 +28,9 @@ public class DefenderCoordinator : MonoBehaviour
         if (defenders.Count == 0) return;
 
         // Once the carrier has advanced past the line of scrimmage, "holding a lane"
-        // no longer makes sense — everyone converges. Assumes offense moves toward +Z,
-        // consistent with the rest of the project.
-        bool pastLOS = PlayState.Instance != null && carrier.position.z > PlayState.Instance.CurrentLineOfScrimmageZ;
+        // no longer makes sense — everyone converges. "Past" is measured in the
+        // possession team's attack direction, not a hardcoded +Z.
+        bool pastLOS = PlayState.Instance != null && PlayState.Instance.IsPastLineOfScrimmage(carrier.position.z);
 
         if (pastLOS)
         {
