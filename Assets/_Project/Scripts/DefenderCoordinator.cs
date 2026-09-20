@@ -23,7 +23,10 @@ public class DefenderCoordinator : MonoBehaviour
         foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             if (member.teamId == carrierTeam.teamId) continue; // same team as carrier — not a defender
-            if (member.TryGetComponent<DefenderAI>(out var ai)) defenders.Add(ai);
+            // A human-controlled defender isn't the coordinator's to command — and if it were
+            // eligible for "closest = Engage", the real chaser would be a defender that
+            // ignores the order and nobody would actually engage.
+            if (member.TryGetComponent<DefenderAI>(out var ai) && !ai.IsUserControlled) defenders.Add(ai);
         }
         if (defenders.Count == 0) return;
 

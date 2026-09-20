@@ -34,7 +34,8 @@ public class DefenderAI : MonoBehaviour
 
     TeamMember teamMember;
 
-    float MoveSpeed => baseMoveSpeed * (attributes != null ? attributes.speedMult : 1f);
+    float MoveSpeed => baseMoveSpeed * SpeedMult;
+    public float SpeedMult => attributes != null ? attributes.speedMult : 1f;
     public float ResistMult => attributes != null ? attributes.resistMult : 1f;
 
     // Resolved live each frame — null when the ball is loose (fumbled, not yet
@@ -47,6 +48,13 @@ public class DefenderAI : MonoBehaviour
     float pushBackTimer;
     const float pushBackDuration = 0.15f;
     float shedTimer;
+
+    // True while the human is piloting this defender (set by DefenderControl). The AI
+    // stops driving it, but push-back/shed still apply — a stiff-arm should land on a
+    // human-controlled defender too. DefenderControl reads IsStunned to lock input.
+    public bool IsUserControlled { get; private set; }
+    public bool IsStunned => pushBackTimer > 0f || shedTimer > 0f;
+    public void SetUserControlled(bool controlled) => IsUserControlled = controlled;
 
     void Awake()
     {
@@ -76,6 +84,9 @@ public class DefenderAI : MonoBehaviour
             shedTimer -= Time.deltaTime;
             return;
         }
+
+        // Human has the wheel — no role behavior, no separation nudge. (Stun above still applies.)
+        if (IsUserControlled) return;
 
         var target = Target; // resolve once per frame — avoids repeated property/null-check calls below
         if (target == null) return; // loose ball — hold current position rather than chasing nothing

@@ -180,6 +180,7 @@ public class ReceiverSelectionUI : MonoBehaviour
     {
         if (playState == null || playState.OffensivePlayers == null) return;
         if (!playState.IsLive) return;
+        if (playState.IsUserDefending) return; // these keys throw the OTHER team's ball
         if (BallController.Instance == null || BallController.Instance.Carrier == null) return;
 
         int receiverCount = 0;
@@ -231,7 +232,7 @@ public class ReceiverSelectionUI : MonoBehaviour
     void ShowLabels()
     {
         if (canvasGroup != null)
-            canvasGroup.alpha = 1f;
+            canvasGroup.alpha = (playState != null && playState.IsUserDefending) ? 0f : 1f; // no pass prompts while defending
         shownAt = Time.unscaledTime;
     }
 

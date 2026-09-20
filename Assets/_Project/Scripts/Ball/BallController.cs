@@ -26,6 +26,7 @@ public class BallController : MonoBehaviour
     public BallState State { get; private set; } = BallState.Held;
     public Transform Carrier => carrier;
     public bool IsHeld => State == BallState.Held;
+    public Vector3 FlightTarget => targetPoint; // where the current pass/pitch is headed — used to auto-switch defenders
 
     // Fired ONLY on a clean pass/pitch catch (see ResolveArrival) — never on fumble
     // recovery, never on interception. This is the single hook OffenseControlManager

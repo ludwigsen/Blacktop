@@ -52,7 +52,8 @@ public class GamebreakerController : MonoBehaviour
     // is the only one who can style or activate.
     bool IsLiveCarrier =>
         PlayState.Instance != null && PlayState.Instance.IsLive &&
-        BallController.Instance != null && BallController.Instance.Carrier == transform;
+        BallController.Instance != null && BallController.Instance.Carrier == transform &&
+        PossessionController.ActivelyControlled == transform; // an AI-held ball (user defending) can't be styled or activated
 
     void Update()
     {

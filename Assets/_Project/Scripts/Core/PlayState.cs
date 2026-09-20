@@ -40,6 +40,12 @@ public class PlayState : MonoBehaviour
         TeamMember.RosterSlot.WR1, TeamMember.RosterSlot.WR2, TeamMember.RosterSlot.WR3
     };
 
+    // Which team the human plays (TeamMember.teamId). With the ball they pilot the ball
+    // carrier; without it they pilot ONE defender at a time (DefenderControlManager).
+    // Default 0 = today's behavior. Set to 1 to play defense against a passive offense.
+    [Header("Human Control")]
+    [SerializeField] int userTeamId = 0;
+
     [Header("Field Position (authored in attack-axis space: negative = own side of midfield)")]
     [SerializeField] float initialPlayerZ = -5f;
     [SerializeField] float kickoffResetZ = -5f;
@@ -113,6 +119,10 @@ public class PlayState : MonoBehaviour
     // Fired AFTER rosters are refreshed, so subscribers can read Passer/OffensivePlayers
     // straight away. Fires between plays only (during EndPlay, before OnPlayEnded).
     public event System.Action<int> OnPossessionChanged;
+
+    public int UserTeamId => userTeamId;
+    public bool IsUserTeam(int teamId) => teamId == userTeamId;
+    public bool IsUserDefending => userTeamId != PossessionTeamId;
 
     // Each team has a fixed attack direction; possession decides which one is "the" direction.
     public FieldDirection DirectionFor(int teamId)
