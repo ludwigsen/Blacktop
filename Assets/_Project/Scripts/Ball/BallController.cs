@@ -78,19 +78,36 @@ public class BallController : MonoBehaviour
     void Start()
     {
         if (PlayState.Instance != null)
+        {
             PlayState.Instance.OnPlayReset += HandlePlayReset;
+            PlayState.Instance.OnHuddleStarted += HandleHuddleStarted;
+        }
     }
 
     void OnDestroy()
     {
         if (PlayState.Instance != null)
+        {
             PlayState.Instance.OnPlayReset -= HandlePlayReset;
+            PlayState.Instance.OnHuddleStarted -= HandleHuddleStarted;
+        }
     }
 
     // Every new play (previous one ended via tackle, touchdown, fumble, incomplete pass,
     // or interception) re-establishes possession with defaultOffenseTeamId's QB. No
     // alternating-possession logic exists yet — see the field comment above.
     void HandlePlayReset()
+    {
+        var qb = FindQuarterback(defaultOffenseTeamId);
+        if (qb != null) AttachTo(qb);
+    }
+
+    // Ball has no business sitting at a fumble/incomplete/interception spot once the
+    // team starts huddling back up — snap it straight to the QB. No visual handoff;
+    // the huddle is about to be covered by playcalling UI anyway, so there's nothing
+    // to sell here. Same target-finding as HandlePlayReset, just fired earlier in the
+    // pre-snap sequence.
+    void HandleHuddleStarted()
     {
         var qb = FindQuarterback(defaultOffenseTeamId);
         if (qb != null) AttachTo(qb);

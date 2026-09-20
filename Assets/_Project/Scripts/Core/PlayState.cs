@@ -62,6 +62,7 @@ public class PlayState : MonoBehaviour
     public bool IsLive { get; private set; } = false;
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
+    public event System.Action OnHuddleStarted; // fired the instant the huddle begins forming — before any walk-in animation
 
     InputSystem_Actions controls;
     float nextLineOfScrimmageZ;
@@ -251,6 +252,7 @@ public class PlayState : MonoBehaviour
     IEnumerator GatherToHuddleRoutine()
     {
         phase = HuddlePhase.GatheringToHuddle;
+        OnHuddleStarted?.Invoke();
 
         var members = GetOffenseRoster();
         if (members.Count == 0) { phase = HuddlePhase.InHuddle; yield break; }
