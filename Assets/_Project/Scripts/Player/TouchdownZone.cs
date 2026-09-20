@@ -5,11 +5,9 @@ using UnityEngine;
 // FieldBounds performs the test in FieldRoot-local coordinates, so moving or rotating the
 // complete field does not require any scoring-code changes.
 //
-// The FAR end zone (the one the offense is driving toward) scores a Touchdown. The NEAR
-// end zone (behind the offense's own line) is a Safety — this used to be unconditional
-// (both end zones triggered Touchdown), so carrying the ball back into your own end zone
-// falsely scored a touchdown FOR the offense instead of correctly killing the play as a
-// safety. FieldBounds.GetEndZone() already distinguished Near/Far, it just wasn't read.
+// The end zone the offense is driving toward scores a Touchdown; the one behind its own
+// line is a Safety. "Toward" comes from PlayState.AttackDirection (possession-relative),
+// so this stays correct when the other team has the ball and attacks the opposite way.
 public class TouchdownZone : MonoBehaviour
 {
     [SerializeField] FieldBounds fieldBounds;
@@ -32,22 +30,27 @@ public class TouchdownZone : MonoBehaviour
 
         Vector3 ballPos = BallController.Instance.transform.position;
 
+        // Which end zone is a Touchdown vs. a Safety depends on who has possession: the
+        // one the offense is attacking scores, the one it's defending is a Safety.
+        FieldDirection dir = PlayState.Instance.AttackDirection;
+
         if (fieldBounds != null)
         {
             FieldEndZone zone = fieldBounds.GetEndZone(ballPos);
-            if (zone == FieldEndZone.Far)
-                PlayState.Instance.EndPlay(PlayState.PlayEndReason.Touchdown);
-            else if (zone == FieldEndZone.Near)
-                PlayState.Instance.EndPlay(PlayState.PlayEndReason.Safety);
+            if (zone == FieldEndZone.None) return;
+
+            PlayState.Instance.EndPlay(zone == dir.TargetEndZone
+                ? PlayState.PlayEndReason.Touchdown
+                : PlayState.PlayEndReason.Safety);
             return;
         }
 
         // Compatibility for scenes not yet migrated to a FieldRoot. New fields should
         // always assign FieldBounds above so this world-axis fallback is never used.
         float z = ballPos.z;
-        if (z >= FieldConstants.FarGoalLineZ)
+        if (dir.IsInTargetEndZone(z))
             PlayState.Instance.EndPlay(PlayState.PlayEndReason.Touchdown);
-        else if (z <= FieldConstants.NearGoalLineZ)
+        else if (dir.IsInOwnEndZone(z))
             PlayState.Instance.EndPlay(PlayState.PlayEndReason.Safety);
     }
 }

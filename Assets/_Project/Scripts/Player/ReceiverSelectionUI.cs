@@ -51,6 +51,7 @@ public class ReceiverSelectionUI : MonoBehaviour
         {
             playState.OnPlayReset += ShowLabels;
             playState.OnPlayEnded += HideLabels;
+            playState.OnPossessionChanged += HandlePossessionChanged;
         }
     }
 
@@ -60,7 +61,20 @@ public class ReceiverSelectionUI : MonoBehaviour
         {
             playState.OnPlayReset -= ShowLabels;
             playState.OnPlayEnded -= HideLabels;
+            playState.OnPossessionChanged -= HandlePossessionChanged;
         }
+    }
+
+    // Pass targets belong to whichever team has the ball — after a possession change the
+    // prompts built at Start() point at the wrong team's receivers, so rebuild them.
+    void HandlePossessionChanged(int _)
+    {
+        if (receiverButtons != null)
+            foreach (var button in receiverButtons)
+                if (button != null) Destroy(button.gameObject);
+
+        CreateReceiverButtons();
+        UpdateLabelPositions();
     }
 
     void Update()
