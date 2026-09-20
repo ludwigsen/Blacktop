@@ -9,14 +9,43 @@ public class PlayState : MonoBehaviour
 
     public static PlayState Instance { get; private set; }
 
-    [SerializeField] Transform player;
+    // --- Possession ---
+    // Teams are identified by TeamMember.teamId (0 = Team 1, 1 = Team 2) and are static per
+    // player. Everything role-related — who's on offense, who snaps, which way we're
+    // driving, who lines up where — is derived from PossessionTeamId, never authored per
+    // player. This replaces the old hand-wired player / offensivePlayers / defenders lists
+    // (T1 = offense, T2 = defense forever) and BallController.defaultOffenseTeamId.
+    [Header("Possession")]
+    [Tooltip("TeamMember.teamId of the team that snaps the ball on the very first play.")]
+    [SerializeField] int startingPossessionTeamId = 0;
+    [Tooltip("Team 0 drives toward +Z when checked; Team 1 always drives the opposite way. Uncheck for a halftime-style swap.")]
+    [SerializeField] bool team0AttacksPositiveZ = true;
+
+    // Rosters are resolved from TeamMember.slot. These orders are what make slot N of a
+    // FormationData asset (and receiverIndex N in a PlayCallData) land on a specific
+    // player. Defaults reproduce the exact assignment the old hand-wired lists had.
+    [Header("Roster Ordering (by TeamMember.slot)")]
+    [Tooltip("Non-QB offense, in the order FormationData.offensiveSlots (and PlayCallData receiverIndex) are authored. QB is handled separately via qbOffsetFromLOS.")]
+    [SerializeField]
+    TeamMember.RosterSlot[] offenseSlotOrder =
+    {
+        TeamMember.RosterSlot.RB, TeamMember.RosterSlot.OL1, TeamMember.RosterSlot.OL2,
+        TeamMember.RosterSlot.WR1, TeamMember.RosterSlot.WR2, TeamMember.RosterSlot.WR3
+    };
+    [Tooltip("A team's players in the order FormationData.defenderSlots are authored (EDGE-L, EDGE-R, LB-L, LB-R, DB-L, DB-R, S). Both-ways roster: any player can fill any defensive slot.")]
+    [SerializeField]
+    TeamMember.RosterSlot[] defenseSlotOrder =
+    {
+        TeamMember.RosterSlot.OL1, TeamMember.RosterSlot.OL2, TeamMember.RosterSlot.QB, TeamMember.RosterSlot.RB,
+        TeamMember.RosterSlot.WR1, TeamMember.RosterSlot.WR2, TeamMember.RosterSlot.WR3
+    };
+
+    [Header("Field Position (authored in attack-axis space: negative = own side of midfield)")]
     [SerializeField] float initialPlayerZ = -5f;
     [SerializeField] float kickoffResetZ = -5f;
 
-    [SerializeField] List<Transform> defenders = new();
+    [Header("Formations (side-based defaults — apply to whichever team is on that side of the ball)")]
     [SerializeField] FormationData defaultDefensiveFormation;
-
-    [SerializeField] List<Transform> offensivePlayers = new();
     [SerializeField] FormationData defaultOffensiveFormation;
 
     FormationData defensiveFormationOverride;
@@ -69,8 +98,141 @@ public class PlayState : MonoBehaviour
     public float CurrentLineOfScrimmageZ => nextLineOfScrimmageZ;
     PlayEndReason lastEndReason;
 
-    public Transform Passer => player;
-    public List<Transform> OffensivePlayers => offensivePlayers;
+    // ------------------------------------------------------------------------------
+    // Possession API
+    // ------------------------------------------------------------------------------
+
+    // The team snapping the ball this play. Only PlayState changes it (TrySetPossession),
+    // and only between plays — so within a play, everything that reads it sees one answer.
+    public int PossessionTeamId { get; private set; }
+    public int DefendingTeamId => OpponentOf(PossessionTeamId);
+
+    // The two-team assumption lives here and nowhere else.
+    public static int OpponentOf(int teamId) => 1 - teamId;
+
+    // Fired AFTER rosters are refreshed, so subscribers can read Passer/OffensivePlayers
+    // straight away. Fires between plays only (during EndPlay, before OnPlayEnded).
+    public event System.Action<int> OnPossessionChanged;
+
+    // Each team has a fixed attack direction; possession decides which one is "the" direction.
+    public FieldDirection DirectionFor(int teamId)
+    {
+        bool attacksPositiveZ = teamId == 0 ? team0AttacksPositiveZ : !team0AttacksPositiveZ;
+        return FieldDirection.FromAttacksPositiveZ(attacksPositiveZ);
+    }
+
+    public FieldDirection AttackDirection => DirectionFor(PossessionTeamId);
+
+    // LOS helpers in the current attack direction — use these instead of comparing raw Z.
+    public bool IsPastLineOfScrimmage(float worldZ) => AttackDirection.IsPastLOS(worldZ, nextLineOfScrimmageZ);
+    public float YardsPastLineOfScrimmage(float worldZ) => AttackDirection.YardsPastLOS(worldZ, nextLineOfScrimmageZ);
+
+    // Rosters for the current possession, rebuilt by RefreshRosters(). Lists keep a null
+    // entry for a missing slot on purpose — index N must stay aligned with formation slot
+    // N and PlayCallData.receiverIndex N. Every consumer already null-checks.
+    Transform quarterback;
+    readonly List<Transform> offensePlayers = new(); // possession team, non-QB, in offenseSlotOrder
+    readonly List<Transform> defensePlayers = new(); // opposing team, in defenseSlotOrder
+
+    public Transform Passer => quarterback; // possession team's QB
+    public List<Transform> OffensivePlayers => offensePlayers;
+
+    // Re-resolves rosters from TeamMember. Runs at Awake and on every possession change;
+    // call it yourself if players are ever spawned/despawned at runtime.
+    public void RefreshRosters()
+    {
+        var members = FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        quarterback = ResolveSlot(members, PossessionTeamId, TeamMember.RosterSlot.QB);
+
+        offensePlayers.Clear();
+        foreach (var slot in offenseSlotOrder)
+            offensePlayers.Add(ResolveSlot(members, PossessionTeamId, slot));
+
+        defensePlayers.Clear();
+        foreach (var slot in defenseSlotOrder)
+            defensePlayers.Add(ResolveSlot(members, DefendingTeamId, slot));
+    }
+
+    static Transform ResolveSlot(TeamMember[] members, int teamId, TeamMember.RosterSlot slot)
+    {
+        foreach (var m in members)
+        {
+            if (m.teamId == teamId && m.slot == slot) return m.transform;
+        }
+
+        Debug.LogWarning($"[PlayState] Team {teamId} has no {slot} TeamMember — that formation slot will stay empty.");
+        return null;
+    }
+
+    // A team can take possession only if it's genuinely both-ways: a QB, plus the full
+    // offensive control stack (PossessionController) on every player, AND the other team
+    // has pursuit AI (DefenderAI) on every player. Until the T1/T2 prefabs are unified
+    // this is what stops a turnover from handing the ball to a team that can't run a play.
+    public bool CanTakePossession(int teamId)
+    {
+        bool hasQB = false;
+
+        foreach (var m in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (m.teamId == teamId)
+            {
+                if (!m.TryGetComponent<PossessionController>(out _)) return false;
+                if (m.slot == TeamMember.RosterSlot.QB) hasQB = true;
+            }
+            else if (!m.TryGetComponent<DefenderAI>(out _))
+            {
+                return false;
+            }
+        }
+
+        return hasQB;
+    }
+
+    public bool TrySetPossession(int teamId)
+    {
+        if (teamId == PossessionTeamId) return true;
+
+        if (IsLive)
+        {
+            Debug.LogWarning("[PlayState] Possession can only change between plays.");
+            return false;
+        }
+
+        if (!CanTakePossession(teamId))
+        {
+            Debug.LogWarning($"[PlayState] Team {teamId} can't take possession yet — needs a QB with PossessionController on every player, and DefenderAI on every player of the other team.");
+            return false;
+        }
+
+        ApplyPossession(teamId);
+        return true;
+    }
+
+    void ApplyPossession(int teamId)
+    {
+        PossessionTeamId = teamId;
+        RefreshRosters();
+        OnPossessionChanged?.Invoke(teamId);
+    }
+
+    // Whoever is holding the ball at the whistle snaps next: tackle, out of bounds,
+    // interception, and a fumble recovered by the other team all resolve through this one
+    // rule. Loose/incomplete balls (no carrier) leave possession alone. Silent no-op when
+    // the other team can't take over yet, so today's T1-only game behaves exactly as before.
+    void ResolvePossessionAtWhistle()
+    {
+        var carrier = BallController.Instance != null ? BallController.Instance.Carrier : null;
+        if (carrier == null || !carrier.TryGetComponent<TeamMember>(out var holder)) return;
+        if (holder.teamId == PossessionTeamId) return;
+
+        if (CanTakePossession(holder.teamId)) ApplyPossession(holder.teamId);
+    }
+
+    [ContextMenu("Debug: Flip Possession")]
+    void DebugFlipPossession() => TrySetPossession(DefendingTeamId);
+
+    // ------------------------------------------------------------------------------
 
     FormationData ActiveOffensiveFormation =>
         (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : defaultOffensiveFormation;
@@ -100,7 +262,13 @@ public class PlayState : MonoBehaviour
     {
         Instance = this;
         controls = new InputSystem_Actions();
-        nextLineOfScrimmageZ = initialPlayerZ;
+
+        PossessionTeamId = startingPossessionTeamId;
+        RefreshRosters();
+
+        // initialPlayerZ is authored in attack-axis space (negative = own side), so it
+        // lands on the correct half of the field for whichever team starts with the ball.
+        nextLineOfScrimmageZ = AttackDirection.FromAxis(initialPlayerZ);
 
         // No special-cased first play logically — but visually, there's nothing to
         // gather FROM before the first snap, so skip straight to InHuddle instead of
@@ -133,7 +301,7 @@ public class PlayState : MonoBehaviour
     {
         if (IsLive)
         {
-            if (!passerCrossedLOS && player != null && player.position.z > nextLineOfScrimmageZ)
+            if (!passerCrossedLOS && quarterback != null && IsPastLineOfScrimmage(quarterback.position.z))
                 passerCrossedLOS = true;
             return;
         }
@@ -151,6 +319,10 @@ public class PlayState : MonoBehaviour
         IsLive = false;
         lastEndReason = reason;
 
+        // Possession first — the kickoff-reset LOS below is authored in axis space and
+        // needs to be converted using the direction of whoever snaps NEXT.
+        ResolvePossessionAtWhistle();
+
         if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
             if (BallController.Instance != null)
@@ -160,7 +332,7 @@ public class PlayState : MonoBehaviour
         }
         else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
         {
-            nextLineOfScrimmageZ = kickoffResetZ;
+            nextLineOfScrimmageZ = AttackDirection.FromAxis(kickoffResetZ);
         }
 
         if (reason == PlayEndReason.Touchdown)
@@ -172,7 +344,7 @@ public class PlayState : MonoBehaviour
         {
             EndOffenseGamebreaker();
         }
-        
+
         OnPlayEnded?.Invoke(reason);
 
         StopAllCoroutines();
@@ -229,11 +401,12 @@ public class PlayState : MonoBehaviour
         DoSnap();
     }
 
+    // Possession team's full offensive unit: QB + everyone in offenseSlotOrder.
     List<Transform> GetOffenseRoster()
     {
         var roster = new List<Transform>();
-        if (player != null) roster.Add(player);
-        foreach (var t in offensivePlayers)
+        if (quarterback != null) roster.Add(quarterback);
+        foreach (var t in offensePlayers)
             if (t != null) roster.Add(t);
         return roster;
     }
@@ -257,7 +430,8 @@ public class PlayState : MonoBehaviour
         var members = GetOffenseRoster();
         if (members.Count == 0) { phase = HuddlePhase.InHuddle; yield break; }
 
-        Vector3 huddleCenter = new(0f, 1f, nextLineOfScrimmageZ - huddleDistanceBehindLOS);
+        // "Behind the LOS" means behind it from the possession team's point of view.
+        Vector3 huddleCenter = new(0f, 1f, AttackDirection.Advance(nextLineOfScrimmageZ, -huddleDistanceBehindLOS));
         var targets = CircleTargets(members.Count, huddleCenter, huddleRadius);
 
         yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance, instant: false);
@@ -280,6 +454,9 @@ public class PlayState : MonoBehaviour
         // shouldn't leave a stale latch from a moment ago.
         passerCrossedLOS = false;
 
+        // Formation offsets are authored for a +Z attacker; ToWorldVector rotates them
+        // 180 degrees when the possession team drives the other way.
+        FieldDirection dir = AttackDirection;
         Vector3 losOrigin = new(0f, 1f, nextLineOfScrimmageZ);
         var offense = ActiveOffensiveFormation;
         var defense = ActiveDefensiveFormation;
@@ -287,35 +464,42 @@ public class PlayState : MonoBehaviour
         var members = new List<Transform>();
         var targets = new List<Vector3>();
 
-        if (player != null)
+        if (quarterback != null)
         {
-            members.Add(player);
-            targets.Add(offense != null ? losOrigin + offense.qbOffsetFromLOS : new Vector3(0f, player.position.y, nextLineOfScrimmageZ));
+            members.Add(quarterback);
+            targets.Add(offense != null
+                ? losOrigin + dir.ToWorldVector(offense.qbOffsetFromLOS)
+                : new Vector3(0f, quarterback.position.y, nextLineOfScrimmageZ));
         }
 
-        for (int i = 0; i < offensivePlayers.Count; i++)
+        for (int i = 0; i < offensePlayers.Count; i++)
         {
-            if (offensivePlayers[i] == null) continue;
-            members.Add(offensivePlayers[i]);
+            if (offensePlayers[i] == null) continue;
+            members.Add(offensePlayers[i]);
             targets.Add(offense != null && i < offense.offensiveSlots.Count
-                ? losOrigin + offense.offensiveSlots[i].offsetFromLOS
-                : offensivePlayers[i].position); // no slot defined -> hold, don't yank to origin
+                ? losOrigin + dir.ToWorldVector(offense.offensiveSlots[i].offsetFromLOS)
+                : offensePlayers[i].position); // no slot defined -> hold, don't yank to origin
         }
 
-        for (int i = 0; i < defenders.Count; i++)
+        for (int i = 0; i < defensePlayers.Count; i++)
         {
-            if (defenders[i] == null) continue;
-            members.Add(defenders[i]);
+            if (defensePlayers[i] == null) continue;
+            members.Add(defensePlayers[i]);
             targets.Add(defense != null && i < defense.defenderSlots.Count
-                ? losOrigin + defense.defenderSlots[i].offsetFromLOS
-                : defenders[i].position);
+                ? losOrigin + dir.ToWorldVector(defense.defenderSlots[i].offsetFromLOS)
+                : defensePlayers[i].position);
         }
 
         yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance, instant);
 
-        if (player != null) player.rotation = Quaternion.identity;
-        foreach (var t in offensivePlayers)
-            if (t != null) t.rotation = Quaternion.identity;
+        // Offense faces the way it's driving; defense faces the offense. Set for both
+        // sides so a team that was just on the other side of the ball doesn't come out
+        // of a possession change still facing backward.
+        if (quarterback != null) quarterback.rotation = dir.Rotation;
+        foreach (var t in offensePlayers)
+            if (t != null) t.rotation = dir.Rotation;
+        foreach (var t in defensePlayers)
+            if (t != null) t.rotation = dir.Opposite.Rotation;
 
         // Fires only once everyone's actually standing in their final spot —
         // ReceiverAI.SetRoute() calculates route depth from current position, so
@@ -324,7 +508,7 @@ public class PlayState : MonoBehaviour
         AssignRoutes();
 
         if (BlockingCoordinator.Instance != null)
-            BlockingCoordinator.Instance.RegisterBlockers(offensivePlayers);
+            BlockingCoordinator.Instance.RegisterBlockers(offensePlayers);
 
         var selectionUI = FindAnyObjectByType<ReceiverSelectionUI>();
         if (selectionUI != null)
@@ -376,9 +560,9 @@ public class PlayState : MonoBehaviour
 
     void AssignRoutes()
     {
-        for (int i = 0; i < offensivePlayers.Count; i++)
+        for (int i = 0; i < offensePlayers.Count; i++)
         {
-            Transform playerTransform = offensivePlayers[i];
+            Transform playerTransform = offensePlayers[i];
             if (!ReceiverTargeting.IsEligible(playerTransform)) continue;
 
             ReceiverAI receiver = playerTransform.GetComponent<ReceiverAI>();
