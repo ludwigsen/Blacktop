@@ -10,7 +10,6 @@ public class PitchMove : IPlayerMove
 {
     [SerializeField] float windupDuration = 0.05f; // near-instant — a pitch should read as a reflex, not a decision
     [SerializeField] float pitchRadius = 6f;
-    [SerializeField] string teammateTag = "Teammate";
     [SerializeField] float arcHeight = 0.5f; // low flat toss, not a lob
     [SerializeField] float flightDuration = 0.15f;
 
@@ -42,27 +41,43 @@ public class PitchMove : IPlayerMove
         // penalty for an errant pitch yet. Revisit once this gets punished properly.
     }
 
+    // Teammates are resolved through TeamMember (same team as the carrier), not tags —
+    // the tag scheme was retired when teams were separated, and the scene now has T2
+    // players carrying a "Teammate" tag, so a tag search could hand the ball to the
+    // other team. "Backward" is measured against the direction the possession team is
+    // attacking rather than the carrier's facing, so a pitch stays legal/illegal
+    // regardless of which way the carrier is turned mid-juke.
     Transform FindNearestTeammateBehind(PlayerContext ctx)
     {
-        var candidates = GameObject.FindGameObjectsWithTag(teammateTag);
+        if (!ctx.transform.TryGetComponent<TeamMember>(out var self)) return null;
+
+        Vector3 attackForward = PlayState.Instance != null
+            ? PlayState.Instance.AttackDirection.Forward
+            : ctx.transform.forward;
+
         Transform best = null;
         float bestDist = pitchRadius;
 
-        foreach (var c in candidates)
+        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
-            Vector3 toTeammate = c.transform.position - ctx.transform.position;
+            if (member.teamId != self.teamId || member.transform == ctx.transform) continue;
+
+            Vector3 toTeammate = member.transform.position - ctx.transform.position;
             float dist = toTeammate.magnitude;
             if (dist > bestDist) continue;
 
             // Real (and arcade) football rule: pitches go backward/lateral, never
             // forward. This is what makes Pitch distinct from Pass rather than a
             // shorter-range duplicate of it.
-            float forwardDot = Vector3.Dot(ctx.transform.forward, toTeammate.normalized);
-            if (forwardDot > 0.2f) continue;
+            if (Vector3.Dot(attackForward, toTeammate.normalized) > 0.2f) continue;
 
             bestDist = dist;
-            best = c.transform;
+            best = member.transform;
         }
+
+        if (best == null)
+            Debug.Log($"[PitchMove] No legal target: nobody on the carrier's team within {pitchRadius} units and behind/level with the carrier.");
+
         return best;
     }
 }

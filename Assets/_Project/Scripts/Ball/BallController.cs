@@ -166,6 +166,14 @@ public class BallController : MonoBehaviour
         flightTimer += Time.deltaTime;
         float t = Mathf.Clamp01(flightTimer / flightDuration);
 
+        // A pitch is a 0.15s reflex toss — the receiver keeps running while it's in the
+        // air, and aiming at where they WERE at release could put the catch just outside
+        // recoveryRadius and end the play as Incomplete. Track them instead, so a pitch
+        // always arrives. (Passes deliberately keep the fixed target: leading the
+        // receiver is the skill there.)
+        if (isPitchInFlight && intendedReceiver != null)
+            targetPoint = intendedReceiver.position;
+
         Vector3 flatPos = Vector3.Lerp(launchPoint, targetPoint, t);
         float height = flightArcCurve.Evaluate(t) * flightArcHeight;
         transform.position = flatPos + Vector3.up * height;

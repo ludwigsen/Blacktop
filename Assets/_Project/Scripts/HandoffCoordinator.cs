@@ -55,6 +55,16 @@ public class HandoffCoordinator : MonoBehaviour
         if (!carrier.TryGetComponent<TeamMember>(out var carrierTeam)) return;
         if (carrierTeam.slot != TeamMember.RosterSlot.QB) return;
 
+        // A handoff is a behind-the-line exchange. Once the QB has crossed the LOS it's
+        // off for the rest of the play — otherwise the back keeps chasing the QB downfield
+        // and "hands off" past the line. Latching also stops the autopath, so the back
+        // goes back to normal behavior (blocking) instead of running into the QB.
+        if (PlayState.Instance.IsPastLineOfScrimmage(carrier.position.z))
+        {
+            handoffResolvedThisPlay = true;
+            return;
+        }
+
         Transform receiver = FindReceiver(carrierTeam.teamId, playCall.HandoffReceiverSlot);
         if (receiver == null) return;
 
