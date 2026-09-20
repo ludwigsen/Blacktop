@@ -26,13 +26,15 @@ public class PlayState : MonoBehaviour
     // player. Defaults reproduce the exact assignment the old hand-wired lists had.
     [Header("Roster Ordering (by TeamMember.slot)")]
     [Tooltip("Non-QB offense, in the order FormationData.offensiveSlots (and PlayCallData receiverIndex) are authored. QB is handled separately via qbOffsetFromLOS.")]
-    [SerializeField] TeamMember.RosterSlot[] offenseSlotOrder =
+    [SerializeField]
+    TeamMember.RosterSlot[] offenseSlotOrder =
     {
         TeamMember.RosterSlot.RB, TeamMember.RosterSlot.OL1, TeamMember.RosterSlot.OL2,
         TeamMember.RosterSlot.WR1, TeamMember.RosterSlot.WR2, TeamMember.RosterSlot.WR3
     };
     [Tooltip("A team's players in the order FormationData.defenderSlots are authored (EDGE-L, EDGE-R, LB-L, LB-R, DB-L, DB-R, S). Both-ways roster: any player can fill any defensive slot.")]
-    [SerializeField] TeamMember.RosterSlot[] defenseSlotOrder =
+    [SerializeField]
+    TeamMember.RosterSlot[] defenseSlotOrder =
     {
         TeamMember.RosterSlot.OL1, TeamMember.RosterSlot.OL2, TeamMember.RosterSlot.QB, TeamMember.RosterSlot.RB,
         TeamMember.RosterSlot.WR1, TeamMember.RosterSlot.WR2, TeamMember.RosterSlot.WR3
@@ -342,7 +344,7 @@ public class PlayState : MonoBehaviour
         {
             EndOffenseGamebreaker();
         }
-        
+
         OnPlayEnded?.Invoke(reason);
 
         StopAllCoroutines();
