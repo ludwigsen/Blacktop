@@ -72,11 +72,9 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
 
-        // Input is screen-relative: "up" means toward the end zone the possession team is
-        // attacking. The camera orbits with possession (see CameraFollow), so this keeps
-        // stick-up = screen-up after a turnover instead of running toward the camera.
-        if (PlayState.Instance != null)
-            moveDir = PlayState.Instance.AttackDirection.ToWorldVector(moveDir);
+        // Input is screen-relative: stick-up = up on screen, whichever way the camera is
+        // currently facing (it orbits behind the ball holder — see CameraFollow).
+        moveDir = CameraFollow.ScreenToWorld(moveDir);
         Vector3 targetVelocity = moveDir * MaxSpeed;
 
         // Asymmetric accel/decel is the core of "arcade feel" — stopping should read as

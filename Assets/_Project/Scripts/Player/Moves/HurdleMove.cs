@@ -20,7 +20,6 @@ public class HurdleMove : IPlayerMove
     // would make longer hurdles disproportionately safer, which isn't the intent.
     [SerializeField] float negateCheckRadius = 2f;
     [SerializeField] float baseNegateChance = 0.2f; // flat 20% base, scaled by hurdleMult
-    [SerializeField] string defenderTag = "Defender";
 
     float timer, lastHeightSample, lastForwardSample;
     PlayerAttributes attr;
@@ -46,7 +45,7 @@ public class HurdleMove : IPlayerMove
         Collider[] nearby = Physics.OverlapSphere(ctx.transform.position, negateCheckRadius);
         foreach (var c in nearby)
         {
-            if (c.CompareTag(defenderTag)) { defenderClose = true; break; }
+            if (TeamMember.AreOpponents(ctx.transform, c)) { defenderClose = true; break; }
         }
 
         if (defenderClose)

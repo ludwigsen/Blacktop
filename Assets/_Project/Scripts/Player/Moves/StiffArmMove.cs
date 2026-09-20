@@ -26,7 +26,6 @@ public class StiffArmMove : IPlayerMove
     // rather than a persistent collider, since this only needs to matter during the move's
     // brief active window.
     [SerializeField] float contactRange = 1.5f;
-    [SerializeField] string defenderTag = "Defender";
 
     // Outcome odds — base 30% full shed, 70% push back, per design call. Scaled by
     // powerMult: a maxed-power player (1.3x) pushes the shed chance up meaningfully,
@@ -77,7 +76,7 @@ public class StiffArmMove : IPlayerMove
 
         foreach (var hit in hits)
         {
-            if (!hit.CompareTag(defenderTag)) continue;
+            if (!TeamMember.AreOpponents(ctx.transform, hit)) continue;
 
             hasResolvedContact = true;
 

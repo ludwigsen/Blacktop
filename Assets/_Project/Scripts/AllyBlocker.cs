@@ -19,7 +19,6 @@ public class AllyBlocker : MonoBehaviour
     [SerializeField] float contactDetectRadius = 1.2f; // OverlapSphere radius for contact resolution
     [SerializeField] float pushBackDistance = 0.8f;
     [SerializeField] float pushBackDuration = 0.15f;
-    [SerializeField] string defenderTag = "Defender";
 
     // Debounce between block-contact rolls. Without this, CheckBlockContact re-rolls
     // almost every frame while blocker and defender stay within contactDetectRadius
@@ -113,7 +112,7 @@ public class AllyBlocker : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, contactDetectRadius);
         foreach (var hit in hits)
         {
-            if (!hit.CompareTag(defenderTag)) continue;
+            if (!TeamMember.AreOpponents(this, hit)) continue;
             if (hit.transform != currentTarget) continue; // only resolve contact against OUR assigned target
 
             var defenderAI = hit.GetComponent<DefenderAI>();

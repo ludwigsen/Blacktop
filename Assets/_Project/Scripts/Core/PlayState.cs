@@ -133,6 +133,21 @@ public class PlayState : MonoBehaviour
 
     public FieldDirection AttackDirection => DirectionFor(PossessionTeamId);
 
+    // Which way the CAMERA (and therefore screen-relative stick input) should face: behind
+    // whoever actually holds the ball, live. Differs from AttackDirection only for the
+    // moment a live ball changes teams (defensive fumble recovery) before the whistle —
+    // possession itself only flips at the whistle, but the camera shouldn't wait for it.
+    public FieldDirection ViewDirection
+    {
+        get
+        {
+            var ball = BallController.Instance;
+            if (ball != null && ball.IsHeld && ball.Carrier != null && ball.Carrier.TryGetComponent<TeamMember>(out var holder))
+                return DirectionFor(holder.teamId);
+            return AttackDirection;
+        }
+    }
+
     // LOS helpers in the current attack direction — use these instead of comparing raw Z.
     public bool IsPastLineOfScrimmage(float worldZ) => AttackDirection.IsPastLOS(worldZ, nextLineOfScrimmageZ);
     public float YardsPastLineOfScrimmage(float worldZ) => AttackDirection.YardsPastLOS(worldZ, nextLineOfScrimmageZ);
@@ -143,6 +158,11 @@ public class PlayState : MonoBehaviour
     Transform quarterback;
     readonly List<Transform> offensePlayers = new(); // possession team, non-QB, in offenseSlotOrder
     readonly List<Transform> defensePlayers = new(); // opposing team, in defenseSlotOrder
+
+    // The defending team in FormationData.defenderSlots order (index 0..6). Keeps null
+    // entries so index N always means defender slot N — DefenderControlManager loops it
+    // for pre-snap switching.
+    public IReadOnlyList<Transform> DefensePlayers => defensePlayers;
 
     public Transform Passer => quarterback; // possession team's QB
     public List<Transform> OffensivePlayers => offensePlayers;

@@ -6,10 +6,14 @@ using UnityEngine.InputSystem;
 // pattern). Does nothing at all while the user has the ball — the carrier-side stack
 // (PossessionController) handles that case.
 //
-// Selection rules (Madden-style, tuned for arcade):
+// Selection rules:
+//   - PRE-SNAP (dead ball): the switch button loops the defense array in formation-slot
+//     order, 0 through 6 and back to 0. Each new dead ball starts at 0.
 //   - At the snap: the defender closest to the ball, unless the human already picked one
 //     pre-snap.
-//   - Switch button: the closest defender to the ball that isn't the current one.
+//   - POST-SNAP: the switch button toggles between the two defenders closest to the ball
+//     (the closest one that isn't the current guy — if you're not one of the two, you go
+//     to the closest).
 //   - Auto-switch whenever the ball changes hands or state (throw, catch, handoff, fumble):
 //     to the closest defender to where the ball is, or where a pass is headed. That's what
 //     puts you in position to break up a throw without having to guess.
@@ -96,10 +100,11 @@ public class DefenderControlManager : MonoBehaviour
             return;
         }
 
-        // First frame of defense, or the piloted guy became invalid (possession change,
-        // destroyed) — pick a default.
+        // First frame of defense, a new dead ball, or the piloted guy became invalid
+        // (possession change, destroyed) — pick a default: slot 0 of the defense array
+        // pre-snap, closest to the ball once live.
         if (!IsValid(current))
-            Select(ClosestUserDefenderTo(FocusPoint(), null));
+            Select(play.IsLive ? ClosestUserDefenderTo(FocusPoint(), null) : NextInDefenseArray(null));
 
         if (play.IsLive) AutoSwitchOnBallChange();
     }
@@ -112,7 +117,11 @@ public class DefenderControlManager : MonoBehaviour
         if (play == null || !play.IsUserDefending) return;
         if (Time.time - lastSwitchTime < switchCooldown) return;
 
-        var next = ClosestUserDefenderTo(FocusPoint(), current);
+        // Dead ball: step through the defense array. Live ball: the closest defender to the
+        // ball that isn't the current one (= toggling between the two closest).
+        var next = play.IsLive
+            ? ClosestUserDefenderTo(FocusPoint(), current)
+            : NextInDefenseArray(current);
         if (next == null) return;
 
         lastSwitchTime = Time.time;
@@ -131,7 +140,12 @@ public class DefenderControlManager : MonoBehaviour
         if (!pickedPreSnap) Select(ClosestUserDefenderTo(FocusPoint(), null));
     }
 
-    void HandlePlayEnded(PlayState.PlayEndReason _) => pickedPreSnap = false;
+    // New dead ball: forget last down's pick and drop control so Update() re-selects slot 0.
+    void HandlePlayEnded(PlayState.PlayEndReason _)
+    {
+        pickedPreSnap = false;
+        Release();
+    }
 
     void HandlePossessionChanged(int _) => Release(); // Update() re-selects if the user is now defending
 
@@ -183,6 +197,33 @@ public class DefenderControlManager : MonoBehaviour
         if (current == null) return;
         current.SetControlled(false);
         current = null;
+    }
+
+    // Next defender after `from` in FormationData.defenderSlots order, wrapping 6 -> 0.
+    // from == null (or not in the array) starts at index 0. Skips empty slots and anyone
+    // without DefenderAI.
+    static DefenderAI NextInDefenseArray(DefenderControl from)
+    {
+        var defense = PlayState.Instance.DefensePlayers;
+        int count = defense.Count;
+        if (count == 0) return null;
+
+        int start = -1;
+        if (from != null)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (defense[i] != null && defense[i].gameObject == from.gameObject) { start = i; break; }
+            }
+        }
+
+        for (int step = 1; step <= count; step++)
+        {
+            int i = (start + step) % count; // start = -1 -> first probe is index 0
+            if (defense[i] != null && defense[i].TryGetComponent<DefenderAI>(out var ai)) return ai;
+        }
+
+        return null;
     }
 
     // Where the action is: the carrier while held, where the pass is going while in

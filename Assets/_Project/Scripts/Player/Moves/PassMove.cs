@@ -11,8 +11,6 @@ public class PassMove : IPlayerMove
     [SerializeField] float windupDuration = 0.15f;
     [SerializeField] float maxReceiverSearchRadius = 45f;
     [SerializeField] float receiverSearchConeAngle = 70f;
-    [SerializeField] string teammateTag = "Teammate";
-    [SerializeField] string defenderTag = "Defender";
 
     // Arc now scales with distance instead of a flat value — short screens should read
     // as bullets, deep balls need real air under them. arcHeightPerDistance is the ratio
@@ -132,7 +130,7 @@ public class PassMove : IPlayerMove
         {
             if (!IsValidAutoTarget(ctx, r)) continue;
 
-            float openness = NearestDefenderDistance(r.position);
+            float openness = NearestOpponentDistance(ctx, r.position);
             float dist = Vector3.Distance(r.position, ctx.transform.position);
             float score = openness * 2f - dist * 0.1f;
 
@@ -162,13 +160,17 @@ public class PassMove : IPlayerMove
         return angle <= receiverSearchConeAngle;
     }
 
-    float NearestDefenderDistance(Vector3 pos)
+    // "Openness" = distance to the nearest player on the OTHER team, resolved through
+    // TeamMember instead of the retired Defender tag — so it stays right whichever team
+    // is throwing.
+    float NearestOpponentDistance(PlayerContext ctx, Vector3 pos)
     {
-        var defenders = GameObject.FindGameObjectsWithTag(defenderTag);
         float closest = float.MaxValue;
-        foreach (var d in defenders)
+        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
-            float dist = Vector3.Distance(pos, d.transform.position);
+            if (!TeamMember.AreOpponents(ctx.transform, member)) continue;
+
+            float dist = Vector3.Distance(pos, member.transform.position);
             if (dist < closest) closest = dist;
         }
         return closest == float.MaxValue ? 999f : closest;

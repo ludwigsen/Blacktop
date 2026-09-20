@@ -13,6 +13,18 @@ public class TeamMember : MonoBehaviour
 
     public RosterSlot slot;
 
+    // The one "is that guy on the other team?" check. Replaces every "Defender"/"Teammate"
+    // tag comparison — tags encoded a permanent offense/defense split that stopped being
+    // true once either team can have the ball. Works on colliders too (players keep their
+    // TeamMember on the same GameObject as the collider). Anything without a TeamMember —
+    // ball, scenery, props — is never an opponent.
+    public static bool AreOpponents(Component self, Component other)
+    {
+        return self.TryGetComponent<TeamMember>(out var a)
+            && other.TryGetComponent<TeamMember>(out var b)
+            && a.teamId != b.teamId;
+    }
+
     // True when this player's team currently has the ball. Resolved live every call —
     // never cached — same reasoning as every other BallController.Carrier read in this
     // project (DefenderAI/DefenderCoordinator/CameraFollow/TouchdownZone).

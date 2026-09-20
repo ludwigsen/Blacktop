@@ -70,10 +70,9 @@ public class DefenderControl : MonoBehaviour
         float decel = tuning != null ? tuning.Deceleration : 60f;
         float turnRate = tuning != null ? tuning.RotationSpeed : 720f;
 
-        // Stick is screen-relative, same as the carrier: up = toward the end zone the
-        // possession team attacks (the camera orbits with possession to match).
-        Vector3 moveDir = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
-        if (play != null) moveDir = play.AttackDirection.ToWorldVector(moveDir);
+        // Stick is screen-relative, same as the carrier: up = up on screen, however the
+        // camera is currently oriented.
+        Vector3 moveDir = CameraFollow.ScreenToWorld(new Vector3(moveInput.x, 0f, moveInput.y).normalized);
 
         Vector3 targetVelocity = moveDir * maxSpeed;
         float rate = moveDir.magnitude > 0.1f ? accel : decel;
