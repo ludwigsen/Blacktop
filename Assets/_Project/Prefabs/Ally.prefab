@@ -21,6 +21,8 @@ GameObject:
   - component: {fileID: 7093260107439753859}
   - component: {fileID: 297861708621314113}
   - component: {fileID: 8830491726354102987}
+  - component: {fileID: 4883675479690406824}
+  - component: {fileID: 4609209659204268853}
   m_Layer: 0
   m_Name: Ally
   m_TagString: Teammate
@@ -137,6 +139,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::ReceiverAI
   moveSpeed: 6
   routeDepth: 12
+  slantDistance: 4
+  hitchDepth: 4
 --- !u!114 &8380642619556374090
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,7 +242,6 @@ MonoBehaviour:
     cooldownDuration: 0.2
     negateCheckRadius: 2
     baseNegateChance: 0.2
-    defenderTag: Defender
   stiffArmMove:
     curve:
       serializedVersion: 2
@@ -268,24 +271,22 @@ MonoBehaviour:
     baseForwardBurst: 2.5
     cooldownDuration: 0.3
     contactRange: 1.5
-    defenderTag: Defender
     baseShedChance: 0.3
     pushBackDistance: 2
     shedDuration: 1
   pitchMove:
     windupDuration: 0.05
     pitchRadius: 6
-    teammateTag: Teammate
     arcHeight: 0.5
     flightDuration: 0.15
   passMove:
     windupDuration: 0.15
     maxReceiverSearchRadius: 20
     receiverSearchConeAngle: 70
-    teammateTag: Teammate
-    defenderTag: Defender
-    arcHeight: 3
-    flightDuration: 0.6
+    baseArcHeight: 0.5
+    arcHeightPerDistance: 0.12
+    baseThrowSpeed: 35
+    minFlightDuration: 0.15
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
 --- !u!114 &4724835751135970437
 MonoBehaviour:
@@ -299,7 +300,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::TackleContact
-  defenderTag: Defender
   contactRadius: 0.8
   baseFumbleChance: 0.5
 --- !u!114 &1581645110467961211
@@ -331,7 +331,7 @@ MonoBehaviour:
   contactDetectRadius: 1.2
   pushBackDistance: 0.8
   pushBackDuration: 0.15
-  defenderTag: Defender
+  contactCooldownDuration: 0.4
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
 --- !u!114 &297861708621314113
 MonoBehaviour:
@@ -345,7 +345,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a098b1d7080e4c11b3e5f232cd8bb4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::DefenderDetector
-  defenderTag: Defender
   boxSize: {x: 2, y: 1.5, z: 2}
   boxOffset: {x: 0, y: 0, z: 1.2}
 --- !u!114 &8830491726354102987
@@ -367,3 +366,36 @@ MonoBehaviour:
   jukeColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   hurdleColor: {r: 0, g: 1, b: 0, a: 1}
   stiffArmColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &4883675479690406824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6555219639277062554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TeamMember
+  teamId: 0
+  slot: 0
+--- !u!114 &4609209659204268853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6555219639277062554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e476568d12b3c411aac940724e2517be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::DefenderAI
+  attributes: {fileID: 0}
+  baseMoveSpeed: 5
+  stopDistance: 1
+  separationRadius: 1.2
+  separationStrength: 3
+  containBreakRadius: 4
+  containLeadDistance: 3

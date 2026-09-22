@@ -152,6 +152,12 @@ public class PlayState : MonoBehaviour
     public bool IsPastLineOfScrimmage(float worldZ) => AttackDirection.IsPastLOS(worldZ, nextLineOfScrimmageZ);
     public float YardsPastLineOfScrimmage(float worldZ) => AttackDirection.YardsPastLOS(worldZ, nextLineOfScrimmageZ);
 
+    // Same as above, but relative to whoever's actually carrying the ball RIGHT NOW rather
+    // than PossessionTeamId — use this for anything evaluated live, mid-play, that could be
+    // asked about during the window between a turnover and the whistle (ResolvePossessionAtWhistle
+    // hasn't run yet). Steady-state (no turnover in flight) this is identical to the pair above.
+    public bool IsCarrierPastLineOfScrimmage(float worldZ) => ViewDirection.IsPastLOS(worldZ, nextLineOfScrimmageZ);
+
     // Rosters for the current possession, rebuilt by RefreshRosters(). Lists keep a null
     // entry for a missing slot on purpose — index N must stay aligned with formation slot
     // N and PlayCallData.receiverIndex N. Every consumer already null-checks.

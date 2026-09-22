@@ -51,8 +51,11 @@ public class PitchMove : IPlayerMove
     {
         if (!ctx.transform.TryGetComponent<TeamMember>(out var self)) return null;
 
+        // self's own team direction — self IS the carrier here (CanTrigger already guarantees
+        // it), so this is correct even the instant after an interception, before the whistle
+        // updates PossessionTeamId/AttackDirection.
         Vector3 attackForward = PlayState.Instance != null
-            ? PlayState.Instance.AttackDirection.Forward
+            ? PlayState.Instance.DirectionFor(self.teamId).Forward
             : ctx.transform.forward;
 
         Transform best = null;

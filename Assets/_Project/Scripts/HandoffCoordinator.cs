@@ -53,6 +53,7 @@ public class HandoffCoordinator : MonoBehaviour
         // Only relevant while the QB still has it — once the back receives it,
         // carrier.slot is no longer QB, so this naturally stops without a second guard.
         if (!carrier.TryGetComponent<TeamMember>(out var carrierTeam)) return;
+        if (carrierTeam.teamId != PlayState.Instance.PossessionTeamId) return; // handoff logic only ever applies to the team actually running this play call
         if (carrierTeam.slot != TeamMember.RosterSlot.QB) return;
 
         // A handoff is a behind-the-line exchange. Once the QB has crossed the LOS it's
