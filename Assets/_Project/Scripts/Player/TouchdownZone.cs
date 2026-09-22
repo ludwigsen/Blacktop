@@ -30,9 +30,12 @@ public class TouchdownZone : MonoBehaviour
 
         Vector3 ballPos = BallController.Instance.transform.position;
 
-        // Which end zone is a Touchdown vs. a Safety depends on who has possession: the
-        // one the offense is attacking scores, the one it's defending is a Safety.
-        FieldDirection dir = PlayState.Instance.AttackDirection;
+        // Which end zone is a Touchdown vs. a Safety depends on who's actually carrying it
+        // RIGHT NOW, not who last had possession at the whistle — during a live interception
+        // or fumble return the carrier is on the opposing team, driving the opposite way, and
+        // PossessionTeamId hasn't flipped yet (that only happens at EndPlay). ViewDirection
+        // already solves this exact staleness for the camera; reuse it here.
+        FieldDirection dir = PlayState.Instance.ViewDirection;
 
         if (fieldBounds != null)
         {
