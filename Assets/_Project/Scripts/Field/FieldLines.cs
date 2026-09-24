@@ -19,10 +19,8 @@ using UnityEngine.Rendering;
 // cheap, no mesh rebuild, no dependency on exactly which PlayState event fires in what
 // order. Goal lines never move, so those are built once and left alone.
 //
-// First down is a flat +firstDownYards ahead of the CURRENT line of scrimmage. There's no
-// downs/yardage tracking yet (see BLACKTOP_STATUS.md), so this is a placeholder "+10 from
-// wherever LOS currently sits," not "10 yards to a fresh set of downs." Swap the source in
-// Update() for a real down tracker later — nothing else here needs to change.
+// First down sits YardsToGo ahead of the current LOS, read live from DownsTracker.
+// Falls back to firstDownYards if no DownsTracker exists in the scene yet.
 [DisallowMultipleComponent]
 public class FieldLines : MonoBehaviour
 {
@@ -33,7 +31,7 @@ public class FieldLines : MonoBehaviour
     [SerializeField] float lineThickness = 0.3f;      // LOS / first-down depth along Z
     [SerializeField] float goalLineThickness = 0.4f;
     [SerializeField] float heightOffset = 0.02f;      // lifts lines above the plane to dodge z-fighting
-    [SerializeField] float firstDownYards = 10f;      // placeholder distance — see class note above
+    [SerializeField] float firstDownYards = 10f;
 
     [Header("Colors (alpha = transparency)")]
     [SerializeField] Color losColor = new Color(1f, 1f, 1f, 0.55f);
@@ -82,14 +80,19 @@ public class FieldLines : MonoBehaviour
 
         SetLocalZ(losLine, losZ);
 
-        // First down sits firstDownYards ahead of the LOS in the direction the offense is
-        // attacking, and hides when that would land at/past the goal line it's attacking.
+        // YardsToGo comes from DownsTracker already clamped so LOS + YardsToGo can't overshoot
+        // the goal line — the marker just draws wherever that lands, including sitting right
+        // at the goal line on a goal-to-go set of downs. The fallback (no DownsTracker in the
+        // scene) clamps the same way, so neither path needs a hide-when-past-the-goal-line
+        // check anymore.
         FieldDirection dir = PlayState.Instance.AttackDirection;
-        float firstDownZ = dir.Advance(losZ, firstDownYards);
-        bool pastGoalLine = dir.Sign > 0f ? firstDownZ >= FarGoalZ : firstDownZ <= NearGoalZ;
+        float goalLineZ = dir.Sign > 0f ? FarGoalZ : NearGoalZ;
+        float distanceToGoal = (goalLineZ - losZ) * dir.Sign;
+        float yardsToGo = DownsTracker.Instance != null
+            ? DownsTracker.Instance.YardsToGo
+            : Mathf.Min(firstDownYards, distanceToGoal);
 
-        firstDownLine.gameObject.SetActive(!pastGoalLine);
-        if (!pastGoalLine) SetLocalZ(firstDownLine, firstDownZ);
+        SetLocalZ(firstDownLine, dir.Advance(losZ, yardsToGo));
     }
 
     static void SetLocalZ(Transform t, float z)
