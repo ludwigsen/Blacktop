@@ -71,18 +71,28 @@ public class DownsTracker : MonoBehaviour
     {
         var ps = PlayState.Instance;
 
+        // Possession already changed hands by now if this was a defensive score
+        // (PlayState.ResolvePossessionAtWhistle runs before OnPlayEnded fires) — fresh
+        // drive for whoever's holding it now, full stop.
         if (ps.PossessionTeamId != DriveTeamId)
         {
             StartFreshDrive(ps.PossessionTeamId, ps.CurrentLineOfScrimmageZ);
             return;
         }
 
+        // Scoring plays reset to a fresh drive at the kickoff spot PlayState already
+        // computed, same team (no receiving-team system yet — see PlayState). Down never
+        // increments on a score, regardless of what down it was.
         if (reason == PlayState.PlayEndReason.Touchdown || reason == PlayState.PlayEndReason.Safety)
         {
             StartFreshDrive(ps.PossessionTeamId, ps.CurrentLineOfScrimmageZ);
             return;
         }
 
+        // Still the same team's drive so far — measure this play in THEIR direction only.
+        // ps.CurrentLineOfScrimmageZ is already exactly right for both cases: ball position
+        // for a tackle/OOB, unchanged (== preSnapLOS) for an incomplete pass — no separate
+        // incomplete-pass branch needed anywhere in this method.
         FieldDirection dir = ps.DirectionFor(DriveTeamId);
         float gained = dir.YardsPastLOS(ps.CurrentLineOfScrimmageZ, preSnapLOS);
 
