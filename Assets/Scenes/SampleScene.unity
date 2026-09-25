@@ -2068,12 +2068,11 @@ GameObject:
   - component: {fileID: 1314477357}
   - component: {fileID: 1314477358}
   - component: {fileID: 1314477363}
-  - component: {fileID: 1314477359}
   - component: {fileID: 1314477360}
   - component: {fileID: 1314477361}
+  - component: {fileID: 1314477367}
   - component: {fileID: 1314477362}
   - component: {fileID: 1314477364}
-  - component: {fileID: 1314477365}
   - component: {fileID: 1314477366}
   m_Layer: 0
   m_Name: GameManager
@@ -2153,24 +2152,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::BlockingCoordinator
   blockEngageRadius: 6
   switchThreshold: 1.5
---- !u!114 &1314477359
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1314477354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd48e88aab77a41aab594de15304f8ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Blacktop::GamebreakerHUD
-  barSize: {x: 300, y: 24}
-  screenMargin: {x: 30, y: 30}
-  promptFontSize: 28
-  offenseColor: {r: 1, g: 0.6, b: 0, a: 1}
-  defenseColor: {r: 0.2, g: 0.6, b: 1, a: 1}
-  backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!114 &1314477360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2257,21 +2238,6 @@ MonoBehaviour:
   deceleration: 60
   rotationSpeed: 720
   switchCooldown: 0.15
---- !u!114 &1314477365
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1314477354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61078f6e64f27454e88dadc609eb7dbc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Blacktop::DownsHUD
-  anchoredPosition: {x: 30, y: -150}
-  fontSize: 40
-  textColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &1314477366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2284,6 +2250,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0c22606bade346698fa308c2b670b9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::DownsTracker
+--- !u!114 &1314477367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfdb2d03a44884e0594a02bc5e21de47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::GameHUD
+  scorebugPosition: {x: 50, y: -30}
+  scoreFontSize: 30
+  downFontSize: 24
+  barSize: {x: 300, y: 24}
+  screenMargin: {x: 30, y: 30}
+  promptFontSize: 28
+  offenseColor: {r: 1, g: 0.6, b: 0, a: 1}
+  defenseColor: {r: 0.2, g: 0.6, b: 1, a: 1}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0

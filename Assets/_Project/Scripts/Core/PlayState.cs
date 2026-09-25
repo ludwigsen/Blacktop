@@ -279,20 +279,40 @@ public class PlayState : MonoBehaviour
     public void SetPlayCall(PlayCallData call) => playCall = call;
     public PlayCallData CurrentPlayCall => playCall;
 
-    // --- Gamebreaker state ---
-    float offenseMeter;
-    float defenseMeter;
-    int offensePossessionsRemaining;
-    bool defenseGuaranteedTurnoverPending;
+    // --- Gamebreaker state — TEAM-OWNED, not role-based. Each team accumulates and
+    // keeps its own meter/active-state across possession changes; "OffenseMeter"/
+    // "AddOffensePoints"/etc. below are unchanged convenience wrappers meaning
+    // "whichever team currently HAS the ball" / "is currently defending" — same as
+    // every existing caller already assumes — but now correctly read/write THAT
+    // TEAM's own persistent slot instead of two anonymous floats that used to
+    // silently change identity the instant possession flipped.
+    struct TeamGamebreakerState
+    {
+        public float meter;
+        public bool isActive;
+        public int possessionsRemaining;
+        public bool guaranteedTurnoverPending;
+    }
 
-    public float OffenseMeter => offenseMeter;
-    public float DefenseMeter => defenseMeter;
-    public bool IsOffenseGamebreakerActive { get; private set; }
+    readonly TeamGamebreakerState[] gamebreaker = new TeamGamebreakerState[2];
+
+    public float OffenseMeter => gamebreaker[PossessionTeamId].meter;
+    public float DefenseMeter => gamebreaker[DefendingTeamId].meter;
+    public bool IsOffenseGamebreakerActive => gamebreaker[PossessionTeamId].isActive;
+
+    // Per-team reads — what a per-team HUD panel should actually use instead of the
+    // offense/defense-flavored properties above, which change identity with possession.
+    public float MeterFor(int teamId) => gamebreaker[teamId].meter;
+    public bool IsGamebreakerActiveFor(int teamId) => gamebreaker[teamId].isActive;
 
     public event System.Action<float> OnOffenseMeterChanged;
     public event System.Action<float> OnDefenseMeterChanged;
     public event System.Action OnOffenseGamebreakerActivated;
     public event System.Action OnOffenseGamebreakerEnded;
+
+    // Fires for EITHER team, any time their meter changes, regardless of current role.
+    // This is what a per-team HUD (two independent bars) should subscribe to.
+    public event System.Action<int, float> OnTeamMeterChanged;
 
     void Awake()
     {
@@ -355,6 +375,12 @@ public class PlayState : MonoBehaviour
         IsLive = false;
         lastEndReason = reason;
 
+        // Capture who was ACTUALLY on offense this play before ResolvePossessionAtWhistle
+        // can flip PossessionTeamId out from under us (interception). Gamebreaker state
+        // is team-owned now, so "end the offense's run" has to mean the team that was
+        // actually driving, not whoever PossessionTeamId says AFTER the flip.
+        int offenseTeamIdThisPlay = PossessionTeamId;
+
         // Possession first — the kickoff-reset LOS below is authored in axis space and
         // needs to be converted using the direction of whoever snaps NEXT.
         ResolvePossessionAtWhistle();
@@ -373,12 +399,12 @@ public class PlayState : MonoBehaviour
 
         if (reason == PlayEndReason.Touchdown)
         {
-            AddOffensePoints(10f);
-            EndOffenseGamebreaker();
+            AddPoints(offenseTeamIdThisPlay, 10f);
+            EndGamebreaker(offenseTeamIdThisPlay);
         }
         else if (reason == PlayEndReason.Interception || reason == PlayEndReason.Safety)
         {
-            EndOffenseGamebreaker();
+            EndGamebreaker(offenseTeamIdThisPlay);
         }
 
         OnPlayEnded?.Invoke(reason);
@@ -387,7 +413,9 @@ public class PlayState : MonoBehaviour
         StartCoroutine(RegularPlayEndDelay());
     }
 
-    public void NotifyFumble() => EndOffenseGamebreaker();
+    // Fumble drop happens mid-play, before any possession flip — PossessionTeamId is
+    // still correctly the fumbling team at the moment this is called, no capture needed.
+    public void NotifyFumble() => EndGamebreaker(PossessionTeamId);
 
     // Entry point for PlayCallSelector's Confirm. Animated, non-blocking — returns
     // immediately, formation coroutine runs in the background. No-op while still
@@ -413,10 +441,11 @@ public class PlayState : MonoBehaviour
 
     void DoSnap()
     {
-        if (IsOffenseGamebreakerActive)
+        ref var offense = ref gamebreaker[PossessionTeamId];
+        if (offense.isActive)
         {
-            offensePossessionsRemaining--;
-            if (offensePossessionsRemaining <= 0) EndOffenseGamebreaker();
+            offense.possessionsRemaining--;
+            if (offense.possessionsRemaining <= 0) EndGamebreaker(PossessionTeamId);
         }
 
         IsLive = true;
@@ -611,60 +640,72 @@ public class PlayState : MonoBehaviour
         }
     }
 
-    // --- Gamebreaker API (unchanged) ---
+    // --- Gamebreaker API — same public surface every existing caller already uses.
+    // AddOffensePoints/AddDefensePoints/GetGamebreakerMult/etc. all still mean "whoever
+    // currently holds the ball" / "whoever's currently defending" from the CALLER's
+    // point of view — that hasn't changed. What changed is what's underneath: each of
+    // those now reads/writes the actual TEAM's own persistent slot in `gamebreaker[]`.
 
-    public void AddOffensePoints(float pts)
-    {
-        offenseMeter = Mathf.Clamp(offenseMeter + pts, 0f, 100f);
-        OnOffenseMeterChanged?.Invoke(offenseMeter);
-    }
+    public void AddOffensePoints(float pts) => AddPoints(PossessionTeamId, pts);
+    public void AddDefensePoints(float pts) => AddPoints(DefendingTeamId, pts);
 
-    public void AddDefensePoints(float pts)
+    void AddPoints(int teamId, float pts)
     {
-        defenseMeter = Mathf.Clamp(defenseMeter + pts, 0f, 100f);
-        OnDefenseMeterChanged?.Invoke(defenseMeter);
+        ref var state = ref gamebreaker[teamId];
+        state.meter = Mathf.Clamp(state.meter + pts, 0f, 100f);
+
+        OnTeamMeterChanged?.Invoke(teamId, state.meter);
+        if (teamId == PossessionTeamId) OnOffenseMeterChanged?.Invoke(state.meter);
+        else OnDefenseMeterChanged?.Invoke(state.meter);
     }
 
     public bool TryActivateOffenseGamebreaker()
     {
-        if (IsOffenseGamebreakerActive || offenseMeter < 100f) return false;
+        ref var state = ref gamebreaker[PossessionTeamId];
+        if (state.isActive || state.meter < 100f) return false;
 
-        IsOffenseGamebreakerActive = true;
-        offensePossessionsRemaining = gamebreakerPossessionLimit;
-        offenseMeter = 0f;
-        OnOffenseMeterChanged?.Invoke(offenseMeter);
+        state.isActive = true;
+        state.possessionsRemaining = gamebreakerPossessionLimit;
+        state.meter = 0f;
+
+        OnTeamMeterChanged?.Invoke(PossessionTeamId, state.meter);
+        OnOffenseMeterChanged?.Invoke(state.meter);
         OnOffenseGamebreakerActivated?.Invoke();
         return true;
     }
 
-    void EndOffenseGamebreaker()
+    void EndGamebreaker(int teamId)
     {
-        if (!IsOffenseGamebreakerActive) return;
-        IsOffenseGamebreakerActive = false;
+        ref var state = ref gamebreaker[teamId];
+        if (!state.isActive) return;
+        state.isActive = false;
         OnOffenseGamebreakerEnded?.Invoke();
     }
 
     void CheckDefenseAutoActivate()
     {
-        if (!defenseGuaranteedTurnoverPending && defenseMeter >= 100f)
+        ref var state = ref gamebreaker[DefendingTeamId];
+        if (!state.guaranteedTurnoverPending && state.meter >= 100f)
         {
-            defenseGuaranteedTurnoverPending = true;
-            defenseMeter = 0f;
-            OnDefenseMeterChanged?.Invoke(defenseMeter);
+            state.guaranteedTurnoverPending = true;
+            state.meter = 0f;
+            OnTeamMeterChanged?.Invoke(DefendingTeamId, state.meter);
+            OnDefenseMeterChanged?.Invoke(state.meter);
         }
     }
 
     public bool ConsumeGuaranteedTurnover()
     {
         CheckDefenseAutoActivate();
-        if (!defenseGuaranteedTurnoverPending) return false;
-        defenseGuaranteedTurnoverPending = false;
+        ref var state = ref gamebreaker[DefendingTeamId];
+        if (!state.guaranteedTurnoverPending) return false;
+        state.guaranteedTurnoverPending = false;
         return true;
     }
 
     public float GetGamebreakerMult(AttributeStat stat)
     {
-        if (!IsOffenseGamebreakerActive || gamebreakerBuffs == null) return 1f;
+        if (!gamebreaker[PossessionTeamId].isActive || gamebreakerBuffs == null) return 1f;
         return gamebreakerBuffs.Get(stat);
     }
 }
