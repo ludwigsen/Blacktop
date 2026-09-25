@@ -15,24 +15,40 @@ using UnityEngine.UI;
 // duplicate gamebreaker bars.
 public class GameHUD : MonoBehaviour
 {
-    [Header("Scorebug (top-left)")]
-    [SerializeField] Vector2 scorebugPosition = new Vector2(30f, -30f);
-    [SerializeField] int scoreFontSize = 30;
-    [SerializeField] int downFontSize = 24;
+    [Header("Scorebug")]
+    [SerializeField, Range(0.02f, 0.10f)]
+    float horizontalMargin = 0.05f;
 
-    [Header("Gamebreaker bars")]
-    [SerializeField] Vector2 barSize = new Vector2(300f, 24f);
-    [SerializeField] Vector2 screenMargin = new Vector2(30f, 30f);
-    [SerializeField] int promptFontSize = 28;
-    [SerializeField] Color offenseColor = new Color(1f, 0.6f, 0f);      // orange
-    [SerializeField] Color defenseColor = new Color(0.2f, 0.6f, 1f);    // blue
-    [SerializeField] Color backgroundColor = new Color(0f, 0f, 0f, 0.5f);
+    [SerializeField]
+    float scorebugHeight = 90f;
 
-    Text scoreText;
+    [Header("Typography")]
+    [SerializeField] int teamNameFontSize = 24;
+    [SerializeField] int scoreFontSize = 42;
+    [SerializeField] int gameStateFontSize = 20;
+    [SerializeField] int downFontSize = 26;
+
+    [Header("Team Colors")]
+    [SerializeField]
+    Color team1Color = new Color(0.15f, 0.55f, 1f);
+
+    [SerializeField]
+    Color team2Color = new Color(1f, 0.2f, 0.2f);
+
+    [SerializeField]
+    Color backgroundColor = new Color(0f, 0f, 0f, 0.82f);
+
+    Text team1NameText;
+    Text team1ScoreText;
+    Image team1GamebreakerFill;
+
+    Text team2NameText;
+    Text team2ScoreText;
+    Image team2GamebreakerFill;
+
+    Text quarterText;
+    Text clockText;
     Text downText;
-    Image offenseFill;
-    Image defenseFill;
-    Text readyPrompt;
 
     void Awake() => BuildHUD();
 
@@ -44,11 +60,11 @@ public class GameHUD : MonoBehaviour
     {
         if (PlayState.Instance != null)
         {
-            PlayState.Instance.OnOffenseMeterChanged += RefreshOffenseMeter;
-            PlayState.Instance.OnDefenseMeterChanged += RefreshDefenseMeter;
-            PlayState.Instance.OnOffenseGamebreakerActivated += HandleGamebreakerActivated;
-            RefreshOffenseMeter(PlayState.Instance.OffenseMeter);
-            RefreshDefenseMeter(PlayState.Instance.DefenseMeter);
+            //PlayState.Instance.OnOffenseMeterChanged += RefreshOffenseMeter;
+            //PlayState.Instance.OnDefenseMeterChanged += RefreshDefenseMeter;
+            //PlayState.Instance.OnOffenseGamebreakerActivated += HandleGamebreakerActivated;
+            //RefreshOffenseMeter(PlayState.Instance.OffenseMeter);
+            //RefreshDefenseMeter(PlayState.Instance.DefenseMeter);
         }
 
         if (DownsTracker.Instance != null)
@@ -68,9 +84,9 @@ public class GameHUD : MonoBehaviour
     {
         if (PlayState.Instance != null)
         {
-            PlayState.Instance.OnOffenseMeterChanged -= RefreshOffenseMeter;
-            PlayState.Instance.OnDefenseMeterChanged -= RefreshDefenseMeter;
-            PlayState.Instance.OnOffenseGamebreakerActivated -= HandleGamebreakerActivated;
+            //PlayState.Instance.OnOffenseMeterChanged -= RefreshOffenseMeter;
+            //PlayState.Instance.OnDefenseMeterChanged -= RefreshDefenseMeter;
+            //PlayState.Instance.OnOffenseGamebreakerActivated -= HandleGamebreakerActivated;
         }
         if (DownsTracker.Instance != null) DownsTracker.Instance.OnDownsChanged -= RefreshDowns;
         if (ScoreBoard.Instance != null) ScoreBoard.Instance.OnScoreChanged -= RefreshScore;
@@ -78,7 +94,13 @@ public class GameHUD : MonoBehaviour
 
     void BuildHUD()
     {
-        var canvasGO = new GameObject("GameHUDCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        var canvasGO = new GameObject(
+            "GameHUDCanvas",
+            typeof(Canvas),
+            typeof(CanvasScaler),
+            typeof(GraphicRaycaster)
+        );
+
         canvasGO.transform.SetParent(transform, false);
 
         var canvas = canvasGO.GetComponent<Canvas>();
@@ -89,34 +111,100 @@ public class GameHUD : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
         BuildScorebug(canvasGO.transform);
-        BuildGamebreakerBars(canvasGO.transform);
-        BuildReadyPrompt(canvasGO.transform);
     }
 
     void BuildScorebug(Transform parent)
     {
-        var scoreGO = new GameObject("ScoreText", typeof(Text));
-        scoreGO.transform.SetParent(parent, false);
-        scoreText = ConfigureText(scoreGO, scoreFontSize);
-        AnchorTopLeft(scoreGO.GetComponent<RectTransform>(), scorebugPosition, new Vector2(400f, 40f));
+        var scorebugGO = new GameObject("Scorebug", typeof(RectTransform), typeof(Image));
+        scorebugGO.transform.SetParent(parent, false);
 
-        var downGO = new GameObject("DownText", typeof(Text));
-        downGO.transform.SetParent(parent, false);
+        var scorebugRT = scorebugGO.GetComponent<RectTransform>();
+        scorebugRT.anchorMin = new Vector2(horizontalMargin, 1f);
+        scorebugRT.anchorMax = new Vector2(1f - horizontalMargin, 1f);
+        scorebugRT.pivot = new Vector2(0.5f, 1f);
+        scorebugRT.anchoredPosition = Vector2.zero;
+        scorebugRT.sizeDelta = new Vector2(0f, scorebugHeight);
+
+        scorebugGO.GetComponent<Image>().color = backgroundColor;
+
+        BuildTeam1Panel(scorebugGO.transform);
+        BuildGameStatePanel(scorebugGO.transform);
+        BuildTeam2Panel(scorebugGO.transform);
+    }
+
+    // builds the panel for Team 1
+    void BuildTeam1Panel(Transform parent)
+    {
+        var teamGO = new GameObject("Team1", typeof(RectTransform));
+        teamGO.transform.SetParent(parent, false);
+
+        var rt = teamGO.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(0.4f, 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        team1NameText = ConfigureText(teamNameGO, teamNameFontSize);
+        team1ScoreText = ConfigureText(teamScoreGO, scoreFontSize);
+
+        team1GamebreakerFill = CreateGamebreaker(
+            teamGO.transform,
+            "Team1Gamebreaker",
+            team1Color,
+            false
+        );
+    }
+
+    void BuildGameStatePanel(Transform parent)
+    {
+        var centerGO = new GameObject("GameState", typeof(RectTransform));
+        centerGO.transform.SetParent(parent, false);
+
+        var rt = centerGO.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.4f, 0f);
+        rt.anchorMax = new Vector2(0.6f, 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        //quarterText = CreateText(centerGO.transform, "Quarter", gameStateFontSize);
+        clockText = ConfigureText(clockGO, gameStateFontSize);
         downText = ConfigureText(downGO, downFontSize);
-        downText.color = new Color(1f, 1f, 1f, 0.85f);
-        // Stacked directly under the score line — 36px is a rough line-height guess at
-        // these font sizes, not a real layout pass. Fine for "does the data show up."
-        AnchorTopLeft(downGO.GetComponent<RectTransform>(), scorebugPosition - new Vector2(0f, 36f), new Vector2(300f, 32f));
+    }
+
+    void BuildTeam2Panel(Transform parent)
+    {
+        var teamGO = new GameObject("Team2", typeof(RectTransform));
+        teamGO.transform.SetParent(parent, false);
+
+        var rt = teamGO.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.6f, 0f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        team2NameText = ConfigureText(teamNameGO, teamNameFontSize);
+        team2ScoreText = ConfigureText(teamScoreGO, scoreFontSize);
+
+        team2GamebreakerFill = CreateGamebreaker(
+            teamGO.transform,
+            "Team2Gamebreaker",
+            team2Color,
+            true
+        );
     }
 
     Text ConfigureText(GameObject go, int fontSize)
     {
         var text = go.GetComponent<Text>();
+
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = fontSize;
         text.fontStyle = FontStyle.Bold;
-        text.alignment = TextAnchor.UpperLeft;
+        text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
+        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
+
         return text;
     }
 
@@ -129,31 +217,16 @@ public class GameHUD : MonoBehaviour
         rt.sizeDelta = size;
     }
 
-    void BuildGamebreakerBars(Transform parent)
-    {
-        offenseFill = CreateBar(parent, "OffenseBar", offenseColor,
-            anchor: new Vector2(0f, 0f), pivot: new Vector2(0f, 0f),
-            anchoredPos: screenMargin);
-
-        defenseFill = CreateBar(parent, "DefenseBar", defenseColor,
-            anchor: new Vector2(1f, 0f), pivot: new Vector2(1f, 0f),
-            anchoredPos: new Vector2(-screenMargin.x, screenMargin.y));
-    }
-
-    // Unchanged from GamebreakerHUD — background + fill pair. No sprite needed; an
-    // Image with sprite == null still renders as a solid quad using its Color.
-    Image CreateBar(Transform parent, string name, Color fillColor, Vector2 anchor, Vector2 pivot, Vector2 anchoredPos)
+    Image CreateGamebreaker(Transform parent, string name, Color fillColor, bool reverse)
     {
         var bgGO = new GameObject(name + "_BG", typeof(Image));
         bgGO.transform.SetParent(parent, false);
 
         var bgRT = bgGO.GetComponent<RectTransform>();
-        bgRT.anchorMin = anchor;
-        bgRT.anchorMax = anchor;
-        bgRT.pivot = pivot;
-        bgRT.sizeDelta = barSize;
-        bgRT.anchoredPosition = anchoredPos;
-        bgGO.GetComponent<Image>().color = backgroundColor;
+        bgRT.sizeDelta = new Vector2(150f, 16f);
+
+        bgGO.GetComponent<Image>().color =
+            new Color(1f, 1f, 1f, 0.15f);
 
         var fillGO = new GameObject(name + "_Fill", typeof(Image));
         fillGO.transform.SetParent(bgGO.transform, false);
@@ -164,73 +237,40 @@ public class GameHUD : MonoBehaviour
         fillRT.offsetMin = Vector2.zero;
         fillRT.offsetMax = Vector2.zero;
 
-        var fillImg = fillGO.GetComponent<Image>();
-        fillImg.color = fillColor;
-        fillImg.type = Image.Type.Filled;
-        fillImg.fillMethod = Image.FillMethod.Horizontal;
-        fillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
-        fillImg.fillAmount = 0f;
+        var fill = fillGO.GetComponent<Image>();
+        fill.color = fillColor;
+        fill.type = Image.Type.Filled;
+        fill.fillMethod = Image.FillMethod.Horizontal;
+        fill.fillOrigin = reverse
+            ? (int)Image.OriginHorizontal.Right
+            : (int)Image.OriginHorizontal.Left;
+        fill.fillAmount = 0f;
 
-        return fillImg;
-    }
-
-    void BuildReadyPrompt(Transform parent)
-    {
-        var promptGO = new GameObject("ReadyPrompt", typeof(Text));
-        promptGO.transform.SetParent(parent, false);
-
-        readyPrompt = promptGO.GetComponent<Text>();
-        readyPrompt.text = "GAMEBREAKER READY — PRESS G";
-        readyPrompt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        readyPrompt.fontSize = promptFontSize;
-        readyPrompt.fontStyle = FontStyle.Bold;
-        readyPrompt.alignment = TextAnchor.MiddleCenter;
-        readyPrompt.color = offenseColor;
-
-        var promptRT = promptGO.GetComponent<RectTransform>();
-        promptRT.anchorMin = new Vector2(0.5f, 1f);
-        promptRT.anchorMax = new Vector2(0.5f, 1f);
-        promptRT.pivot = new Vector2(0.5f, 1f);
-        promptRT.anchoredPosition = new Vector2(0f, -30f);
-        promptRT.sizeDelta = new Vector2(600f, 50f);
-
-        promptGO.SetActive(false);
+        return fill;
     }
 
     void RefreshScore()
     {
-        if (scoreText == null || ScoreBoard.Instance == null) return;
-        scoreText.text = $"T1  {ScoreBoard.Instance.Team1Score}   –   T2  {ScoreBoard.Instance.Team2Score}";
+        if (ScoreBoard.Instance == null) return;
+
+        if (team1ScoreText != null)
+            team1ScoreText.text =
+                ScoreBoard.Instance.Team1Score.ToString();
+
+        if (team2ScoreText != null)
+            team2ScoreText.text =
+                ScoreBoard.Instance.Team2Score.ToString();
     }
 
     void RefreshDowns()
     {
         if (downText == null || DownsTracker.Instance == null) return;
+
         var downs = DownsTracker.Instance;
+
         downText.text = downs.IsGoalToGo
             ? $"{Ordinal(downs.CurrentDown)} & Goal"
             : $"{Ordinal(downs.CurrentDown)} & {Mathf.CeilToInt(downs.YardsToGo)}";
-    }
-
-    void RefreshOffenseMeter(float value)
-    {
-        if (offenseFill != null) offenseFill.fillAmount = value / 100f;
-
-        if (readyPrompt != null)
-        {
-            bool ready = value >= 100f && PlayState.Instance != null && !PlayState.Instance.IsOffenseGamebreakerActive;
-            readyPrompt.gameObject.SetActive(ready);
-        }
-    }
-
-    void RefreshDefenseMeter(float value)
-    {
-        if (defenseFill != null) defenseFill.fillAmount = value / 100f;
-    }
-
-    void HandleGamebreakerActivated()
-    {
-        if (readyPrompt != null) readyPrompt.gameObject.SetActive(false);
     }
 
     static string Ordinal(int down) => down switch
