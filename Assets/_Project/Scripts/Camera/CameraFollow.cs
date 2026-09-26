@@ -5,6 +5,8 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] Transform target; // fallback if no ball exists (e.g. testing without BallController in scene)
     [SerializeField] Vector3 offset = new Vector3(0f, 9f, -7f);
     [SerializeField] float followSpeed = 8f;
+    [SerializeField] float lookAtHeight = 3f; // was hardcoded at 1 — raising this pitches the cam toward the horizon,
+                                              // pushing the carrier lower in-frame and opening up field visibility for the HUD
 
     // Offset is authored for a team attacking +Z (camera behind the ball holder). When the
     // ball changes hands and the holder attacks the other way, the camera orbits around to
@@ -60,7 +62,7 @@ public class CameraFollow : MonoBehaviour
         Vector3 orbitedOffset = Quaternion.Euler(0f, currentYaw, 0f) * offset;
         Vector3 desiredPosition = followTarget.position + orbitedOffset;
         transform.position = Vector3.Lerp(transform.position, desiredPosition, followSpeed * Time.deltaTime);
-        transform.LookAt(followTarget.position + Vector3.up * 1f);
+        transform.LookAt(followTarget.position + Vector3.up * lookAtHeight);
     }
 
     void UpdateYaw(float targetYaw)
