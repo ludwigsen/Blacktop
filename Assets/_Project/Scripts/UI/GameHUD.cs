@@ -1,27 +1,33 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 // Single unified HUD for everything that isn't play selection: team score + Gamebreaker
 // on each side, play clock + down/distance/field position in the center. Structure
 // matches the concept board's HUD breakdown, minus quarter (no quarter system — the
-// center clock is PlayState's PLAY clock only, not a running game clock) and minus the
-// diagonal/grunge panel art (that needs real sprite assets — this is the honest
-// placeholder pass, plain rectangles, not a fake paint texture).
+// center clock is PlayState's PLAY clock only) and minus the diagonal/grunge panel art
+// (needs real sprite assets — this is the honest placeholder pass: plain rectangles,
+// not a faked paint texture).
+//
+// Typeface comes from a HUDTheme asset (assign one in the Inspector once you've built
+// TMP Font Assets from your real fonts); leave it unassigned and everything falls back
+// to TMP's default font with zero errors. Center panel (clock/downs) uses
+// theme.legibleFont; TeamScorePanel uses theme.displayFont — matches the concept
+// board's own typographic split.
 //
 // Pure display — every value comes from ScoreBoard/DownsTracker/PlayState's already-
 // resolved state, with one deliberate exception: the play clock is polled every frame
-// in Update() rather than event-driven, since it changes continuously and has no
-// natural discrete "changed" event to hook.
+// in Update() rather than event-driven, since it changes continuously with no natural
+// discrete "changed" event to hook.
 //
-// Layout is percentage-of-screen: fixed top bar, inset horizontally from each edge,
-// sized as a fraction of screen height — genuinely that fraction at any resolution,
-// not an approximation under CanvasScaler's reference resolution.
-//
-// SETUP: drop on GameManager, alongside PlayState/DownsTracker/ScoreBoard. Assign
-// PlayState's Team1Identity/Team2Identity (Assets > Create > Blacktop > Team Identity)
-// for real names/colors — everything falls back to a neutral placeholder if you don't.
+// SETUP: drop on GameManager, alongside PlayState/DownsTracker/ScoreBoard. Assign a
+// HUDTheme (Assets > Create > Blacktop > HUD Theme) and PlayState's
+// Team1Identity/Team2Identity for real fonts/names/colors.
 public class GameHUD : MonoBehaviour
 {
+    [Header("Theme")]
+    [SerializeField] HUDTheme theme;
+
     [Header("Scorebug")]
     [SerializeField, Range(0.02f, 0.10f)] float horizontalMargin = 0.05f;
     [SerializeField, Range(0.05f, 0.20f)] float heightPercent = 0.10f;
@@ -30,14 +36,15 @@ public class GameHUD : MonoBehaviour
     [Header("Typography")]
     [SerializeField] int teamNameFontSize = 22;
     [SerializeField] int scoreFontSize = 40;
+    [SerializeField] int gamebreakerLabelFontSize = 14;
     [SerializeField] int centerFontSize = 24;
 
     [SerializeField] Color backgroundColor = new Color(0f, 0f, 0f, 0.82f);
 
     TeamScorePanel team1Panel;
     TeamScorePanel team2Panel;
-    Text clockText;
-    Text downText;
+    TextMeshProUGUI clockText;
+    TextMeshProUGUI downText;
 
     void Awake() => BuildHUD();
 
@@ -127,7 +134,13 @@ public class GameHUD : MonoBehaviour
         rt.offsetMax = Vector2.zero;
 
         var panel = teamGO.AddComponent<TeamScorePanel>();
-        panel.Build(teamNameFontSize, scoreFontSize, reverseFill: !isTeam1); // right side fills toward center
+        panel.Build(
+            displayFont: theme != null ? theme.displayFont : null,
+            nameFontSize: teamNameFontSize,
+            scoreFontSize: scoreFontSize,
+            labelFontSize: gamebreakerLabelFontSize,
+            reverseFill: !isTeam1 // right side fills toward center
+        );
         panel.SetScore(0);
 
         if (isTeam1) team1Panel = panel; else team2Panel = panel;
@@ -143,9 +156,11 @@ public class GameHUD : MonoBehaviour
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
-        var clockGO = new GameObject("PlayClock", typeof(Text));
+        var legibleFont = theme != null ? theme.legibleFont : null;
+
+        var clockGO = new GameObject("PlayClock", typeof(TextMeshProUGUI));
         clockGO.transform.SetParent(centerGO.transform, false);
-        clockText = ConfigureText(clockGO, centerFontSize);
+        clockText = ConfigureText(clockGO, legibleFont, centerFontSize);
         AnchorStrip(clockGO.GetComponent<RectTransform>(), new Vector2(0f, 0f), new Vector2(0.48f, 1f));
 
         var dividerGO = new GameObject("Divider", typeof(Image));
@@ -153,22 +168,24 @@ public class GameHUD : MonoBehaviour
         dividerGO.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.25f);
         AnchorStrip(dividerGO.GetComponent<RectTransform>(), new Vector2(0.49f, 0.15f), new Vector2(0.51f, 0.85f));
 
-        var downGO = new GameObject("DownAndDistance", typeof(Text));
+        var downGO = new GameObject("DownAndDistance", typeof(TextMeshProUGUI));
         downGO.transform.SetParent(centerGO.transform, false);
-        downText = ConfigureText(downGO, centerFontSize);
+        downText = ConfigureText(downGO, legibleFont, centerFontSize);
         AnchorStrip(downGO.GetComponent<RectTransform>(), new Vector2(0.52f, 0f), new Vector2(1f, 1f));
     }
 
-    static Text ConfigureText(GameObject go, int fontSize)
+    // font left null is fine — TMP falls back to TMP_Settings.defaultFontAsset, same as
+    // ReceiverSelectionUI already relies on elsewhere in this project.
+    static TextMeshProUGUI ConfigureText(GameObject go, TMP_FontAsset font, int fontSize)
     {
-        var text = go.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        var text = go.GetComponent<TextMeshProUGUI>();
+        if (font != null) text.font = font;
         text.fontSize = fontSize;
-        text.fontStyle = FontStyle.Bold;
-        text.alignment = TextAnchor.MiddleCenter;
+        text.fontStyle = FontStyles.Bold;
+        text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
         return text;
     }
 

@@ -14,6 +14,8 @@ public class ReceiverSelectionUI : MonoBehaviour
     [SerializeField] Canvas uiCanvas;
     [SerializeField] PlayState playState;
 
+    [SerializeField] HUDTheme theme;
+
     int selectedReceiverIndex = -1;
     readonly List<Transform> receivers = new();
     RectTransform[] receiverButtons;
@@ -126,6 +128,7 @@ public class ReceiverSelectionUI : MonoBehaviour
             labelObj.transform.SetParent(buttonObj.transform, false);
 
             var label = labelObj.GetComponent<TextMeshProUGUI>();
+            if (theme != null && theme.legibleFont != null) label.font = theme.legibleFont; // on-court player labels — "legible font" case
             label.text = $"{i + 1}";
             label.alignment = TextAlignmentOptions.Center;
             label.fontSize = 30;

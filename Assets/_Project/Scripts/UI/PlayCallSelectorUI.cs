@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,11 +16,13 @@ using UnityEngine.UI;
 // PlayState now starts dead by default, so this is only relevant on scenes that
 // override that. Revisit only if that changes.
 //
-// SETUP: drop on GameManager. Assign PlayCallData assets to availablePlays. Builds its
-// own HUD — no manual Canvas/Text setup needed.
+// SETUP: drop on GameManager. Assign PlayCallData assets to availablePlays, and a
+// HUDTheme for the legible font — leave the theme unassigned and this still runs on
+// TMP's default. Builds its own HUD — no manual Canvas/Text setup needed.
 public class PlayCallSelector : MonoBehaviour
 {
     [SerializeField] List<PlayCallData> availablePlays = new();
+    [SerializeField] HUDTheme theme;
 
     [Header("Layout")]
     [SerializeField] Vector2 anchoredPosition = new Vector2(30f, -30f);
@@ -29,7 +32,7 @@ public class PlayCallSelector : MonoBehaviour
 
     InputSystem_Actions controls;
     int currentIndex;
-    Text listText;
+    TextMeshProUGUI listText;
     CanvasGroup canvasGroup;
 
     void Awake()
@@ -120,17 +123,16 @@ public class PlayCallSelector : MonoBehaviour
         canvasGroup = canvasGO.GetComponent<CanvasGroup>();
         canvasGroup.alpha = 0f;
 
-        var textGO = new GameObject("PlayList", typeof(Text));
+        var textGO = new GameObject("PlayList", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(canvasGO.transform, false);
 
-        listText = textGO.GetComponent<Text>();
-        listText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        listText = textGO.GetComponent<TextMeshProUGUI>();
+        if (theme != null && theme.legibleFont != null) listText.font = theme.legibleFont;
         listText.fontSize = fontSize;
-        listText.fontStyle = FontStyle.Bold;
-        listText.alignment = TextAnchor.UpperLeft;
-        listText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        listText.verticalOverflow = VerticalWrapMode.Overflow;
-        listText.supportRichText = true;
+        listText.fontStyle = FontStyles.Bold;
+        listText.alignment = TextAlignmentOptions.TopLeft;
+        listText.enableWordWrapping = false;
+        listText.overflowMode = TextOverflowModes.Overflow;
 
         var rt = textGO.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 1f);

@@ -1,24 +1,27 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// One team's slice of the scorebug — logo, name, score, and a SEGMENTED Gamebreaker
-// meter (discrete chunks, not a smooth fill) matching the concept board's three states:
-// Empty (all dark), Charging (some chunks lit), Full/Ready (all chunks lit and visibly
-// brighter — a cheap stand-in for "glow" until this project has a real emissive/bloom
-// pipeline for UI, which Canvas Overlay doesn't get by default in URP). Self-building,
-// same pattern as every other runtime HUD here.
+// One team's slice of the scorebug — logo, name, score, GAMEBREAKER label, and a
+// SEGMENTED Gamebreaker meter (discrete chunks, not a smooth fill) matching the concept
+// board's three states: Empty (all dark), Charging (some chunks lit), Full/Ready (all
+// chunks lit and visibly brighter — a brightness swap stands in for real glow until this
+// project has an HDR/bloom pipeline for UI, which Canvas Overlay doesn't get by default).
+// Self-building, same pattern as every other runtime HUD here.
 //
-// Build() lays out the panel with placeholder name/color and is safe to call from
-// Awake() — before PlayState.Instance necessarily exists. ApplyIdentity() reads the
-// real name/color/logo and is meant to be called from Start(), once it does.
+// Text elements use the DISPLAY font (team name, score, GAMEBREAKER label) per the
+// concept board's own typographic split — the legible font belongs to GameHUD's center
+// panel instead, not to anything built by this component.
 public class TeamScorePanel : MonoBehaviour
 {
     const int SegmentCount = 8;
     static readonly Color EmptyColor = new Color(0.18f, 0.18f, 0.18f);
+    static readonly Color LabelColor = new Color(1f, 1f, 1f, 0.75f);
     static readonly Color DefaultAccent = new Color(0.6f, 0.6f, 0.6f);
 
-    Text teamNameText;
-    Text scoreText;
+    TextMeshProUGUI teamNameText;
+    TextMeshProUGUI scoreText;
+    TextMeshProUGUI gamebreakerLabel;
     Image logoImage;
     Image[] segments;
     Color accent = DefaultAccent;
@@ -26,7 +29,7 @@ public class TeamScorePanel : MonoBehaviour
     bool reverseFill;
     float lastGamebreakerValue;
 
-    public void Build(int nameFontSize, int scoreFontSize, bool reverseFill)
+    public void Build(TMP_FontAsset displayFont, int nameFontSize, int scoreFontSize, int labelFontSize, bool reverseFill)
     {
         this.reverseFill = reverseFill;
 
@@ -39,16 +42,23 @@ public class TeamScorePanel : MonoBehaviour
             reverseFill ? new Vector2(0.82f, 0.6f) : new Vector2(0.02f, 0.6f),
             reverseFill ? new Vector2(0.98f, 0.98f) : new Vector2(0.18f, 0.98f));
 
-        var nameGO = new GameObject("TeamName", typeof(Text));
+        var nameGO = new GameObject("TeamName", typeof(TextMeshProUGUI));
         nameGO.transform.SetParent(transform, false);
-        teamNameText = ConfigureText(nameGO, nameFontSize);
+        teamNameText = ConfigureText(nameGO, displayFont, nameFontSize);
         teamNameText.text = "TEAM";
-        AnchorStrip(nameGO.GetComponent<RectTransform>(), new Vector2(0f, 0.55f), new Vector2(1f, 1f));
+        AnchorStrip(nameGO.GetComponent<RectTransform>(), new Vector2(0f, 0.62f), new Vector2(1f, 1f));
 
-        var scoreGO = new GameObject("Score", typeof(Text));
+        var scoreGO = new GameObject("Score", typeof(TextMeshProUGUI));
         scoreGO.transform.SetParent(transform, false);
-        scoreText = ConfigureText(scoreGO, scoreFontSize);
-        AnchorStrip(scoreGO.GetComponent<RectTransform>(), new Vector2(0f, 0.25f), new Vector2(1f, 0.55f));
+        scoreText = ConfigureText(scoreGO, displayFont, scoreFontSize);
+        AnchorStrip(scoreGO.GetComponent<RectTransform>(), new Vector2(0f, 0.34f), new Vector2(1f, 0.62f));
+
+        var labelGO = new GameObject("GamebreakerLabel", typeof(TextMeshProUGUI));
+        labelGO.transform.SetParent(transform, false);
+        gamebreakerLabel = ConfigureText(labelGO, displayFont, labelFontSize);
+        gamebreakerLabel.text = "GAMEBREAKER";
+        gamebreakerLabel.color = LabelColor;
+        AnchorStrip(labelGO.GetComponent<RectTransform>(), new Vector2(0.06f, 0.20f), new Vector2(0.94f, 0.34f));
 
         BuildGamebreakerBar(transform);
     }
@@ -97,7 +107,7 @@ public class TeamScorePanel : MonoBehaviour
     {
         var barGO = new GameObject("Gamebreaker", typeof(RectTransform));
         barGO.transform.SetParent(parent, false);
-        AnchorStrip(barGO.GetComponent<RectTransform>(), new Vector2(0.06f, 0.06f), new Vector2(0.94f, 0.22f));
+        AnchorStrip(barGO.GetComponent<RectTransform>(), new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.19f));
 
         segments = new Image[SegmentCount];
         const float gap = 0.02f; // fraction of the bar's own width, between chunks
@@ -121,15 +131,18 @@ public class TeamScorePanel : MonoBehaviour
         }
     }
 
-    static Text ConfigureText(GameObject go, int fontSize)
+    // font left null is fine — TMP falls back to TMP_Settings.defaultFontAsset, same as
+    // ReceiverSelectionUI already relies on elsewhere in this project.
+    static TextMeshProUGUI ConfigureText(GameObject go, TMP_FontAsset font, int fontSize)
     {
-        var text = go.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        var text = go.GetComponent<TextMeshProUGUI>();
+        if (font != null) text.font = font;
         text.fontSize = fontSize;
-        text.fontStyle = FontStyle.Bold;
-        text.alignment = TextAnchor.MiddleCenter;
+        text.fontStyle = FontStyles.Bold;
+        text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
         return text;
     }
 
