@@ -4,7 +4,8 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - player: {instanceID: 0}
+  - team1Identity: {fileID: 11400000, guid: 19a3b9c5ae226466ab5ba14090db2abe, type: 2}
+  - team2Identity: {fileID: 11400000, guid: 9bccb93aaef7c4f8b984232e1e48202e, type: 2}
   - defaultDefensiveFormation: {fileID: 11400000, guid: e18cb3b13471343dda697de3d4565545, type: 2}
   - defaultOffensiveFormation: {fileID: 11400000, guid: 3a892ebd5ed1d491a990f419ffd69d15, type: 2}
   - gamebreakerBuffs: {fileID: 11400000, guid: 76e927b1011834942a4cf33a3b538f95, type: 2}

@@ -535,7 +535,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::CameraFollow
   target: {fileID: 1064215533}
-  offset: {x: 0, y: 9, z: -7}
+  offset: {x: 0, y: 9.5, z: -7}
   followSpeed: 8
   orbitDuration: 0.9
   easeBezier: {x: 0.65, y: 0, z: 0.35, w: 1}
@@ -2098,6 +2098,8 @@ MonoBehaviour:
   offenseSlotOrder: 010000000500000006000000020000000300000004000000
   defenseSlotOrder: 05000000060000000000000001000000020000000300000004000000
   userTeamId: 0
+  team1Identity: {fileID: 0}
+  team2Identity: {fileID: 0}
   initialPlayerZ: -10
   kickoffResetZ: -10
   defaultDefensiveFormation: {fileID: 11400000, guid: e18cb3b13471343dda697de3d4565545, type: 2}
@@ -2262,14 +2264,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfdb2d03a44884e0594a02bc5e21de47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::GameHUD
-  scorebugPosition: {x: 50, y: -30}
+  horizontalMargin: 0.05
+  heightPercent: 0.1
+  teamPanelWidth: 0.35
+  teamNameFontSize: 22
   scoreFontSize: 30
-  downFontSize: 24
-  barSize: {x: 300, y: 24}
-  screenMargin: {x: 30, y: 30}
-  promptFontSize: 28
-  offenseColor: {r: 1, g: 0.6, b: 0, a: 1}
-  defenseColor: {r: 0.2, g: 0.6, b: 1, a: 1}
+  centerFontSize: 24
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!1001 &1382229152
 PrefabInstance:

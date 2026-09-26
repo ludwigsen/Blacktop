@@ -24,6 +24,20 @@ public class DownsTracker : MonoBehaviour
     public int CurrentDown { get; private set; } = 1;
     public float YardsToGo { get; private set; } = StartingYardsToGo;
     public bool IsGoalToGo { get; private set; }
+    
+    // Distance in "yards" (this project's Unity-units-as-yards convention, same as
+    // YardsToGo) from the driving team's OWN goal line to the current LOS — how far this
+    // drive has traveled. Deliberately NOT the real-broadcast OWN/OPP-relative-to-50
+    // relabeling past midfield — that's a genuine simplification, revisit if it matters.
+    public float YardLine
+    {
+        get
+        {
+            var ps = PlayState.Instance;
+            FieldDirection dir = ps.DirectionFor(DriveTeamId);
+            return dir.YardsPastLOS(ps.CurrentLineOfScrimmageZ, dir.OwnGoalLineZ);
+        }
+    }
 
     // Which team this set of downs belongs to. A change of possession always starts a
     // fresh drive for the new team — that's the reset condition itself, not an input

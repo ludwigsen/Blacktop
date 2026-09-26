@@ -45,6 +45,9 @@ public class PlayState : MonoBehaviour
     // Default 0 = today's behavior. Set to 1 to play defense against a passive offense.
     [Header("Human Control")]
     [SerializeField] int userTeamId = 0;
+    [Header("Team Identity")]
+    [SerializeField] TeamIdentity team1Identity;
+    [SerializeField] TeamIdentity team2Identity;
 
     [Header("Field Position (authored in attack-axis space: negative = own side of midfield)")]
     [SerializeField] float initialPlayerZ = -5f;
@@ -132,6 +135,8 @@ public class PlayState : MonoBehaviour
     }
 
     public FieldDirection AttackDirection => DirectionFor(PossessionTeamId);
+
+    public TeamIdentity IdentityFor(int teamId) => teamId == 0 ? team1Identity : team2Identity;
 
     // Which way the CAMERA (and therefore screen-relative stick input) should face: behind
     // whoever actually holds the ball, live. Differs from AttackDirection only for the
