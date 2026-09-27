@@ -70,6 +70,14 @@ public class DefenderAI : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
+        // Both-ways roster: every player carries DefenderAI now, but it should only drive
+        // movement while THIS player's team is actually defending. Target has no team
+        // check, so without this an offensive player's DefenderAI still resolves to the
+        // live ball carrier (its own teammate) and chases them every frame — silently
+        // overriding ReceiverAI's route movement in the same Update(), no arbitration.
+        // Resolved live, same "never cache possession" rule as Target/DefenderCoordinator.
+        if (teamMember.IsOnOffense) return;
+
         // Push-back and shed states take priority over any role behavior — being
         // stiff-armed interrupts whatever the defender was doing.
         if (pushBackTimer > 0f)
@@ -85,11 +93,10 @@ public class DefenderAI : MonoBehaviour
             return;
         }
 
-        // Human has the wheel — no role behavior, no separation nudge. (Stun above still applies.)
         if (IsUserControlled) return;
 
-        var target = Target; // resolve once per frame — avoids repeated property/null-check calls below
-        if (target == null) return; // loose ball — hold current position rather than chasing nothing
+        var target = Target;
+        if (target == null) return;
 
         Vector3 roleMove = CurrentRole == Role.Engage ? CalculateEngageMove(target) : CalculateContainMove(target);
         Vector3 separationMove = CalculateSeparation();

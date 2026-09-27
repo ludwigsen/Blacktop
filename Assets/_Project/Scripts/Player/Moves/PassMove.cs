@@ -71,19 +71,30 @@ public class PassMove : IPlayerMove
     {
         if (target != null && BallController.Instance != null)
         {
-            float distance = Vector3.Distance(ctx.transform.position, target.position);
+            // Lead the throw. Throwing at the receiver's position AT RELEASE (old
+            // behavior) ignored the fact that they keep running the route during the
+            // ball's flight — the pass always landed at a spot they'd already passed by
+            // arrival, which read as a chronic underthrow. One-pass predict/correct:
+            // estimate flight time off the receiver's CURRENT position, predict where
+            // they'll actually be at that arrival time, then redo distance/duration/arc
+            // against THAT point. Not a true iterative solve, but close enough that the
+            // error is imperceptible at these speeds/distances.
+            float initialDistance = Vector3.Distance(ctx.transform.position, target.position);
+            float initialThrowSpeed = baseThrowSpeed * ctx.attributes.Passing();
+            float estimatedDuration = Mathf.Max(initialDistance / initialThrowSpeed, minFlightDuration);
+
+            Vector3 leadPoint = target.TryGetComponent<ReceiverAI>(out var receiverAI)
+                ? receiverAI.PredictedPosition(estimatedDuration)
+                : target.position; // no ReceiverAI (shouldn't happen for an eligible target) — fall back to old behavior
+
+            float distance = Vector3.Distance(ctx.transform.position, leadPoint);
             float throwSpeed = baseThrowSpeed * ctx.attributes.Passing();
             float duration = Mathf.Max(distance / throwSpeed, minFlightDuration);
 
-            // Arc grows with distance (more air time needed to cover ground), but a
-            // higher Passing rating flattens it back down — an elite arm can drive a
-            // 30-yard throw tighter than an average one. Inverse curve vs. throw speed:
-            // Passing 20 = flatter/faster, Passing 0 = looping and slow, both compounding
-            // in the same direction (bad passer = lob city, good passer = frozen rope).
             float distanceArc = baseArcHeight + distance * arcHeightPerDistance;
             float arc = distanceArc / Mathf.Lerp(1.3f, 0.8f, InverseLerpPassing(ctx.attributes.Passing()));
 
-            BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arc, duration: duration);
+            BallController.Instance.Throw(leadPoint, target, isPitch: false, arcHeight: arc, duration: duration);
         }
     }
 

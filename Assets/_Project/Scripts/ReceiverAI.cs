@@ -13,6 +13,16 @@ public class ReceiverAI : MonoBehaviour
     bool routeComplete;
 
     public bool RouteComplete => routeComplete;
+    // Predicts where this receiver will be after `time` more seconds of route movement,
+    // using the exact same Vector3.MoveTowards call Update() actually runs — so a
+    // prediction can never run a receiver past where their own route stops (a Hitch
+    // clamps here the same way it clamps in real movement). Returns the current position
+    // untouched once the route's already finished — nothing left to lead into.
+    public Vector3 PredictedPosition(float time)
+    {
+        if (routeComplete) return transform.position;
+        return Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * time);
+    }
 
     void OnEnable()
     {
