@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 4883675479690406824}
   - component: {fileID: 4609209659204268853}
   m_Layer: 0
-  m_Name: Ally
+  m_Name: Player
   m_TagString: Teammate
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -26,6 +26,14 @@ public class TackleContact : MonoBehaviour
         if (PlayState.Instance.IsPostSnapGraceActive) return;
         if (stateMachine != null && stateMachine.IsTackleImmune) return;
 
+        // Only the CURRENT ball carrier can be tackled. Without this, a player who just
+        // fumbled (or threw/pitched) keeps eating tackle checks every frame they're standing
+        // near an opponent, and — since the ball's already gone — falls straight through to
+        // an incorrect EndPlay(Tackled) before the fumble's pop-arc has even landed.
+        // Resolved live rather than trusting PossessionController's enable/disable timing,
+        // which races against this component with no defined execution order.
+        if (BallController.Instance == null || BallController.Instance.Carrier != transform) return;
+
         Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);
         foreach (var hit in hits)
         {

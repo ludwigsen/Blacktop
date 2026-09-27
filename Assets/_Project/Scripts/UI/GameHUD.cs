@@ -101,7 +101,7 @@ public class GameHUD : MonoBehaviour
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
         var scaler = canvasGO.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        //scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
         BuildScorebug(canvasGO.transform);
