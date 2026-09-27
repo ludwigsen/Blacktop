@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: BlacktopHUDTheme
   m_EditorClassIdentifier: Blacktop::HUDTheme
   displayFont: {fileID: 0}
-  legibleFont: {fileID: 0}
+  legibleFont: {fileID: 11400000, guid: ccd38227a631d4594bbc1ddb7592d040, type: 2}
