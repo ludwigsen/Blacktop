@@ -27,6 +27,15 @@ public class PassMove : IPlayerMove
     [SerializeField] float baseThrowSpeed = 35f;
     [SerializeField] float minFlightDuration = 0.15f; // floor so a 2-yard hitch doesn't arrive in one frame
 
+    // Accuracy scatter — the throw lands somewhere around the intended lead point, not
+    // exactly on it. Radius shrinks as Passing rating rises. At NEUTRAL Passing worst-
+    // case scatter is baseMaxLeadError; at max Passing it's minLeadError, never zero —
+    // nobody's a laser in this game. Flat radius regardless of throw distance for now;
+    // a real QB misses bombs by more than screens, so scaling this by distance is a
+    // reasonable follow-up if flat scatter feels wrong on deep balls specifically.
+    [SerializeField] float baseMaxLeadError = 3f;
+    [SerializeField] float minLeadError = 0.2f;
+
     float timer;
     Transform target;
 
@@ -69,33 +78,41 @@ public class PassMove : IPlayerMove
 
     public void Exit(PlayerContext ctx)
     {
-        if (target != null && BallController.Instance != null)
-        {
-            // Lead the throw. Throwing at the receiver's position AT RELEASE (old
-            // behavior) ignored the fact that they keep running the route during the
-            // ball's flight — the pass always landed at a spot they'd already passed by
-            // arrival, which read as a chronic underthrow. One-pass predict/correct:
-            // estimate flight time off the receiver's CURRENT position, predict where
-            // they'll actually be at that arrival time, then redo distance/duration/arc
-            // against THAT point. Not a true iterative solve, but close enough that the
-            // error is imperceptible at these speeds/distances.
-            float initialDistance = Vector3.Distance(ctx.transform.position, target.position);
-            float initialThrowSpeed = baseThrowSpeed * ctx.attributes.Passing();
-            float estimatedDuration = Mathf.Max(initialDistance / initialThrowSpeed, minFlightDuration);
+        if (target == null || BallController.Instance == null) return;
 
-            Vector3 leadPoint = target.TryGetComponent<ReceiverAI>(out var receiverAI)
-                ? receiverAI.PredictedPosition(estimatedDuration)
-                : target.position; // no ReceiverAI (shouldn't happen for an eligible target) — fall back to old behavior
+        // Lead the throw — see ReceiverAI.PredictedPosition: estimate flight time off
+        // current distance, predict where the receiver will actually be by then, aim
+        // there instead of at their position-at-release (old behavior always threw
+        // "behind" a moving receiver).
+        float initialDistance = Vector3.Distance(ctx.transform.position, target.position);
+        float estimateThrowSpeed = baseThrowSpeed * ctx.attributes.Passing();
+        float estimatedDuration = Mathf.Max(initialDistance / estimateThrowSpeed, minFlightDuration);
 
-            float distance = Vector3.Distance(ctx.transform.position, leadPoint);
-            float throwSpeed = baseThrowSpeed * ctx.attributes.Passing();
-            float duration = Mathf.Max(distance / throwSpeed, minFlightDuration);
+        Vector3 leadPoint = target.TryGetComponent<ReceiverAI>(out var receiverAI)
+            ? receiverAI.PredictedPosition(estimatedDuration)
+            : target.position; // no ReceiverAI on an eligible target shouldn't happen — fall back to old behavior
 
-            float distanceArc = baseArcHeight + distance * arcHeightPerDistance;
-            float arc = distanceArc / Mathf.Lerp(1.3f, 0.8f, InverseLerpPassing(ctx.attributes.Passing()));
+        // Passing-attribute accuracy: leadPoint above is the QB's INTENT. The actual
+        // release scatters around it, radius shrinking as Passing rises. This is the
+        // half of the equation that makes a bad QB actually feel bad — the receiver-side
+        // half (ReceiverAI adjusting toward the ball, scaled by Route Running) is what
+        // decides whether a miss here is still catchable or a clean incompletion.
+        float skill = InverseLerpPassing(ctx.attributes.Passing());
+        float errorRadius = Mathf.Lerp(baseMaxLeadError, minLeadError, skill);
+        Vector2 scatter = Random.insideUnitCircle * errorRadius;
+        Vector3 actualTarget = leadPoint + new Vector3(scatter.x, 0f, scatter.y);
 
-            BallController.Instance.Throw(leadPoint, target, isPitch: false, arcHeight: arc, duration: duration);
-        }
+        float distance = Vector3.Distance(ctx.transform.position, actualTarget);
+        float throwSpeed = baseThrowSpeed * ctx.attributes.Passing();
+        float duration = Mathf.Max(distance / throwSpeed, minFlightDuration);
+
+        // Arc grows with distance (more air time needed to cover ground), but a
+        // higher Passing rating flattens it back down — an elite arm can drive a
+        // 30-yard throw tighter than an average one.
+        float distanceArc = baseArcHeight + distance * arcHeightPerDistance;
+        float arc = distanceArc / Mathf.Lerp(1.3f, 0.8f, skill);
+
+        BallController.Instance.Throw(actualTarget, target, isPitch: false, arcHeight: arc, duration: duration);
     }
 
     // Passing() typically ranges ~0.6–1.3 per AttributeCurves. Remap to 0-1 for the Lerp

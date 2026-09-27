@@ -46,11 +46,12 @@ public class TackleContact : MonoBehaviour
                 bool guaranteed = PlayState.Instance.ConsumeGuaranteedTurnover();
                 if (guaranteed || Random.value < baseFumbleChance)
                 {
-                    BallController.Instance.Drop();
+                    BallController.Instance.Fumble(transform.position, hit.transform.position); // was: Drop()
                     PlayState.Instance.AddDefensePoints(8f);
                     PlayState.Instance.NotifyFumble();
                     // A fumble remains a live ball. BallController's recovery pass runs in
-                    // LateUpdate, so ending the play here would prevent any recovery.
+                    // LateUpdate once the pop-arc lands, so ending the play here would prevent
+                    // any recovery.
                     return;
                 }
             }
