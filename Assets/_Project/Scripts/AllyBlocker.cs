@@ -67,6 +67,17 @@ public class AllyBlocker : MonoBehaviour
             return;
         }
 
+        // Ball's loose — drop whatever you were doing (route, block target) and dive for
+        // it, same as DefenderAI does on the other side of the ball. Pushback (mid-shove)
+        // still finishes first below — it's a ~0.15s state, not worth interrupting for this.
+        if (pushBackTimer <= 0f && BallController.Instance != null && BallController.Instance.State == BallController.BallState.Loose)
+        {
+            receiverAI?.AbortRoute(); // stop ReceiverAI from also driving this transform mid-route
+            currentTarget = null;
+            ScrambleForBall();
+            return;
+        }
+
         // Defer to an in-progress route — only relevant on RB/WR/TE slots. OL have no
         // ReceiverAI component, so receiverAI is null and this never blocks them.
         if (receiverAI != null && !receiverAI.RouteComplete) return;
@@ -94,6 +105,21 @@ public class AllyBlocker : MonoBehaviour
 
         MoveTowardTarget();
         if (contactCooldownTimer <= 0f) CheckBlockContact();
+    }
+
+    // No separation logic here (unlike DefenderAI's CalculateSeparation) — a pile of
+    // teammates converging on one spot is honestly correct for a fumble scrum. Flagged,
+    // not fixed: whoever's OverlapSphere hit lands first in BallController.CheckRecovery
+    // still wins with no tie-breaking, same known gap as everywhere else recovery happens.
+    void ScrambleForBall()
+    {
+        Vector3 toBall = BallController.Instance.transform.position - transform.position;
+        toBall.y = 0f;
+        if (toBall.magnitude <= stopDistance) return;
+
+        Vector3 direction = toBall.normalized;
+        transform.rotation = Quaternion.LookRotation(direction);
+        transform.position += direction * moveSpeed * Time.deltaTime;
     }
 
     void MoveTowardTarget()

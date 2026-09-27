@@ -70,16 +70,6 @@ public class DefenderAI : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
-        // Both-ways roster: every player carries DefenderAI now, but it should only drive
-        // movement while THIS player's team is actually defending. Target has no team
-        // check, so without this an offensive player's DefenderAI still resolves to the
-        // live ball carrier (its own teammate) and chases them every frame — silently
-        // overriding ReceiverAI's route movement in the same Update(), no arbitration.
-        // Resolved live, same "never cache possession" rule as Target/DefenderCoordinator.
-        if (teamMember.IsOnOffense) return;
-
-        // Push-back and shed states take priority over any role behavior — being
-        // stiff-armed interrupts whatever the defender was doing.
         if (pushBackTimer > 0f)
         {
             transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
@@ -95,21 +85,38 @@ public class DefenderAI : MonoBehaviour
 
         if (IsUserControlled) return;
 
-        var target = Target;
-        if (target == null) return;
+        var target = Target; // resolve once per frame — avoids repeated property/null-check calls below
 
-        Vector3 roleMove = CurrentRole == Role.Engage ? CalculateEngageMove(target) : CalculateContainMove(target);
+        Vector3 roleMove;
+        if (target != null)
+        {
+            roleMove = CurrentRole == Role.Engage ? CalculateEngageMove(target.position) : CalculateContainMove(target);
+        }
+        else if (BallController.Instance != null && BallController.Instance.State == BallController.BallState.Loose)
+        {
+            // Ball's loose — Engage/Contain roles are meaningless right now (DefenderCoordinator
+            // already skips reassigning them for exactly this reason), so every non-controlled
+            // defender just dives straight at the ball instead of freezing in place.
+            roleMove = CalculateEngageMove(BallController.Instance.transform.position);
+        }
+        else
+        {
+            return; // ball's mid-flight (pass/pitch/fumble pop) with no carrier yet — nothing real to chase
+        }
+
         Vector3 separationMove = CalculateSeparation();
-
         transform.position += (roleMove + separationMove) * Time.deltaTime;
     }
 
-    Vector3 CalculateEngageMove(Transform target)
+    // Now takes a position instead of a Transform — same math, but lets both the loose-ball
+    // scramble (chasing the ball's transform) and the normal carrier-chase (chasing a
+    // player's transform) share one method instead of duplicating it.
+    Vector3 CalculateEngageMove(Vector3 targetPosition)
     {
-        float distance = Vector3.Distance(transform.position, target.position);
+        float distance = Vector3.Distance(transform.position, targetPosition);
         if (distance <= stopDistance) return Vector3.zero;
 
-        Vector3 direction = (target.position - transform.position).normalized;
+        Vector3 direction = (targetPosition - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
         return direction * MoveSpeed;
     }
@@ -120,17 +127,10 @@ public class DefenderAI : MonoBehaviour
 
         if (distanceToCarrier <= containBreakRadius)
         {
-            return CalculateEngageMove(target);
+            return CalculateEngageMove(target.position); // updated call site — was CalculateEngageMove(target)
         }
 
-        // Hold position is anchored to the actual line of scrimmage, NOT the carrier's
-        // live position — otherwise a player moving backward drags the whole contain
-        // formation backward with them. LOS is the fixed anchor; only the break-radius
-        // check above should react to where the carrier currently is.
         float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : target.position.z;
-        // "Downfield" = the direction the CURRENT carrier is driving — ViewDirection, not
-        // AttackDirection, so this still points the right way mid-return, before the whistle
-        // flips PossessionTeamId.
         float holdZ = PlayState.Instance != null
             ? PlayState.Instance.ViewDirection.Advance(losZ, containLeadDistance)
             : losZ + containLeadDistance;

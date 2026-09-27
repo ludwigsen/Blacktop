@@ -137,4 +137,10 @@ public class ReceiverAI : MonoBehaviour
         target = ball.FlightTarget;
         return true;
     }
+
+    // Called by AllyBlocker when the ball goes loose mid-route. Without this, ReceiverAI's
+    // own Update() keeps MoveTowards-ing the receiver toward their route target in the same
+    // frame AllyBlocker tries to move them toward the ball — two components fighting over
+    // one transform. Marking the route complete hands full control to AllyBlocker cleanly.
+    public void AbortRoute() => routeComplete = true;
 }
