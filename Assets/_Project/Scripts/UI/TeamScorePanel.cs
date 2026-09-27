@@ -29,9 +29,22 @@ public class TeamScorePanel : MonoBehaviour
     bool reverseFill;
     float lastGamebreakerValue;
 
-    public void Build(TMP_FontAsset displayFont, int nameFontSize, int scoreFontSize, int labelFontSize, bool reverseFill)
+    public void Build(TMP_FontAsset displayFont, int nameFontSize, int scoreFontSize, int labelFontSize, bool reverseFill, Sprite backgroundSprite = null)
     {
         this.reverseFill = reverseFill;
+
+        // Background art, if supplied — added FIRST so it sits behind logo/name/score/meter.
+        // Authored to exactly fill this panel's rect, so no preserveAspect stretching logic needed.
+        if (backgroundSprite != null)
+        {
+            var bgGO = new GameObject("PanelBackground", typeof(Image));
+            bgGO.transform.SetParent(transform, false);
+            var bgImage = bgGO.GetComponent<Image>();
+            bgImage.sprite = backgroundSprite;
+            bgImage.type = Image.Type.Simple;
+            bgImage.raycastTarget = false;
+            AnchorStrip(bgGO.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
+        }
 
         var logoGO = new GameObject("Logo", typeof(Image));
         logoGO.transform.SetParent(transform, false);

@@ -33,6 +33,12 @@ public class GameHUD : MonoBehaviour
     [SerializeField, Range(0.05f, 0.20f)] float heightPercent = 0.10f;
     [SerializeField, Range(0.2f, 0.45f)] float teamPanelWidth = 0.35f; // each side; center strip gets the rest
 
+    [Header("Panel Backgrounds")]
+    [Tooltip("Background art behind Team 1's logo/name/score. Assign Assets/_Project/Art/ScorebugBG_Left.png.")]
+    [SerializeField] Sprite team1PanelBackground;
+    [Tooltip("Mirrored background for Team 2's panel, once that asset exists. Leave unassigned for now — falls back to the plain background color.")]
+    [SerializeField] Sprite team2PanelBackground;
+
     [Header("Typography")]
     [SerializeField] int teamNameFontSize = 22;
     [SerializeField] int scoreFontSize = 40;
@@ -139,7 +145,8 @@ public class GameHUD : MonoBehaviour
             nameFontSize: teamNameFontSize,
             scoreFontSize: scoreFontSize,
             labelFontSize: gamebreakerLabelFontSize,
-            reverseFill: !isTeam1 // right side fills toward center
+            reverseFill: !isTeam1,
+            backgroundSprite: isTeam1 ? team1PanelBackground : team2PanelBackground
         );
         panel.SetScore(0);
 

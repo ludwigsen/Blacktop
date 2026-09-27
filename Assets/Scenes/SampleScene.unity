@@ -537,6 +537,7 @@ MonoBehaviour:
   target: {fileID: 1064215533}
   offset: {x: 0, y: 9.5, z: -7}
   followSpeed: 8
+  lookAtHeight: 3
   orbitDuration: 0.9
   easeBezier: {x: 0.65, y: 0, z: 0.35, w: 1}
 --- !u!1 &410087039
@@ -2098,8 +2099,8 @@ MonoBehaviour:
   offenseSlotOrder: 010000000500000006000000020000000300000004000000
   defenseSlotOrder: 05000000060000000000000001000000020000000300000004000000
   userTeamId: 0
-  team1Identity: {fileID: 0}
-  team2Identity: {fileID: 0}
+  team1Identity: {fileID: 11400000, guid: 19a3b9c5ae226466ab5ba14090db2abe, type: 2}
+  team2Identity: {fileID: 11400000, guid: 9bccb93aaef7c4f8b984232e1e48202e, type: 2}
   initialPlayerZ: -10
   kickoffResetZ: -10
   defaultDefensiveFormation: {fileID: 11400000, guid: e18cb3b13471343dda697de3d4565545, type: 2}
@@ -2168,6 +2169,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::ReceiverSelectionUI
   uiCanvas: {fileID: 139281777}
   playState: {fileID: 1314477355}
+  theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
 --- !u!114 &1314477361
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2185,6 +2187,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 37ee327a48b2c4d0a81dd15d7cb4c9af, type: 2}
   - {fileID: 11400000, guid: 61fe07e9002d64df9b2e581a54ed2e6e, type: 2}
   - {fileID: 11400000, guid: 71eb994fe649a436385577806f3af300, type: 2}
+  theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
   anchoredPosition: {x: 30, y: -30}
   fontSize: 26
   activeColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -2264,11 +2267,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfdb2d03a44884e0594a02bc5e21de47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::GameHUD
+  theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
   horizontalMargin: 0.05
   heightPercent: 0.1
   teamPanelWidth: 0.35
+  team1PanelBackground: {fileID: 0}
+  team2PanelBackground: {fileID: 0}
   teamNameFontSize: 22
   scoreFontSize: 30
+  gamebreakerLabelFontSize: 14
   centerFontSize: 24
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!1001 &1382229152
