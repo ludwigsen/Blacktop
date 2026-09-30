@@ -34,7 +34,7 @@ public class BallController : MonoBehaviour
     public bool IsHeld => State == BallState.Held;
     public Vector3 FlightTarget => targetPoint; // where the current pass/pitch is headed — used to auto-switch defenders
     public Transform IntendedReceiver => intendedReceiver; // who the ball is thrown to, while InFlight — ReceiverAI uses this to know a pass is coming for THEM specifically, not just that some ball is in the air
-
+ 
     // Fired ONLY on a clean pass/pitch catch (see ResolvePassArrival/Pitch case) — never
     // on fumble recovery, never on interception. Single hook OffenseControlManager uses
     // to decide "should the player now be piloting this body."
@@ -283,7 +283,10 @@ public class BallController : MonoBehaviour
             interceptionResolved = true;
             bool guaranteed = PlayState.Instance != null && PlayState.Instance.ConsumeGuaranteedTurnover();
 
-            if (guaranteed || Random.value < baseInterceptChance)
+            float defenderCoverage = hit.TryGetComponent<DefenderAI>(out var defAI) ? defAI.CoverageMult : 1f;
+            float chance = Mathf.Clamp01(baseInterceptChance * defenderCoverage);
+
+            if (guaranteed || Random.value < chance)
             {
                 AttachTo(hit.transform);
                 if (PlayState.Instance != null)

@@ -1,19 +1,20 @@
 using UnityEngine;
 
-// Chase-and-contain logic, transform-based (no Rigidbody — consistent with the rest of
-// the project). Behavior branches on a Role set externally by DefenderCoordinator:
-// Engage = direct pursuit. Contain = hold a lane position between the ball and the end
-// zone, only escalating to direct chase if the carrier gets close enough to this specific
-// defender to be a real threat.
+// Chase-and-contain-and-cover logic, transform-based. Behavior branches on a Role set
+// externally by DefenderCoordinator — Engage/Contain/Cover — DefenderAI never decides its
+// own assignment, same standing rule as before Cover existed.
 //
-// Target is resolved live from BallController every frame rather than cached once —
-// this is what makes defenders track the ball itself (and whoever's currently carrying
-// it) instead of a hardcoded reference to the player. Once fumbles/interceptions change
-// possession mid-play, a cached reference would go stale immediately; this doesn't.
+// Movement now branches on BallController.State, not just "is there a carrier":
+//   - Held:     original Engage/Contain, plus new Cover (shadow an assigned receiver).
+//   - InFlight: the ONE thing that was completely missing. A defender assigned to Cover
+//     the actual intended receiver breaks toward BallController.FlightTarget instead of
+//     freezing — this is what makes an interception a real, winnable footrace instead of
+//     a static dice roll nobody could ever be in position to benefit from.
+//   - Loose:    unchanged — hold position, pursuit-of-loose-ball is still a deferred system.
 [RequireComponent(typeof(TeamMember))]
 public class DefenderAI : MonoBehaviour
 {
-    public enum Role { Engage, Contain }
+    public enum Role { Engage, Contain, Cover }
 
     [SerializeField] DefenderAttributes attributes;
     [SerializeField] float baseMoveSpeed = 5f;
@@ -21,50 +22,45 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float separationRadius = 1.2f;
     [SerializeField] float separationStrength = 3f;
 
-    // How close the ball carrier needs to get to THIS defender before a Contain defender
-    // drops the "hold position" behavior and chases directly, same as Engage would.
     [SerializeField] float containBreakRadius = 4f;
-
-    // How far downfield (toward the end zone) a Contain defender holds relative to the
-    // carrier's current Z — keeps them positioned as a real obstacle ahead of the
-    // runner rather than standing still wherever they started.
     [SerializeField] float containLeadDistance = 3f;
+
+    [Header("Coverage (Cover role — man coverage on an assigned receiver)")]
+    [Tooltip("Distance defender sits toward their own goal line from the receiver — reads as playing off-man rather than standing on top of them.")]
+    [SerializeField] float coverCushion = 2.5f;
+    [Tooltip("Cover role closes on its shadow point faster than a normal chase — this is what keeps a defender glued to a receiver instead of trailing.")]
+    [SerializeField] float coverCatchUpSpeedMult = 1.15f;
+    [Tooltip("Speed boost once a Cover defender breaks on a released throw — 'jumping the route' should look faster than normal pursuit.")]
+    [SerializeField] float breakOnBallSpeedMult = 1.35f;
+    [Tooltip("Seconds after release before a Cover defender reacts to the throw — arcade reaction-time fudge so this never reads as psychic.")]
+    [SerializeField] float breakReactionDelay = 0.15f;
 
     public Role CurrentRole { get; private set; } = Role.Engage; // default Engage so a scene without a coordinator behaves sanely
 
     TeamMember teamMember;
+    Transform coverTarget;
+    float ballInFlightTimer;
 
     float MoveSpeed => baseMoveSpeed * SpeedMult;
     public float SpeedMult => attributes != null ? attributes.speedMult : 1f;
     public float ResistMult => attributes != null ? attributes.resistMult : 1f;
-
-    // Resolved live each frame — null when the ball is loose (fumbled, not yet
-    // recovered). No fallback to a hardcoded Player reference; a loose ball means
-    // defenders have nothing to chase yet (recovery/pursuit-of-loose-ball is a
-    // future system, not this one).
-    Transform Target => BallController.Instance != null ? BallController.Instance.Carrier : null;
+    public float CoverageMult => attributes != null ? attributes.coverageMult : 1f;
 
     Vector3 pushBackTarget;
     float pushBackTimer;
     const float pushBackDuration = 0.15f;
     float shedTimer;
 
-    // True while the human is piloting this defender (set by DefenderControl). The AI
-    // stops driving it, but push-back/shed still apply — a stiff-arm should land on a
-    // human-controlled defender too. DefenderControl reads IsStunned to lock input.
     public bool IsUserControlled { get; private set; }
     public bool IsStunned => pushBackTimer > 0f || shedTimer > 0f;
     public void SetUserControlled(bool controlled) => IsUserControlled = controlled;
 
-    void Awake()
-    {
-        teamMember = GetComponent<TeamMember>();
-    }
+    void Awake() => teamMember = GetComponent<TeamMember>();
 
-    // Called by DefenderCoordinator once per frame — external assignment rather than
-    // this script deciding its own role, since "who's closest" requires comparing
-    // across ALL defenders, information a single DefenderAI instance doesn't have.
+    // Called by DefenderCoordinator — external assignment, same reasoning as before.
     public void SetRole(Role role) => CurrentRole = role;
+    public void SetCoverTarget(Transform receiver) => coverTarget = receiver;
+    public void ClearCoverTarget() => coverTarget = null;
 
     void Update()
     {
@@ -85,38 +81,83 @@ public class DefenderAI : MonoBehaviour
 
         if (IsUserControlled) return;
 
-        var target = Target; // resolve once per frame — avoids repeated property/null-check calls below
+        var ball = BallController.Instance;
+        if (ball == null) return;
 
-        Vector3 roleMove;
-        if (target != null)
+        switch (ball.State)
         {
-            roleMove = CurrentRole == Role.Engage ? CalculateEngageMove(target.position) : CalculateContainMove(target);
+            case BallController.BallState.Held:
+                ballInFlightTimer = 0f;
+                UpdateHeldState(ball.Carrier);
+                break;
+            case BallController.BallState.InFlight:
+                ballInFlightTimer += Time.deltaTime;
+                UpdateInFlightState(ball);
+                break;
+            case BallController.BallState.Loose:
+                ballInFlightTimer = 0f;
+                // Hold position — pursuit-of-loose-ball is a separate, still-deferred system.
+                break;
         }
-        else if (BallController.Instance != null && BallController.Instance.State == BallController.BallState.Loose)
-        {
-            // Ball's loose — Engage/Contain roles are meaningless right now (DefenderCoordinator
-            // already skips reassigning them for exactly this reason), so every non-controlled
-            // defender just dives straight at the ball instead of freezing in place.
-            roleMove = CalculateEngageMove(BallController.Instance.transform.position);
-        }
-        else
-        {
-            return; // ball's mid-flight (pass/pitch/fumble pop) with no carrier yet — nothing real to chase
-        }
-
-        Vector3 separationMove = CalculateSeparation();
-        transform.position += (roleMove + separationMove) * Time.deltaTime;
     }
 
-    // Now takes a position instead of a Transform — same math, but lets both the loose-ball
-    // scramble (chasing the ball's transform) and the normal carrier-chase (chasing a
-    // player's transform) share one method instead of duplicating it.
-    Vector3 CalculateEngageMove(Vector3 targetPosition)
+    void UpdateHeldState(Transform carrier)
     {
-        float distance = Vector3.Distance(transform.position, targetPosition);
+        if (carrier == null) return;
+
+        Vector3 roleMove = CurrentRole switch
+        {
+            Role.Cover => CalculateCoverMove(),
+            Role.Contain => CalculateContainMove(carrier),
+            _ => CalculateEngageMove(carrier)
+        };
+
+        transform.position += (roleMove + CalculateSeparation()) * Time.deltaTime;
+    }
+
+    // The one genuinely new piece of gameplay: a Cover defender guarding the ACTUAL
+    // intended receiver breaks toward the landing spot instead of standing still while
+    // the ball sails past. Everyone else near the landing spot still gets a shot via
+    // BallController's own OverlapSphere check once it arrives — they just don't get
+    // the head start, which is what keeps this from reading as every defender on the
+    // field psychically converging on a live throw.
+    void UpdateInFlightState(BallController ball)
+    {
+        bool isTargetedDefender = coverTarget != null && ball.IntendedReceiver == coverTarget;
+        if (!isTargetedDefender || ballInFlightTimer < breakReactionDelay) return;
+
+        Vector3 landing = ball.FlightTarget;
+        float distance = Vector3.Distance(transform.position, landing);
+        if (distance <= stopDistance) return;
+
+        Vector3 direction = (landing - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(direction);
+        transform.position += direction * (MoveSpeed * breakOnBallSpeedMult) * Time.deltaTime;
+    }
+
+    Vector3 CalculateCoverMove()
+    {
+        if (coverTarget == null) return Vector3.zero; // assignment lost mid-play — coordinator reassigns next snap
+
+        FieldDirection receiverAttack = PlayState.Instance != null && coverTarget.TryGetComponent<TeamMember>(out var wrTeam)
+            ? PlayState.Instance.DirectionFor(wrTeam.teamId)
+            : FieldDirection.TowardPositiveZ;
+
+        Vector3 shadowPoint = coverTarget.position - receiverAttack.Forward * coverCushion;
+        float distance = Vector3.Distance(transform.position, shadowPoint);
         if (distance <= stopDistance) return Vector3.zero;
 
-        Vector3 direction = (targetPosition - transform.position).normalized;
+        Vector3 direction = (shadowPoint - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation((coverTarget.position - transform.position).normalized);
+        return direction * (MoveSpeed * coverCatchUpSpeedMult);
+    }
+
+    Vector3 CalculateEngageMove(Transform target)
+    {
+        float distance = Vector3.Distance(transform.position, target.position);
+        if (distance <= stopDistance) return Vector3.zero;
+
+        Vector3 direction = (target.position - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
         return direction * MoveSpeed;
     }
@@ -126,9 +167,7 @@ public class DefenderAI : MonoBehaviour
         float distanceToCarrier = Vector3.Distance(transform.position, target.position);
 
         if (distanceToCarrier <= containBreakRadius)
-        {
-            return CalculateEngageMove(target.position); // updated call site — was CalculateEngageMove(target)
-        }
+            return CalculateEngageMove(target);
 
         float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : target.position.z;
         float holdZ = PlayState.Instance != null
@@ -144,9 +183,6 @@ public class DefenderAI : MonoBehaviour
         return direction * MoveSpeed;
     }
 
-    // Spacing is measured against same-team players (excluding self), not a hardcoded
-    // Defender tag — same "don't stack on your own guys" effect as before, but it no
-    // longer assumes this component only ever lives on one permanently-defensive group.
     Vector3 CalculateSeparation()
     {
         Vector3 push = Vector3.zero;
@@ -174,8 +210,5 @@ public class DefenderAI : MonoBehaviour
         pushBackTimer = pushBackDuration;
     }
 
-    public void ApplyShed(float duration)
-    {
-        shedTimer = duration;
-    }
+    public void ApplyShed(float duration) => shedTimer = duration;
 }
