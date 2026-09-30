@@ -1,51 +1,89 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Assigns defensive roles. Pre-existing rule stays: everyone converges (Engage) once the
-// carrier is past the LOS, regardless of play type — covers scrambles and busted plays
-// uniformly. New: on a designed PASS play, man-coverage matchups are locked in ONCE at the
-// snap (not recomputed every frame) — otherwise crossing routes would cause defenders to
-// instantly swap assignments mid-route, which reads as "beat your man" being auto-corrected
-// rather than an earned separation. Leftover defenders either rush the passer or fall back
-// to the existing Contain (lane-hold) behavior as a crude zone/spy.
+// Turns the called DefensivePlayData into roles, once, at the snap. Deliberately never looks
+// at the offense's play call — defense is blind, same as a human defender. It reacts to what
+// it can actually see: who has the ball and where.
+//
+// Snap:   Rush -> Engage, Spy -> Contain, Zone -> Zone (+ anchor), Man -> matched to the
+//         nearest receiver (cascade-by-distance, locked for the whole play so crossing routes
+//         can't cause mid-route swaps). Leftover men with nobody to cover fall back to Spy.
+// Live:   QB still has it behind the LOS -> assignments stand.
+//         Carrier past the LOS (scramble, breakaway) -> everyone Engages.
+//         Carrier is NOT the QB (handoff, screen catch) -> run-fit: closest defender Engages,
+//         rest Contain; Rush-job defenders stay Engage.
+// No defensive play set at all -> the original closest-Engage/rest-Contain scheme, so a
+// scene with no defensive plays authored behaves exactly as it did before.
 public class DefenderCoordinator : MonoBehaviour
 {
-    [Tooltip("How many leftover (non-covering) defenders commit to rushing the passer on a pass play. Everyone else spies/contains.")]
-    [SerializeField] int passRushCount = 2;
-
     Transform Carrier => BallController.Instance != null ? BallController.Instance.Carrier : null;
 
-    void OnEnable()
+    // Start(), not OnEnable(): PlayState.Instance is only guaranteed to exist after every Awake().
+    void Start()
     {
-        if (PlayState.Instance != null) PlayState.Instance.OnPlayReset += HandlePlayReset;
+        if (PlayState.Instance != null) PlayState.Instance.OnPlayReset += AssignSnapRoles;
     }
 
-    void OnDisable()
+    void OnDestroy()
     {
-        if (PlayState.Instance != null) PlayState.Instance.OnPlayReset -= HandlePlayReset;
+        if (PlayState.Instance != null) PlayState.Instance.OnPlayReset -= AssignSnapRoles;
     }
 
-    void HandlePlayReset()
+    void AssignSnapRoles()
     {
-        var carrier = Carrier;
-        if (carrier == null || !carrier.TryGetComponent<TeamMember>(out var carrierTeam)) return;
+        var ps = PlayState.Instance;
+        var defense = ps.DefensePlayers; // index N = formation slot N = DefensivePlayData assignment N
 
-        var defenders = LiveDefenders(carrierTeam.teamId);
-        foreach (var ai in defenders) ai.ClearCoverTarget();
-        if (defenders.Count == 0) return;
+        foreach (var t in defense)
+            if (t != null && t.TryGetComponent<DefenderAI>(out var ai)) ai.ClearCoverTarget();
 
-        var playCall = PlayState.Instance != null ? PlayState.Instance.CurrentPlayCall : null;
-        if (playCall == null || playCall.PlayType != PlayType.Pass) return; // run/no-call: original closest-Engage/rest-Contain resolves fresh every frame below
+        var play = ps.CurrentDefensivePlay;
+        if (play == null) return; // fallback scheme runs per-frame in Update()
 
-        var receivers = ReceiverTargeting.GetEligibleReceivers(PlayState.Instance.OffensivePlayers);
-        var available = new List<DefenderAI>(defenders);
+        FieldDirection dir = ps.AttackDirection;
+        Vector3 losOrigin = new(0f, 0f, ps.CurrentLineOfScrimmageZ);
+        var menToMatch = new List<DefenderAI>();
 
-        // Cascade-by-distance, same pattern BlockingCoordinator uses — each receiver claims
-        // its nearest still-available defender, closest-to-the-ball receiver resolved first
-        // so the most dangerous route gets first pick of coverage.
-        receivers.Sort((a, b) =>
-            Vector3.Distance(carrier.position, a.position).CompareTo(Vector3.Distance(carrier.position, b.position)));
+        for (int i = 0; i < defense.Count; i++)
+        {
+            if (defense[i] == null || !defense[i].TryGetComponent<DefenderAI>(out var ai) || ai.IsUserControlled) continue;
 
+            var assignment = play.GetAssignment(i);
+            switch (assignment.job)
+            {
+                case DefenderJob.Rush:
+                    ai.SetRole(DefenderAI.Role.Engage);
+                    break;
+                case DefenderJob.Spy:
+                    ai.SetRole(DefenderAI.Role.Contain);
+                    break;
+                case DefenderJob.Zone:
+                    Vector3 anchor = losOrigin + dir.ToWorldVector(assignment.zoneOffsetFromLOS);
+                    anchor.y = ai.transform.position.y;
+                    ai.SetZoneAnchor(anchor);
+                    ai.SetRole(DefenderAI.Role.Zone);
+                    break;
+                case DefenderJob.Man:
+                    menToMatch.Add(ai);
+                    break;
+            }
+        }
+
+        MatchMenToReceivers(menToMatch, ps);
+    }
+
+    static void MatchMenToReceivers(List<DefenderAI> men, PlayState ps)
+    {
+        if (men.Count == 0) return;
+
+        var receivers = ReceiverTargeting.GetEligibleReceivers(ps.OffensivePlayers);
+        var qb = ps.Passer;
+
+        // Most dangerous (closest to the ball) receiver picks first — same cascade idea BlockingCoordinator uses.
+        if (qb != null)
+            receivers.Sort((a, b) => Vector3.Distance(qb.position, a.position).CompareTo(Vector3.Distance(qb.position, b.position)));
+
+        var available = new List<DefenderAI>(men);
         foreach (var receiver in receivers)
         {
             DefenderAI best = null;
@@ -55,50 +93,69 @@ public class DefenderCoordinator : MonoBehaviour
                 float dist = Vector3.Distance(ai.transform.position, receiver.position);
                 if (dist < bestDist) { bestDist = dist; best = ai; }
             }
-            if (best == null) continue;
+            if (best == null) break;
 
             best.SetRole(DefenderAI.Role.Cover);
             best.SetCoverTarget(receiver);
             available.Remove(best);
         }
 
-        available.Sort((a, b) =>
-            Vector3.Distance(carrier.position, a.transform.position).CompareTo(Vector3.Distance(carrier.position, b.transform.position)));
-
-        for (int i = 0; i < available.Count; i++)
-            available[i].SetRole(i < passRushCount ? DefenderAI.Role.Engage : DefenderAI.Role.Contain);
+        foreach (var ai in available) ai.SetRole(DefenderAI.Role.Contain); // more men than receivers — spy
     }
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        var ps = PlayState.Instance;
+        if (ps == null || !ps.IsLive) return;
 
         var carrier = Carrier;
-        if (carrier == null) return; // loose ball, or mid-flight — no one to assign roles relative to
+        if (carrier == null) return; // loose or in flight — roles stand as they were at release
         if (!carrier.TryGetComponent<TeamMember>(out var carrierTeam)) return;
 
         var defenders = LiveDefenders(carrierTeam.teamId);
         if (defenders.Count == 0) return;
 
-        bool pastLOS = PlayState.Instance != null && PlayState.Instance.IsCarrierPastLineOfScrimmage(carrier.position.z);
-        if (pastLOS)
+        // Breakaway / scramble: coverage stops mattering, everybody converges.
+        if (ps.IsCarrierPastLineOfScrimmage(carrier.position.z))
         {
             foreach (var ai in defenders) ai.SetRole(DefenderAI.Role.Engage);
             return;
         }
 
-        var playCall = PlayState.Instance != null ? PlayState.Instance.CurrentPlayCall : null;
-        if (playCall != null && playCall.PlayType == PlayType.Pass) return; // Cover/rush assignments from the snap stand as-is
+        var play = ps.CurrentDefensivePlay;
+        bool qbStillHasIt = carrierTeam.slot == TeamMember.RosterSlot.QB;
+        if (play != null && qbStillHasIt) return; // called assignments stand
+
+        // Run-fit (or no defensive play at all): closest Engages, the rest Contain.
+        // Rush-job defenders are always Engage.
+        var rushers = play != null ? RushersFor(ps, play) : null;
 
         DefenderAI closest = null;
         float closestDist = float.MaxValue;
         foreach (var ai in defenders)
         {
+            if (rushers != null && rushers.Contains(ai)) continue;
             float dist = Vector3.Distance(ai.transform.position, carrier.position);
             if (dist < closestDist) { closestDist = dist; closest = ai; }
         }
+
         foreach (var ai in defenders)
-            ai.SetRole(ai == closest ? DefenderAI.Role.Engage : DefenderAI.Role.Contain);
+        {
+            bool engage = ai == closest || (rushers != null && rushers.Contains(ai));
+            ai.SetRole(engage ? DefenderAI.Role.Engage : DefenderAI.Role.Contain);
+        }
+    }
+
+    static HashSet<DefenderAI> RushersFor(PlayState ps, DefensivePlayData play)
+    {
+        var set = new HashSet<DefenderAI>();
+        var defense = ps.DefensePlayers;
+        for (int i = 0; i < defense.Count; i++)
+        {
+            if (defense[i] == null || play.GetAssignment(i).job != DefenderJob.Rush) continue;
+            if (defense[i].TryGetComponent<DefenderAI>(out var ai)) set.Add(ai);
+        }
+        return set;
     }
 
     static List<DefenderAI> LiveDefenders(int carrierTeamId)

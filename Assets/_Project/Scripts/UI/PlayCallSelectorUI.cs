@@ -4,24 +4,18 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Pre-snap play selection. Cycle with Previous/Next, confirm with the Confirm action
-// (Enter) to break the huddle — offense visibly forms up into the selected play, still
-// dead — then Reset Play (R) snaps it live. Cycling itself never moves anyone; only
-// Confirm does, matching "browse, then commit" rather than every cycle press yanking
-// players around mid-scroll.
+// Pre-snap play selection for the HUMAN's side only. Shows offensive plays when the user
+// has the ball and defensive plays when they don't (swaps on possession change). Cycle with
+// Previous/Next, Confirm breaks the huddle for BOTH teams — the CPU already picked its own
+// side, blind, the instant the huddle formed (see CPUPlayCaller), so nothing waits on it.
 //
-// v1 scope: every play here is uniform-route (see PlayCallData.uniformRoute).
-//
-// KNOWN LIMITATION: no pre-snap dead window before the very first play of a session —
-// PlayState now starts dead by default, so this is only relevant on scenes that
-// override that. Revisit only if that changes.
-//
-// SETUP: drop on GameManager. Assign PlayCallData assets to availablePlays, and a
-// HUDTheme for the legible font — leave the theme unassigned and this still runs on
-// TMP's default. Builds its own HUD — no manual Canvas/Text setup needed.
+// SETUP: drop on GameManager. Assign PlayCallData assets to availablePlays and
+// DefensivePlayData assets to defensivePlays. HUDTheme optional.
 public class PlayCallSelector : MonoBehaviour
 {
+    // Field name kept as-is so the scene's already-serialized offensive list survives.
     [SerializeField] List<PlayCallData> availablePlays = new();
+    [SerializeField] List<DefensivePlayData> defensivePlays = new();
     [SerializeField] HUDTheme theme;
 
     [Header("Layout")]
@@ -30,10 +24,18 @@ public class PlayCallSelector : MonoBehaviour
     [SerializeField] Color activeColor = Color.yellow;
     [SerializeField] Color inactiveColor = new Color(1f, 1f, 1f, 0.6f);
 
+    // The CPU picks from these same authored lists, so both sides always share one playbook.
+    public IReadOnlyList<PlayCallData> OffensivePlays => availablePlays;
+    public IReadOnlyList<DefensivePlayData> DefensivePlays => defensivePlays;
+
     InputSystem_Actions controls;
-    int currentIndex;
+    int offenseIndex;
+    int defenseIndex;
     TextMeshProUGUI listText;
     CanvasGroup canvasGroup;
+
+    bool ShowingDefense => PlayState.Instance != null && PlayState.Instance.IsUserDefending;
+    int ActiveCount => ShowingDefense ? defensivePlays.Count : availablePlays.Count;
 
     void Awake()
     {
@@ -42,47 +44,46 @@ public class PlayCallSelector : MonoBehaviour
         controls.Player.Next.performed += ctx => Cycle(1);
         controls.Player.Confirm.performed += ctx => TryBreakHuddle();
         BuildHUD();
-
-        // Pushed here, not Start() — Unity guarantees every Awake() runs before any
-        // Start(), so PlayState's first BreakHuddle()/ResetPlay() is guaranteed to see
-        // this selection already set regardless of GameObject/script execution order.
-        PushSelection();
     }
 
+    // Start(), not Awake/OnEnable: PlayState.Instance is only guaranteed after every Awake().
     void Start()
     {
-        RefreshText();
-        UpdateVisibility();
-    }
-
-    void OnEnable()
-    {
-        controls.Player.Enable();
         if (PlayState.Instance != null)
         {
             PlayState.Instance.OnPlayEnded += HandlePlayEnded;
             PlayState.Instance.OnPlayReset += HandlePlayReset;
+            PlayState.Instance.OnPossessionChanged += HandlePossessionChanged;
         }
+
+        PushSelection();
+        RefreshText();
+        UpdateVisibility();
     }
 
-    void OnDisable()
+    void OnEnable() => controls.Player.Enable();
+    void OnDisable() => controls.Player.Disable();
+
+    void OnDestroy()
     {
-        controls.Player.Disable();
         if (PlayState.Instance != null)
         {
             PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
             PlayState.Instance.OnPlayReset -= HandlePlayReset;
+            PlayState.Instance.OnPossessionChanged -= HandlePossessionChanged;
         }
+        controls?.Dispose();
     }
-
-    void OnDestroy() => controls?.Dispose();
 
     void Cycle(int dir)
     {
-        if (availablePlays.Count == 0) return;
+        int count = ActiveCount;
+        if (count == 0) return;
         if (PlayState.Instance != null && PlayState.Instance.IsLive) return; // only between plays
 
-        currentIndex = (currentIndex + dir + availablePlays.Count) % availablePlays.Count;
+        if (ShowingDefense) defenseIndex = (defenseIndex + dir + count) % count;
+        else offenseIndex = (offenseIndex + dir + count) % count;
+
         PushSelection();
         RefreshText();
     }
@@ -93,10 +94,27 @@ public class PlayCallSelector : MonoBehaviour
         PlayState.Instance.BreakHuddle();
     }
 
+    // Pushes ONLY the human's side. The other side is CPUPlayCaller's job.
     void PushSelection()
     {
-        if (availablePlays.Count == 0 || PlayState.Instance == null) return;
-        PlayState.Instance.SetPlayCall(availablePlays[currentIndex]);
+        var ps = PlayState.Instance;
+        if (ps == null) return;
+
+        if (ShowingDefense)
+        {
+            if (defensivePlays.Count > 0) ps.SetDefensivePlay(defensivePlays[defenseIndex]);
+        }
+        else if (availablePlays.Count > 0)
+        {
+            ps.SetPlayCall(availablePlays[offenseIndex]);
+        }
+    }
+
+    // Fires during EndPlay, after rosters refresh — the list the user sees flips sides here.
+    void HandlePossessionChanged(int _)
+    {
+        PushSelection();
+        RefreshText();
     }
 
     void HandlePlayEnded(PlayState.PlayEndReason reason) => UpdateVisibility();
@@ -148,12 +166,19 @@ public class PlayCallSelector : MonoBehaviour
 
         string activeHex = ColorUtility.ToHtmlStringRGB(activeColor);
         string inactiveHex = ColorUtility.ToHtmlStringRGB(inactiveColor);
+        bool defense = ShowingDefense;
+        int current = defense ? defenseIndex : offenseIndex;
+        int count = ActiveCount;
 
         var sb = new StringBuilder();
-        for (int i = 0; i < availablePlays.Count; i++)
+        sb.Append($"<color=#{inactiveHex}>{(defense ? "DEFENSE" : "OFFENSE")}</color>\n");
+
+        for (int i = 0; i < count; i++)
         {
-            string name = availablePlays[i] != null ? availablePlays[i].DisplayName : "(missing)";
-            bool active = i == currentIndex;
+            string name = defense
+                ? (defensivePlays[i] != null ? defensivePlays[i].DisplayName : "(missing)")
+                : (availablePlays[i] != null ? availablePlays[i].DisplayName : "(missing)");
+            bool active = i == current;
             string hex = active ? activeHex : inactiveHex;
             string marker = active ? "> " : "   ";
             sb.Append($"<color=#{hex}>{marker}{i + 1}. {name}</color>\n");

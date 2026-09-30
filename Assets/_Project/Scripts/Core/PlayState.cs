@@ -60,6 +60,11 @@ public class PlayState : MonoBehaviour
     FormationData defensiveFormationOverride;
     public void SetDefensiveFormation(FormationData f) => defensiveFormationOverride = f;
 
+    [Header("Defensive Play")]
+    [SerializeField] DefensivePlayData defensivePlay;
+    public void SetDefensivePlay(DefensivePlayData d) => defensivePlay = d;
+    public DefensivePlayData CurrentDefensivePlay => defensivePlay;
+
     [Header("Gamebreaker")]
     [SerializeField] GamebreakerBuffs gamebreakerBuffs;
     [SerializeField] int gamebreakerPossessionLimit = 3;
@@ -101,6 +106,7 @@ public class PlayState : MonoBehaviour
     public event System.Action<PlayEndReason> OnPlayEnded;
     public event System.Action OnPlayReset;
     public event System.Action OnHuddleStarted; // fired the instant the huddle begins forming — before any walk-in animation
+    public event System.Action OnSetAtLOS;
 
     InputSystem_Actions controls;
     float nextLineOfScrimmageZ;
@@ -279,7 +285,9 @@ public class PlayState : MonoBehaviour
         (playCall != null && playCall.OffensiveFormation != null) ? playCall.OffensiveFormation : defaultOffensiveFormation;
 
     FormationData ActiveDefensiveFormation =>
-        defensiveFormationOverride != null ? defensiveFormationOverride : defaultDefensiveFormation;
+     defensiveFormationOverride != null ? defensiveFormationOverride
+     : (defensivePlay != null && defensivePlay.Formation != null) ? defensivePlay.Formation
+     : defaultDefensiveFormation;
 
     public void SetPlayCall(PlayCallData call) => playCall = call;
     public PlayCallData CurrentPlayCall => playCall;
@@ -585,6 +593,7 @@ public class PlayState : MonoBehaviour
             selectionUI.ResetSelection();
 
         phase = HuddlePhase.SetAtLOS;
+        OnSetAtLOS?.Invoke();
     }
 
     // Shared walk helper. instant=true assigns final positions directly with zero

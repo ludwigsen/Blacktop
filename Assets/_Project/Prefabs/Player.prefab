@@ -23,6 +23,7 @@ GameObject:
   - component: {fileID: 8830491726354102987}
   - component: {fileID: 4883675479690406824}
   - component: {fileID: 4609209659204268853}
+  - component: {fileID: 5906274877810500750}
   m_Layer: 0
   m_Name: Player
   m_TagString: Teammate
@@ -141,6 +142,8 @@ MonoBehaviour:
   routeDepth: 12
   slantDistance: 4
   hitchDepth: 4
+  baseBallAdjustRadius: 2.5
+  attributes: {fileID: 0}
 --- !u!114 &8380642619556374090
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -287,6 +290,8 @@ MonoBehaviour:
     arcHeightPerDistance: 0.12
     baseThrowSpeed: 35
     minFlightDuration: 0.15
+    baseMaxLeadError: 3
+    minLeadError: 0.2
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
 --- !u!114 &4724835751135970437
 MonoBehaviour:
@@ -399,3 +404,33 @@ MonoBehaviour:
   separationStrength: 3
   containBreakRadius: 4
   containLeadDistance: 3
+  coverCushion: 2.5
+  coverCatchUpSpeedMult: 1.15
+  breakOnBallSpeedMult: 1.35
+  breakReactionDelay: 0.15
+--- !u!114 &5906274877810500750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6555219639277062554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bea1ba26bd3cc44aa80c3fbeab706cf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::CPUCarrierAI
+  dropbackSpeed: 2.5
+  maxReadTime: 1.4
+  scrambleTriggerDistance: 3
+  maxReceiverSearchRadius: 45
+  receiverSearchConeAngle: 90
+  baseThrowSpeed: 30
+  minFlightDuration: 0.15
+  baseArcHeight: 0.5
+  arcHeightPerDistance: 0.12
+  runSpeed: 7
+  rotationSpeed: 540
+  avoidanceRadius: 4
+  avoidanceWeight: 1.2
+  threatsConsidered: 2

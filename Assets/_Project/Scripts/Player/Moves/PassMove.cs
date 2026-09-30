@@ -149,26 +149,9 @@ public class PassMove : IPlayerMove
             }
         }
 
-        // Auto-select fallback (no explicit selection, or selection out of range) —
-        // cone angle applies here since a heuristic is making the read, not a person.
-        Transform best = null;
-        float bestScore = float.MinValue;
-
-        foreach (var r in receivers)
-        {
-            if (!IsValidAutoTarget(ctx, r)) continue;
-
-            float openness = NearestOpponentDistance(ctx, r.position);
-            float dist = Vector3.Distance(r.position, ctx.transform.position);
-            float score = openness * 2f - dist * 0.1f;
-
-            if (score > bestScore)
-            {
-                bestScore = score;
-                best = r;
-            }
-        }
-
+        // Auto-select fallback — shared with CPUCarrierAI's QB brain via PassTargeting, so
+        // tuning "openness" once improves both a human's auto-throw and every CPU pass.
+        var best = PassTargeting.FindBestReceiver(ctx.transform, PlayState.Instance?.OffensivePlayers, maxReceiverSearchRadius, receiverSearchConeAngle);
         Debug.Log($"[PassMove] Auto-selected: {(best != null ? best.name : "NULL")}");
         return best;
     }
@@ -179,28 +162,5 @@ public class PassMove : IPlayerMove
         return dist <= maxReceiverSearchRadius;
     }
 
-    bool IsValidAutoTarget(PlayerContext ctx, Transform receiver)
-    {
-        if (!IsWithinRange(ctx, receiver)) return false;
 
-        Vector3 toReceiver = receiver.position - ctx.transform.position;
-        float angle = Vector3.Angle(ctx.transform.forward, toReceiver);
-        return angle <= receiverSearchConeAngle;
-    }
-
-    // "Openness" = distance to the nearest player on the OTHER team, resolved through
-    // TeamMember instead of the retired Defender tag — so it stays right whichever team
-    // is throwing.
-    float NearestOpponentDistance(PlayerContext ctx, Vector3 pos)
-    {
-        float closest = float.MaxValue;
-        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-        {
-            if (!TeamMember.AreOpponents(ctx.transform, member)) continue;
-
-            float dist = Vector3.Distance(pos, member.transform.position);
-            if (dist < closest) closest = dist;
-        }
-        return closest == float.MaxValue ? 999f : closest;
-    }
 }
