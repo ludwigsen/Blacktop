@@ -13,8 +13,10 @@ using UnityEngine;
 // SETUP: drop on GameManager, alongside PlayState/DownsTracker. No Inspector wiring required.
 public class ScoreBoard : MonoBehaviour
 {
-    const int TouchdownPoints = 6;
-    const int SafetyPoints = 2;
+    const int TouchdownPoints = 6; // TD
+    const int TwoPointConversionPoints = 2; // 2-point conversion
+    const int SinglePointConversionPoints = 1; // Extra point
+    const int SafetyPoints = 2; // Safety
 
     public static ScoreBoard Instance { get; private set; }
 

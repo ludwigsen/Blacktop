@@ -7,7 +7,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Blacktop/Team Identity")]
 public class TeamIdentity : ScriptableObject
 {
-    public string teamName = "TEAM";
-    public Color accentColor = Color.white;
-    public Sprite logo; // crown / anarchy-style crest — no art yet, wired for when it exists
+    public string teamName = "Football Team";
+    public Color accentColor = Color.white; // white default
+    public Sprite logo; // crest
 }
