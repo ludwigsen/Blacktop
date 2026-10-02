@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 4883675479690406824}
   - component: {fileID: 4609209659204268853}
   - component: {fileID: 5906274877810500750}
+  - component: {fileID: 6791215661319204177}
   m_Layer: 0
   m_Name: Player
   m_TagString: Teammate
@@ -408,6 +409,8 @@ MonoBehaviour:
   coverCatchUpSpeedMult: 1.15
   breakOnBallSpeedMult: 1.35
   breakReactionDelay: 0.15
+  zoneReactRadius: 4
+  zoneBreakRadius: 8
 --- !u!114 &5906274877810500750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,3 +437,20 @@ MonoBehaviour:
   avoidanceRadius: 4
   avoidanceWeight: 1.2
   threatsConsidered: 2
+--- !u!114 &6791215661319204177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6555219639277062554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28a8202570e124c3694eae6de69b7089, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::CharacterApplier
+  roster: {fileID: 0}
+  playerId: 
+  showNameplate: 1
+  nameplateHeight: 2.6
+  nameplateFontSize: 28

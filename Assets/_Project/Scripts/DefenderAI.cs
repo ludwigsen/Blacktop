@@ -52,6 +52,7 @@ public class DefenderAI : MonoBehaviour
     float MoveSpeed => baseMoveSpeed * SpeedMult;
     public float SpeedMult => attributes != null ? attributes.Speed() : 1f;
     public float ResistMult => attributes != null ? attributes.Tackling() : 1f;
+    public float CoverageMult => attributes != null ? attributes.Coverage() : 1f;
 
     public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
 
@@ -248,6 +249,7 @@ public class DefenderAI : MonoBehaviour
     {
         pushBackTarget = transform.position + direction * distance;
         pushBackTimer = pushBackDuration;
+ 
     }
 
     public void ApplyShed(float duration) => shedTimer = duration;
