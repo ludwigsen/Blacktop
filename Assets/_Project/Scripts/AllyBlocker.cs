@@ -32,6 +32,7 @@ public class AllyBlocker : MonoBehaviour
     // or create ally-specific variants once blocking feel needs differentiation from
     // the passer's stat line.
     [SerializeField] PlayerAttributes attributes;
+    public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
 
     Transform currentTarget;
 

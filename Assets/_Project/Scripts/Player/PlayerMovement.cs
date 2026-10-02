@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] PlayerAttributes attributes; // per-player stat multipliers (speed/agility/etc)
+    public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
 
     // Base values are tuned during solo playtesting with a "balanced" player (all multipliers = 1.0).
     // Actual per-player speed is base * attribute multiplier — never hardcode absolute

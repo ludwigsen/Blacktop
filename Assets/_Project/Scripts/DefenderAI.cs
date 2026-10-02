@@ -1,21 +1,20 @@
 using UnityEngine;
 
-// Chase / contain / cover / zone logic, transform-based. Role is assigned externally by
-// DefenderCoordinator — DefenderAI never decides its own assignment.
+// Chase-and-contain-and-cover logic, transform-based. Behavior branches on a Role set
+// externally by DefenderCoordinator — Engage/Contain/Cover — DefenderAI never decides its
+// own assignment, same standing rule as before Cover existed.
 //
-//   Engage  — direct pursuit of the ball carrier (also = Rush job)
-//   Contain — hold a lane near the LOS (also = Spy job)
-//   Cover   — man: shadow one assigned receiver
-//   Zone    — drop to an anchor; shadow any receiver who walks into it; break on nearby throws
-//
-// Movement branches on BallController.State, not just "is there a carrier": Held runs the
-// role logic, InFlight lets a man defender on the target (or a zone defender near the
-// landing spot) break on the ball, Loose still holds position (loose-ball pursuit is a
-// separate, still-deferred system).
+// Movement now branches on BallController.State, not just "is there a carrier":
+//   - Held:     original Engage/Contain, plus new Cover (shadow an assigned receiver).
+//   - InFlight: the ONE thing that was completely missing. A defender assigned to Cover
+//     the actual intended receiver breaks toward BallController.FlightTarget instead of
+//     freezing — this is what makes an interception a real, winnable footrace instead of
+//     a static dice roll nobody could ever be in position to benefit from.
+//   - Loose:    unchanged — hold position, pursuit-of-loose-ball is still a deferred system.
 [RequireComponent(typeof(TeamMember))]
 public class DefenderAI : MonoBehaviour
 {
-    public enum Role { Engage, Contain, Cover, Zone }
+    public enum Role { Engage, Contain, Cover }
 
     [SerializeField] DefenderAttributes attributes;
     [SerializeField] float baseMoveSpeed = 5f;
@@ -26,27 +25,20 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float containBreakRadius = 4f;
     [SerializeField] float containLeadDistance = 3f;
 
-    [Header("Coverage")]
-    [Tooltip("Distance defender sits toward their own goal line from the receiver — reads as playing off rather than standing on top of them.")]
+    [Header("Coverage (Cover role — man coverage on an assigned receiver)")]
+    [Tooltip("Distance defender sits toward their own goal line from the receiver — reads as playing off-man rather than standing on top of them.")]
     [SerializeField] float coverCushion = 2.5f;
-    [Tooltip("Man/zone shadowing closes faster than a normal chase — keeps a defender glued instead of trailing.")]
+    [Tooltip("Cover role closes on its shadow point faster than a normal chase — this is what keeps a defender glued to a receiver instead of trailing.")]
     [SerializeField] float coverCatchUpSpeedMult = 1.15f;
-    [Tooltip("Speed boost once a defender breaks on a released throw.")]
+    [Tooltip("Speed boost once a Cover defender breaks on a released throw — 'jumping the route' should look faster than normal pursuit.")]
     [SerializeField] float breakOnBallSpeedMult = 1.35f;
-    [Tooltip("Seconds after release before anyone reacts to the throw — arcade reaction fudge so it never reads as psychic.")]
+    [Tooltip("Seconds after release before a Cover defender reacts to the throw — arcade reaction-time fudge so this never reads as psychic.")]
     [SerializeField] float breakReactionDelay = 0.15f;
-
-    [Header("Zone")]
-    [Tooltip("A receiver inside this radius of the zone anchor gets shadowed.")]
-    [SerializeField] float zoneReactRadius = 4f;
-    [Tooltip("A zone defender within this distance of a throw's landing spot breaks on it.")]
-    [SerializeField] float zoneBreakRadius = 8f;
 
     public Role CurrentRole { get; private set; } = Role.Engage; // default Engage so a scene without a coordinator behaves sanely
 
     TeamMember teamMember;
     Transform coverTarget;
-    Vector3 zoneAnchor;
     float ballInFlightTimer;
 
     float MoveSpeed => baseMoveSpeed * SpeedMult;
@@ -65,10 +57,10 @@ public class DefenderAI : MonoBehaviour
 
     void Awake() => teamMember = GetComponent<TeamMember>();
 
+    // Called by DefenderCoordinator — external assignment, same reasoning as before.
     public void SetRole(Role role) => CurrentRole = role;
     public void SetCoverTarget(Transform receiver) => coverTarget = receiver;
     public void ClearCoverTarget() => coverTarget = null;
-    public void SetZoneAnchor(Vector3 anchor) => zoneAnchor = anchor;
 
     void Update()
     {
@@ -104,7 +96,8 @@ public class DefenderAI : MonoBehaviour
                 break;
             case BallController.BallState.Loose:
                 ballInFlightTimer = 0f;
-                break; // hold position — loose-ball pursuit still deferred
+                // Hold position — pursuit-of-loose-ball is a separate, still-deferred system.
+                break;
         }
     }
 
@@ -115,7 +108,6 @@ public class DefenderAI : MonoBehaviour
         Vector3 roleMove = CurrentRole switch
         {
             Role.Cover => CalculateCoverMove(),
-            Role.Zone => CalculateZoneMove(carrier),
             Role.Contain => CalculateContainMove(carrier),
             _ => CalculateEngageMove(carrier)
         };
@@ -123,73 +115,41 @@ public class DefenderAI : MonoBehaviour
         transform.position += (roleMove + CalculateSeparation()) * Time.deltaTime;
     }
 
-    // A man defender on the ACTUAL intended receiver breaks on the ball, and so does a zone
-    // defender near the landing spot. Everyone else still gets a shot via BallController's
-    // OverlapSphere check on arrival, just without the head start — which is what keeps this
-    // from reading as the whole defense psychically converging on a live throw.
+    // The one genuinely new piece of gameplay: a Cover defender guarding the ACTUAL
+    // intended receiver breaks toward the landing spot instead of standing still while
+    // the ball sails past. Everyone else near the landing spot still gets a shot via
+    // BallController's own OverlapSphere check once it arrives — they just don't get
+    // the head start, which is what keeps this from reading as every defender on the
+    // field psychically converging on a live throw.
     void UpdateInFlightState(BallController ball)
     {
+        bool isTargetedDefender = coverTarget != null && ball.IntendedReceiver == coverTarget;
+        if (!isTargetedDefender || ballInFlightTimer < breakReactionDelay) return;
+
         Vector3 landing = ball.FlightTarget;
-
-        bool manBreak = coverTarget != null && ball.IntendedReceiver == coverTarget;
-        bool zoneBreak = CurrentRole == Role.Zone && Vector3.Distance(transform.position, landing) <= zoneBreakRadius;
-        if (!(manBreak || zoneBreak) || ballInFlightTimer < breakReactionDelay) return;
-
-        if (Vector3.Distance(transform.position, landing) <= stopDistance) return;
+        float distance = Vector3.Distance(transform.position, landing);
+        if (distance <= stopDistance) return;
 
         Vector3 direction = (landing - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
         transform.position += direction * (MoveSpeed * breakOnBallSpeedMult) * Time.deltaTime;
     }
 
-    Vector3 CalculateCoverMove() => coverTarget == null ? Vector3.zero : ShadowMove(coverTarget);
-
-    Vector3 CalculateZoneMove(Transform carrier)
+    Vector3 CalculateCoverMove()
     {
-        Transform threat = FindReceiverInZone();
-        if (threat != null) return ShadowMove(threat);
+        if (coverTarget == null) return Vector3.zero; // assignment lost mid-play — coordinator reassigns next snap
 
-        // Nobody in the zone: drop to the anchor, facing the ball (reads as a backpedal).
-        Vector3 toCarrier = carrier.position - transform.position;
-        toCarrier.y = 0f;
-        if (toCarrier.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(toCarrier.normalized);
-
-        float distance = Vector3.Distance(transform.position, zoneAnchor);
-        if (distance <= stopDistance) return Vector3.zero;
-        return (zoneAnchor - transform.position).normalized * MoveSpeed;
-    }
-
-    // Nearest eligible opposing receiver inside the zone. Anchor-relative, so the defender
-    // is naturally leashed to his zone instead of chasing a receiver across the field.
-    Transform FindReceiverInZone()
-    {
-        Transform best = null;
-        float bestDist = zoneReactRadius;
-
-        foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-        {
-            if (!TeamMember.AreOpponents(this, member)) continue;
-            if (!ReceiverTargeting.IsEligible(member.transform)) continue;
-
-            float dist = Vector3.Distance(zoneAnchor, member.transform.position);
-            if (dist < bestDist) { bestDist = dist; best = member.transform; }
-        }
-
-        return best;
-    }
-
-    // Shared by man and zone: sit a cushion toward our own goal from the target, facing them.
-    Vector3 ShadowMove(Transform target)
-    {
-        FieldDirection targetAttack = PlayState.Instance != null && target.TryGetComponent<TeamMember>(out var targetTeam)
-            ? PlayState.Instance.DirectionFor(targetTeam.teamId)
+        FieldDirection receiverAttack = PlayState.Instance != null && coverTarget.TryGetComponent<TeamMember>(out var wrTeam)
+            ? PlayState.Instance.DirectionFor(wrTeam.teamId)
             : FieldDirection.TowardPositiveZ;
 
-        Vector3 shadowPoint = target.position - targetAttack.Forward * coverCushion;
-        transform.rotation = Quaternion.LookRotation((target.position - transform.position).normalized);
+        Vector3 shadowPoint = coverTarget.position - receiverAttack.Forward * coverCushion;
+        float distance = Vector3.Distance(transform.position, shadowPoint);
+        if (distance <= stopDistance) return Vector3.zero;
 
-        if (Vector3.Distance(transform.position, shadowPoint) <= stopDistance) return Vector3.zero;
-        return (shadowPoint - transform.position).normalized * (MoveSpeed * coverCatchUpSpeedMult);
+        Vector3 direction = (shadowPoint - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation((coverTarget.position - transform.position).normalized);
+        return direction * (MoveSpeed * coverCatchUpSpeedMult);
     }
 
     Vector3 CalculateEngageMove(Transform target)
@@ -205,15 +165,18 @@ public class DefenderAI : MonoBehaviour
     Vector3 CalculateContainMove(Transform target)
     {
         float distanceToCarrier = Vector3.Distance(transform.position, target.position);
-        if (distanceToCarrier <= containBreakRadius) return CalculateEngageMove(target);
+
+        if (distanceToCarrier <= containBreakRadius)
+            return CalculateEngageMove(target);
 
         float losZ = PlayState.Instance != null ? PlayState.Instance.CurrentLineOfScrimmageZ : target.position.z;
         float holdZ = PlayState.Instance != null
             ? PlayState.Instance.ViewDirection.Advance(losZ, containLeadDistance)
             : losZ + containLeadDistance;
         Vector3 holdPosition = new(transform.position.x, transform.position.y, holdZ);
+        float distanceToHold = Vector3.Distance(transform.position, holdPosition);
 
-        if (Vector3.Distance(transform.position, holdPosition) <= stopDistance) return Vector3.zero;
+        if (distanceToHold <= stopDistance) return Vector3.zero;
 
         Vector3 direction = (holdPosition - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation((target.position - transform.position).normalized);

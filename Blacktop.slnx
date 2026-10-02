@@ -2,4 +2,5 @@
   <Project Path="Blacktop.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Blacktop.Editor.csproj" />
 </Solution>

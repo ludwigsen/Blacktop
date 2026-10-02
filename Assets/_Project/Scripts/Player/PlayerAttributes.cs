@@ -22,6 +22,28 @@ public class PlayerAttributes : ScriptableObject
     [Range(0, 20)] public int swagger = 10;
     [Range(0, 20)] public int routeRunning = 10;
 
+    // Runtime factory — builds a working PlayerAttributes instance from a data-only
+    // TeamRoster.PlayerRecord plus the one shared AttributeCurves asset. This is how
+    // stats reach a capsule WITHOUT a hand-authored PlayerAttributes .asset per player.
+    public static PlayerAttributes CreateFromRecord(TeamRoster.PlayerRecord record, AttributeCurves curves)
+    {
+        var attr = CreateInstance<PlayerAttributes>();
+        attr.curves = curves;
+        attr.passing = record.passing;
+        attr.speed = record.speed;
+        attr.blocking = record.blocking;
+        attr.agility = record.agility;
+        attr.catching = record.catching;
+        attr.runPower = record.runPower;
+        attr.carrying = record.carrying;
+        attr.tackling = record.tackling;
+        attr.coverage = record.coverage;
+        attr.dMoves = record.dMoves;
+        attr.swagger = record.swagger;
+        attr.routeRunning = record.routeRunning;
+        return attr;
+    }
+
     // Stack order: curve output (identity) + field additive% (environment, small &
     // bounded by design) -> combined, THEN x gamebreaker (temporary, multiplicative,
     // cleared on PlayState.OnPlayEnded per the Gamebreaker design note) -> hard clamp.

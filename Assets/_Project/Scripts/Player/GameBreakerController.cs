@@ -17,6 +17,7 @@ using UnityEngine.InputSystem;
 public class GamebreakerController : MonoBehaviour
 {
     [SerializeField] PlayerAttributes attributes;
+    public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
     [SerializeField] float basePointsPerSecond = 2.5f; // at neutral (10) Swagger — matches design spec
 
     InputSystem_Actions controls;
