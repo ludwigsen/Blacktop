@@ -1709,6 +1709,7 @@ GameObject:
   - component: {fileID: 1314477366}
   - component: {fileID: 1314477368}
   - component: {fileID: 1314477369}
+  - component: {fileID: 1314477370}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1730,7 +1731,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::PlayState
   startingPossessionTeamId: 0
   team0AttacksPositiveZ: 1
-  offenseSlotOrder: 010000000500000006000000020000000300000004000000
+  offenseSlotOrder: 01000000050000000600000002000000030000000400000000000000
   defenseSlotOrder: 05000000060000000000000001000000020000000300000004000000
   userTeamId: 0
   team1Identity: {fileID: 11400000, guid: 19a3b9c5ae226466ab5ba14090db2abe, type: 2}
@@ -1951,6 +1952,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8a19f601b45e4b348c1cd15ec5927ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::ScoreBoard
+--- !u!114 &1314477370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cfaf8d26966440f6aa95edb408988c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::TouchdownZone
+  fieldBounds: {fileID: 0}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0
