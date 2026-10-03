@@ -27,8 +27,13 @@ public class SidelineCheck : MonoBehaviour
             return;
         }
 
-        // Legacy fallback for scenes that have not yet added FieldBounds.
-        if (Mathf.Abs(ballPos.x) > FieldConstants.HalfWidth + FieldConstants.OutOfBoundsMargin)
+        // Legacy fallback for scenes that have not yet added FieldBounds. Both sidelines
+        // AND end lines are dead-ball boundaries; the old check only handled X, so an
+        // end-line exit could never end the play.
+        float xLimit = FieldConstants.HalfWidth + FieldConstants.OutOfBoundsMargin;
+        float zLimit = FieldConstants.PlayLength * 0.5f + FieldConstants.OutOfBoundsMargin;
+
+        if (Mathf.Abs(ballPos.x) > xLimit || Mathf.Abs(ballPos.z) > zLimit)
             PlayState.Instance.EndPlay(PlayState.PlayEndReason.OutOfBounds);
     }
 }
