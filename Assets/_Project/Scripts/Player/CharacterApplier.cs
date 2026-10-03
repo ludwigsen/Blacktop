@@ -54,6 +54,7 @@ public class CharacterApplier : MonoBehaviour
     {
         if (TryGetComponent<PlayerMovement>(out var movement)) movement.SetAttributes(attr);
         if (TryGetComponent<PlayerStateMachine>(out var stateMachine)) stateMachine.SetAttributes(attr);
+        if (TryGetComponent<ReceiverAI>(out var receiverAI)) receiverAI.SetAttributes(attr);
         if (TryGetComponent<DefenderAI>(out var defenderAI)) defenderAI.SetAttributes(attr);
         if (TryGetComponent<AllyBlocker>(out var blocker)) blocker.SetAttributes(attr);
         if (TryGetComponent<GamebreakerController>(out var gamebreaker)) gamebreaker.SetAttributes(attr);
