@@ -6,10 +6,13 @@ public class TackleContact : MonoBehaviour
 {
     [SerializeField] float contactRadius = 0.8f;
 
-    // Testing value — no ballSecurity-style attribute exists yet, so this is a flat
-    // base chance rather than attribute-scaled (mirrors StiffArmMove's baseShedChance
-    // pattern, minus the multiplier since there's nothing to multiply by yet).
-    [SerializeField] float baseFumbleChance = 0.5f;
+    // Neutral-vs-neutral contact produces baseFumbleChance * 0.5 because both
+    // Tackling and Carrying are 1.0 at rating 10. Higher Tackling raises the chance;
+    // higher Carrying lowers it. The clamp prevents extreme ratings from producing
+    // either an automatic fumble or an impossible one.
+    [SerializeField, Range(0f, 1f)] float baseFumbleChance = 0.5f;
+    [SerializeField, Range(0.01f, 1f)] float minFumbleChance = 0.05f;
+    [SerializeField, Range(0f, 1f)] float maxFumbleChance = 0.8f;
 
     PlayerStateMachine stateMachine;
     TeamMember teamMember;
@@ -52,7 +55,8 @@ public class TackleContact : MonoBehaviour
             if (BallController.Instance != null && BallController.Instance.IsHeld)
             {
                 bool guaranteed = PlayState.Instance.ConsumeGuaranteedTurnover();
-                if (guaranteed || Random.value < baseFumbleChance)
+                float fumbleChance = CalculateFumbleChance(hit.transform);
+                if (guaranteed || Random.value < fumbleChance)
                 {
                     BallController.Instance.Fumble(transform.position, hit.transform.position); // was: Drop()
                     PlayState.Instance.AddDefensePoints(8f);
@@ -67,6 +71,22 @@ public class TackleContact : MonoBehaviour
             PlayState.Instance.EndPlay(PlayState.PlayEndReason.Tackled);
             return;
         }
+    }
+
+    float CalculateFumbleChance(Transform tackler)
+    {
+        // Use the same runtime attributes that the rest of the player stack consumes.
+        // Tackling belongs to the tackler; Carrying belongs to the current carrier.
+        var carrierAttributes = stateMachine != null ? stateMachine.Attributes : null;
+        var tacklerState = tackler.GetComponent<PlayerStateMachine>();
+
+        float carrying = carrierAttributes != null ? carrierAttributes.Carrying() : 1f;
+        float tackling = tacklerState != null && tacklerState.Attributes != null
+            ? tacklerState.Attributes.Tackling()
+            : 1f;
+
+        float matchup = tackling / Mathf.Max(0.01f, carrying);
+        return Mathf.Clamp(baseFumbleChance * matchup, minFumbleChance, maxFumbleChance);
     }
 
     void OnDrawGizmosSelected()
