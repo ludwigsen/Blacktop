@@ -1822,7 +1822,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 37ee327a48b2c4d0a81dd15d7cb4c9af, type: 2}
   - {fileID: 11400000, guid: 61fe07e9002d64df9b2e581a54ed2e6e, type: 2}
   - {fileID: 11400000, guid: 71eb994fe649a436385577806f3af300, type: 2}
-  defensivePlays: []
+  defensivePlays:
+  - {fileID: 11400000, guid: b8f4d0c2e7a941b9a5e13d6c8427f301, type: 2}
+  - {fileID: 11400000, guid: 5d91c7a4f3b842e1a6c509d78b26f430, type: 2}
+  - {fileID: 11400000, guid: c2a76e8f194d43b5a61c7d90e832f154, type: 2}
   theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
   anchoredPosition: {x: 30, y: -30}
   fontSize: 26
