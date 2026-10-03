@@ -49,3 +49,88 @@ MonoBehaviour:
     dMoves: 1
     swagger: 16
     routeRunning: 9
+  - id: 5918034b-ec24-4afd-a1d6-30168e74ebaa
+    displayName: Andre Mitchell
+    jerseyNumber: 65
+    archetypeLabel: 
+    accentColor: {r: 0, g: 0, b: 0, a: 0}
+    passing: 2
+    speed: 2
+    blocking: 19
+    agility: 3
+    catching: 3
+    runPower: 13
+    carrying: 11
+    tackling: 13
+    coverage: 3
+    dMoves: 10
+    swagger: 8
+    routeRunning: 1
+  - id: efc16a80-61bb-4884-8c47-8526031333b5
+    displayName: Darius Cole
+    jerseyNumber: 99
+    archetypeLabel: 
+    accentColor: {r: 0, g: 0, b: 0, a: 0}
+    passing: 4
+    speed: 18
+    blocking: 10
+    agility: 19
+    catching: 14
+    runPower: 17
+    carrying: 20
+    tackling: 5
+    coverage: 3
+    dMoves: 1
+    swagger: 16
+    routeRunning: 9
+  - id: bb44b754-0cda-43db-b161-e9b9facf9ef8
+    displayName: Malik Turner
+    jerseyNumber: 15
+    archetypeLabel: 
+    accentColor: {r: 0, g: 0, b: 0, a: 0}
+    passing: 4
+    speed: 18
+    blocking: 10
+    agility: 19
+    catching: 14
+    runPower: 17
+    carrying: 20
+    tackling: 5
+    coverage: 3
+    dMoves: 1
+    swagger: 16
+    routeRunning: 9
+  - id: 05c35e3b-1ee5-4e22-aedc-e4ea8110b2e3
+    displayName: Devon Hayes
+    jerseyNumber: 88
+    archetypeLabel: 
+    accentColor: {r: 0, g: 0, b: 0, a: 0}
+    passing: 4
+    speed: 18
+    blocking: 10
+    agility: 19
+    catching: 14
+    runPower: 17
+    carrying: 20
+    tackling: 5
+    coverage: 3
+    dMoves: 1
+    swagger: 16
+    routeRunning: 9
+  - id: 6fa2b391-dd99-49ab-88f1-7f42396188e0
+    displayName: Isaiah Grant
+    jerseyNumber: 86
+    archetypeLabel: 
+    accentColor: {r: 0, g: 0, b: 0, a: 0}
+    passing: 4
+    speed: 18
+    blocking: 10
+    agility: 19
+    catching: 14
+    runPower: 17
+    carrying: 20
+    tackling: 5
+    coverage: 3
+    dMoves: 1
+    swagger: 16
+    routeRunning: 9
