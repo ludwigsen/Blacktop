@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayState : MonoBehaviour
 {
-    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, OutOfBounds, Safety }
+    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, Safety }
 
     public static PlayState Instance { get; private set; }
 
@@ -404,7 +404,7 @@ public class PlayState : MonoBehaviour
         // needs to be converted using the direction of whoever snaps NEXT.
         ResolvePossessionAtWhistle();
 
-        if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
+        if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception)
         {
             if (BallController.Instance != null)
             {
@@ -418,9 +418,7 @@ public class PlayState : MonoBehaviour
 
         if (reason == PlayEndReason.Touchdown)
         {
-            // The offense scored, then gives the ball up for the next drive.
-            // Keep the scoring team captured separately because PossessionTeamId
-            // changes before OnPlayEnded subscribers run.
+            // Capture the scorer BEFORE flipping possession for the next drive.
             LastScoringTeamId = offenseTeamIdThisPlay;
             AddPoints(offenseTeamIdThisPlay, 6f);
             EndGamebreaker(offenseTeamIdThisPlay);
@@ -428,7 +426,7 @@ public class PlayState : MonoBehaviour
         }
         else if (reason == PlayEndReason.Safety)
         {
-            // Safety: the defending team receives the next possession.
+            // The team that did NOT commit the safety scores and receives the next drive.
             LastScoringTeamId = OpponentOf(offenseTeamIdThisPlay);
             EndGamebreaker(offenseTeamIdThisPlay);
             TrySetPossession(OpponentOf(offenseTeamIdThisPlay));
