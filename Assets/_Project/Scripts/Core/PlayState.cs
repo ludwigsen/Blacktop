@@ -409,7 +409,16 @@ public class PlayState : MonoBehaviour
         {
             if (BallController.Instance != null)
             {
-                nextLineOfScrimmageZ = BallController.Instance.transform.position.z;
+                Vector3 spot = BallController.Instance.transform.position;
+
+                if (reason == PlayEndReason.OutOfBounds)
+                {
+                    var fieldBounds = FindAnyObjectByType<FieldBounds>();
+                    if (fieldBounds != null)
+                        spot = fieldBounds.GetClosestPlayablePoint(spot);
+                }
+
+                nextLineOfScrimmageZ = spot.z;
             }
         }
         else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
@@ -455,7 +464,7 @@ public class PlayState : MonoBehaviour
     public void BreakHuddle()
     {
         if (IsLive) return;
-        if (phase == HuddlePhase.GatheringToHuddle) return;
+        if (phase != HuddlePhase.InHuddle) return;
 
         StopAllCoroutines();
         StartCoroutine(BreakToFormationRoutine());
@@ -513,9 +522,7 @@ public class PlayState : MonoBehaviour
     {
         yield return new WaitForSeconds(3f);
 
-        phase = HuddlePhase.GatheringToHuddle;
         playClockTimer = playClockDuration;
-
         StartCoroutine(GatherToHuddleRoutine());
     }
 
