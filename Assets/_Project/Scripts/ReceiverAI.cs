@@ -17,7 +17,11 @@ public class ReceiverAI : MonoBehaviour
     // radius is actually reachable before the ball lands — a long-developing bomb
     // gives more real time to recover from a bad lead than a quick slant does).
     [SerializeField] float baseBallAdjustRadius = 2.5f;
-    [SerializeField] PlayerAttributes attributes;
+    PlayerAttributes attributes;
+
+    // CharacterApplier owns construction of the runtime PlayerAttributes instance.
+    // ReceiverAI consumes that same instance rather than keeping a stale prefab reference.
+    public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
 
     Vector3 snapPosition;
     Vector3 targetPosition;
