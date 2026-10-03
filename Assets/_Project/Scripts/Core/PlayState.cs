@@ -122,6 +122,11 @@ public class PlayState : MonoBehaviour
     public int PossessionTeamId { get; private set; }
     public int DefendingTeamId => OpponentOf(PossessionTeamId);
 
+    // Set during a scoring play before OnPlayEnded fires. ScoreBoard and other
+    // post-play observers can use this instead of inferring the scorer from the
+    // post-kickoff possession team.
+    public int? LastScoringTeamId { get; private set; }
+
     // The two-team assumption lives here and nowhere else.
     public static int OpponentOf(int teamId) => 1 - teamId;
 
@@ -393,6 +398,7 @@ public class PlayState : MonoBehaviour
         // is team-owned now, so "end the offense's run" has to mean the team that was
         // actually driving, not whoever PossessionTeamId says AFTER the flip.
         int offenseTeamIdThisPlay = PossessionTeamId;
+        LastScoringTeamId = null;
 
         // Possession first — the kickoff-reset LOS below is authored in axis space and
         // needs to be converted using the direction of whoever snaps NEXT.
@@ -412,10 +418,22 @@ public class PlayState : MonoBehaviour
 
         if (reason == PlayEndReason.Touchdown)
         {
-            AddPoints(offenseTeamIdThisPlay, 10f);
+            // The offense scored, then gives the ball up for the next drive.
+            // Keep the scoring team captured separately because PossessionTeamId
+            // changes before OnPlayEnded subscribers run.
+            LastScoringTeamId = offenseTeamIdThisPlay;
+            AddPoints(offenseTeamIdThisPlay, 6f);
             EndGamebreaker(offenseTeamIdThisPlay);
+            TrySetPossession(OpponentOf(offenseTeamIdThisPlay));
         }
-        else if (reason == PlayEndReason.Interception || reason == PlayEndReason.Safety)
+        else if (reason == PlayEndReason.Safety)
+        {
+            // Safety: the defending team receives the next possession.
+            LastScoringTeamId = OpponentOf(offenseTeamIdThisPlay);
+            EndGamebreaker(offenseTeamIdThisPlay);
+            TrySetPossession(OpponentOf(offenseTeamIdThisPlay));
+        }
+        else if (reason == PlayEndReason.Interception)
         {
             EndGamebreaker(offenseTeamIdThisPlay);
         }
