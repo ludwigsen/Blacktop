@@ -400,9 +400,10 @@ public class PlayState : MonoBehaviour
         int offenseTeamIdThisPlay = PossessionTeamId;
         LastScoringTeamId = null;
 
-        // Possession first — the kickoff-reset LOS below is authored in axis space and
-        // needs to be converted using the direction of whoever snaps NEXT.
-        ResolvePossessionAtWhistle();
+        // Non-scoring plays resolve possession before downstream observers run.
+        // Scoring plays are handled below because the scorer must be captured first.
+        if (reason != PlayEndReason.Touchdown && reason != PlayEndReason.Safety)
+            ResolvePossessionAtWhistle();
 
         if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception)
         {
@@ -413,7 +414,9 @@ public class PlayState : MonoBehaviour
         }
         else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
         {
-            nextLineOfScrimmageZ = AttackDirection.FromAxis(kickoffResetZ);
+            // Score first, then possession flips below. The next drive's kickoff
+            // position must be interpreted in the NEXT team's attack direction.
+            nextLineOfScrimmageZ = DirectionFor(OpponentOf(offenseTeamIdThisPlay)).FromAxis(kickoffResetZ);
         }
 
         if (reason == PlayEndReason.Touchdown)
