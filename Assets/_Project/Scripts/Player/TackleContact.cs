@@ -43,7 +43,8 @@ public class TackleContact : MonoBehaviour
             // Anyone on a different team can tackle you — this is what makes tackling
             // work regardless of which side is currently on offense, instead of only
             // ever recognizing a hardcoded "Defender" tag.
-            if (!hit.TryGetComponent<TeamMember>(out var otherTeam)) continue;
+            var otherTeam = hit.GetComponentInParent<TeamMember>();
+            if (otherTeam == null) continue;
             if (otherTeam.teamId == teamMember.teamId) continue;
 
             // Sack — specifically the designated passer, tackled behind the current LOS,
