@@ -149,7 +149,7 @@ public class PlayCallSelector : MonoBehaviour
         listText.fontSize = fontSize;
         listText.fontStyle = FontStyles.Bold;
         listText.alignment = TextAlignmentOptions.TopLeft;
-        listText.enableWordWrapping = false;
+        listText.textWrappingMode = TextWrappingModes.NoWrap;;
         listText.overflowMode = TextOverflowModes.Overflow;
 
         var rt = textGO.GetComponent<RectTransform>();

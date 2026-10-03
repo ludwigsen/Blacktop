@@ -376,7 +376,7 @@ public class BallController : MonoBehaviour
 
     // Polled via OverlapSphere, same pattern as TackleContact/StiffArmMove — no
     // Rigidbody/trigger-callback reliance anywhere in this project. Recovery is
-    // deterministic: nearest eligible player wins, with instance ID breaking exact ties.
+    // deterministic: nearest eligible player wins, with entity ID breaking exact ties.
     // This prevents the physics engine's collider ordering from deciding possession.
     void CheckRecovery()
     {
@@ -384,21 +384,21 @@ public class BallController : MonoBehaviour
 
         Transform best = null;
         float bestDistanceSqr = float.PositiveInfinity;
-        int bestInstanceId = int.MaxValue;
+        EntityId bestEntityId = default;
 
         foreach (var hit in hits)
         {
             if (!hit.TryGetComponent<TeamMember>(out _)) continue;
 
             float distanceSqr = (hit.transform.position - transform.position).sqrMagnitude;
-            int instanceId = hit.transform.GetInstanceID();
+            EntityId entityId = hit.transform.GetEntityId();
 
             if (distanceSqr < bestDistanceSqr ||
-                (Mathf.Approximately(distanceSqr, bestDistanceSqr) && instanceId < bestInstanceId))
+                (Mathf.Approximately(distanceSqr, bestDistanceSqr) && entityId.CompareTo(bestEntityId) < 0))
             {
                 best = hit.transform;
                 bestDistanceSqr = distanceSqr;
-                bestInstanceId = instanceId;
+                bestEntityId = entityId;
             }
         }
 
