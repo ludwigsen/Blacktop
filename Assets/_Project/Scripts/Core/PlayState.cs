@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayState : MonoBehaviour
 {
-    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, Safety }
+    public enum PlayEndReason { Tackled, Touchdown, Interception, Incomplete, OutOfBounds, Safety }
 
     public static PlayState Instance { get; private set; }
 
@@ -405,7 +405,7 @@ public class PlayState : MonoBehaviour
         if (reason != PlayEndReason.Touchdown && reason != PlayEndReason.Safety)
             ResolvePossessionAtWhistle();
 
-        if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception)
+        if (reason == PlayEndReason.Tackled || reason == PlayEndReason.Interception || reason == PlayEndReason.OutOfBounds)
         {
             if (BallController.Instance != null)
             {
