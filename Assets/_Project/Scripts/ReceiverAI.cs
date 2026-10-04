@@ -94,6 +94,15 @@ public class ReceiverAI : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
+        // A fumble/loose ball is no longer a route problem. AllyBlocker owns offensive
+        // skill-position movement during the scrum; returning here prevents this component
+        // from fighting it for the same transform for a frame.
+        if (BallController.Instance != null && BallController.Instance.State == BallController.BallState.Loose)
+        {
+            routeComplete = true;
+            return;
+        }
+
         // Pass-play rule: the route is over the moment a teammate carrying the ball is past
         // the LOS. From here AllyBlocker owns this transform (BlockingCoordinator makes skill
         // players eligible on the same condition).
