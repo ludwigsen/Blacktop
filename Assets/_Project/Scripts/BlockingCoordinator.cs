@@ -75,6 +75,11 @@ public class BlockingCoordinator : MonoBehaviour
         var playCall = PlayState.Instance != null ? PlayState.Instance.CurrentPlayCall : null;
         Vector3 ballPos = BallController.Instance.transform.position;
 
+        // Pass-play rule: skill players block once a ball carrier is past the LOS (QB scramble
+        // or a catch-and-run). Resolved live from the actual carrier, same as ViewDirection.
+        bool carrierPastLOS = PlayState.Instance != null
+            && PlayState.Instance.IsCarrierPastLineOfScrimmage(carrier.position.z);
+
         var defendersByBallDistance = new List<Transform>();
         foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
@@ -97,7 +102,13 @@ public class BlockingCoordinator : MonoBehaviour
         foreach (var blocker in blockers)
         {
             if (blocker.IsCarrier) continue; // the carrier is never a blocker, full stop
-            if (!IsEligibleBlocker(blocker, playCall)) { blocker.SetBlockingTarget(null); continue; }
+            // After a turnover the old offense is the carrier's OPPONENT — it must not "block"
+            // its own teammates. Only players on the carrier's team can be blockers.
+            if (!IsOnTeam(blocker, carrierTeam.teamId) || !IsEligibleBlocker(blocker, playCall, carrierPastLOS))
+            {
+                blocker.SetBlockingTarget(null);
+                continue;
+            }
 
             Transform current = blocker.GetCurrentTarget();
             if (current == null) continue;
@@ -120,7 +131,7 @@ public class BlockingCoordinator : MonoBehaviour
         foreach (var blocker in blockers)
         {
             if (blocker.IsCarrier) continue;
-            if (!IsEligibleBlocker(blocker, playCall)) continue; // already cleared in Pass 1
+            if (!IsOnTeam(blocker, carrierTeam.teamId) || !IsEligibleBlocker(blocker, playCall, carrierPastLOS)) continue; // already cleared in Pass 1
             if (blocker.GetCurrentTarget() != null) continue;
 
             Transform best = FindBestAvailableDefender(blocker, defendersByBallDistance);
@@ -132,11 +143,16 @@ public class BlockingCoordinator : MonoBehaviour
         }
     }
 
-    // OL blocks on every play, unconditionally, from the snap. Skill positions
-    // (WR/RB) only block on designed run plays, and never the player who's about to
-    // receive (or already received) the handoff — that player is running the ball or
-    // autopathing to get it, not blocking for someone else.
-    static bool IsEligibleBlocker(AllyBlocker blocker, PlayCallData playCall)
+    static bool IsOnTeam(AllyBlocker blocker, int teamId)
+        => blocker.TryGetComponent<TeamMember>(out var m) && m.teamId == teamId;
+
+    // OL blocks on every play, unconditionally, from the snap. Skill positions (WR/RB):
+    //   Run  — block from the snap, except the handoff receiver (he's taking the ball).
+    //   Pass — run the route (ReceiverAI) and only block once a ball carrier is past the LOS.
+    //          ReceiverAI ends the route on that same condition, and AllyBlocker waits on
+    //          RouteComplete, so the two never drive the transform at once.
+    //   Trick — falls under the Pass rules until trick plays get their own pass.
+    static bool IsEligibleBlocker(AllyBlocker blocker, PlayCallData playCall, bool carrierPastLOS)
     {
         if (!blocker.TryGetComponent<TeamMember>(out var member)) return false;
 
@@ -144,11 +160,9 @@ public class BlockingCoordinator : MonoBehaviour
             return true;
 
         bool isRunPlay = playCall != null && playCall.PlayType == PlayType.Run;
-        if (!isRunPlay) return false;
+        if (isRunPlay) return playCall.HandoffReceiverSlot != member.slot;
 
-        if (playCall.HandoffReceiverSlot == member.slot) return false;
-
-        return true;
+        return carrierPastLOS;
     }
 
     Transform FindBestAvailableDefender(AllyBlocker blocker, List<Transform> defendersByBallDistance)

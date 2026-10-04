@@ -96,6 +96,12 @@ public class DefenderAI : MonoBehaviour
         var ball = BallController.Instance;
         if (ball == null) return;
 
+        // Both-ways roster: every player carries DefenderAI, but only the team that does NOT
+        // have the ball may run it. Without this gate the offense's copy (default role Engage)
+        // walked every teammate toward their own ball carrier while ReceiverAI/AllyBlocker
+        // moved the same transform — the route-vs-block "conflict".
+        if (!IsDefendingBall(ball)) return;
+
         switch (ball.State)
         {
             case BallController.BallState.Held:
@@ -109,6 +115,32 @@ public class DefenderAI : MonoBehaviour
             case BallController.BallState.Loose:
                 ballInFlightTimer = 0f;
                 break; // hold position — loose-ball pursuit still deferred
+        }
+    }
+
+    // Resolved live from the ball, never cached (project rule). Held: anyone not on the
+    // carrier's team defends. InFlight: the offense is the intended receiver's team (falls
+    // back to PossessionTeamId for a pop/fumble flight with no receiver). Loose: nobody acts
+    // anyway, so return true and let the Loose case hold position.
+    bool IsDefendingBall(BallController ball)
+    {
+        if (teamMember == null) return true;
+
+        switch (ball.State)
+        {
+            case BallController.BallState.Held:
+                return ball.Carrier == null
+                    || !ball.Carrier.TryGetComponent<TeamMember>(out var holder)
+                    || holder.teamId != teamMember.teamId;
+
+            case BallController.BallState.InFlight:
+                int offenseTeam = ball.IntendedReceiver != null && ball.IntendedReceiver.TryGetComponent<TeamMember>(out var receiver)
+                    ? receiver.teamId
+                    : (PlayState.Instance != null ? PlayState.Instance.PossessionTeamId : -1);
+                return teamMember.teamId != offenseTeam;
+
+            default:
+                return true;
         }
     }
 

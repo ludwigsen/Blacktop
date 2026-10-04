@@ -339,6 +339,13 @@ public class PlayState : MonoBehaviour
         Instance = this;
         controls = new InputSystem_Actions();
 
+        // Out-of-bounds ruling needs a SidelineCheck in the scene, and SampleScene never had
+        // one (so nothing ever ended a play at the sideline). Self-wire it here so the scene
+        // can't silently lose OOB again. If you add your own SidelineCheck (e.g. with a
+        // FieldBounds assigned), this is skipped.
+        if (FindAnyObjectByType<SidelineCheck>() == null)
+            gameObject.AddComponent<SidelineCheck>();
+
         PossessionTeamId = startingPossessionTeamId;
         RefreshRosters();
 
@@ -463,7 +470,16 @@ public class PlayState : MonoBehaviour
         {
             var fieldBounds = FindAnyObjectByType<FieldBounds>();
             if (fieldBounds != null)
+            {
                 spot = fieldBounds.GetClosestPlayablePoint(spot);
+            }
+            else
+            {
+                // No FieldBounds in the scene: clamp to the 60u playable length ourselves so
+                // a ball carried out the back of an end zone doesn't spot past the end line.
+                float halfLength = FieldConstants.PlayLength * 0.5f;
+                spot.z = Mathf.Clamp(spot.z, -halfLength, halfLength);
+            }
         }
 
         return spot;
@@ -722,6 +738,13 @@ public class PlayState : MonoBehaviour
         // both — WRs ran 12 units downfield before AllyBlocker's RouteComplete gate let them
         // block, and the RB got pulled upfield and toward the QB in the same frame.
         bool isRunPlay = playCall != null && playCall.PlayType == PlayType.Run;
+
+        // Anyone on the defense who used to be offense must not keep last drive's route.
+        foreach (var t in defensePlayers)
+        {
+            if (t != null && t.TryGetComponent<ReceiverAI>(out var formerReceiver))
+                formerReceiver.SetRoute(RoutePattern.None);
+        }
 
         for (int i = 0; i < offensePlayers.Count; i++)
         {
