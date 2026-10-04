@@ -388,15 +388,20 @@ public class BallController : MonoBehaviour
 
         foreach (var hit in hits)
         {
-            if (!hit.TryGetComponent<TeamMember>(out _)) continue;
+            // Resolve the player from the collider (not the collider itself). This keeps
+            // multi-collider player rigs from producing child-transform carriers and makes
+            // the candidate set "players", not "colliders".
+            var member = hit.GetComponentInParent<TeamMember>();
+            if (member == null) continue;
 
-            float distanceSqr = (hit.transform.position - transform.position).sqrMagnitude;
-            EntityId entityId = hit.transform.GetEntityId();
+            Transform candidate = member.transform;
+            float distanceSqr = (candidate.position - transform.position).sqrMagnitude;
+            EntityId entityId = candidate.GetEntityId();
 
             if (distanceSqr < bestDistanceSqr ||
                 (Mathf.Approximately(distanceSqr, bestDistanceSqr) && entityId.CompareTo(bestEntityId) < 0))
             {
-                best = hit.transform;
+                best = candidate;
                 bestDistanceSqr = distanceSqr;
                 bestEntityId = entityId;
             }
