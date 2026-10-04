@@ -1731,7 +1731,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::PlayState
   startingPossessionTeamId: 0
   team0AttacksPositiveZ: 1
-  offenseSlotOrder: 01000000050000000600000002000000030000000400000000000000
+  offenseSlotOrder: 010000000500000006000000020000000300000004000000
   defenseSlotOrder: 05000000060000000000000001000000020000000300000004000000
   userTeamId: 0
   team1Identity: {fileID: 11400000, guid: 19a3b9c5ae226466ab5ba14090db2abe, type: 2}
@@ -1911,7 +1911,7 @@ MonoBehaviour:
   horizontalMargin: 0.05
   heightPercent: 0.1
   teamPanelWidth: 0.45
-  team1PanelBackground: {fileID: 21300000, guid: 424e0f112910e43318cda21c1d24e79c, type: 3}
+  team1PanelBackground: {fileID: 21300000, guid: 1df3f1918c9094b7294ce86d246644ee, type: 3}
   team2PanelBackground: {fileID: 0}
   teamNameFontSize: 22
   scoreFontSize: 30
