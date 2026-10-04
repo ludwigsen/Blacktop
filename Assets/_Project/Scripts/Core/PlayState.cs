@@ -50,8 +50,10 @@ public class PlayState : MonoBehaviour
     [SerializeField] TeamIdentity team2Identity;
 
     [Header("Field Position (authored in attack-axis space: negative = own side of midfield)")]
-    [SerializeField] float initialPlayerZ = -5f;
-    [SerializeField] float kickoffResetZ = -5f;
+    [Tooltip("Where the first drive's line of scrimmage sits, in the attacking team's own axis. -10 = Team 1 at world -10, Team 2 at world +10.")]
+    [SerializeField] float initialPlayerZ = -10f;
+    [Tooltip("Where a drive starts after a score or a touchback. Same axis rules as above: -10 / +10 in world space.")]
+    [SerializeField] float kickoffResetZ = -10f;
 
     [Header("Formations (side-based defaults — apply to whichever team is on that side of the ball)")]
     [SerializeField] FormationData defaultDefensiveFormation;
@@ -391,6 +393,10 @@ public class PlayState : MonoBehaviour
     {
         if (!IsLive) return;
         IsLive = false;
+
+        // Safety is decided by HOW the play ended, not by the ball touching an end zone.
+        // Must run before ResolvePossessionAtWhistle can flip PossessionTeamId.
+        reason = PromoteToSafety(reason);
         lastEndReason = reason;
 
         // Capture who was ACTUALLY on offense this play before ResolvePossessionAtWhistle
@@ -409,16 +415,9 @@ public class PlayState : MonoBehaviour
         {
             if (BallController.Instance != null)
             {
-                Vector3 spot = BallController.Instance.transform.position;
-
-                if (reason == PlayEndReason.OutOfBounds)
-                {
-                    var fieldBounds = FindAnyObjectByType<FieldBounds>();
-                    if (fieldBounds != null)
-                        spot = fieldBounds.GetClosestPlayablePoint(spot);
-                }
-
-                nextLineOfScrimmageZ = spot.z;
+                // Possession is already resolved above, so AttackDirection is the NEXT
+                // offense's direction — which is what the drive-start clamp needs.
+                nextLineOfScrimmageZ = ConstrainDriveStart(GetWhistleSpot(reason).z);
             }
         }
         else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
@@ -452,6 +451,59 @@ public class PlayState : MonoBehaviour
 
         StopAllCoroutines();
         StartCoroutine(RegularPlayEndDelay());
+    }
+
+    // Where the ball is when the whistle blows. Out-of-bounds spots snap to the nearest
+    // playable point so a wall-margin overshoot doesn't read as past the end line.
+    Vector3 GetWhistleSpot(PlayEndReason reason)
+    {
+        Vector3 spot = BallController.Instance.transform.position;
+
+        if (reason == PlayEndReason.OutOfBounds)
+        {
+            var fieldBounds = FindAnyObjectByType<FieldBounds>();
+            if (fieldBounds != null)
+                spot = fieldBounds.GetClosestPlayablePoint(spot);
+        }
+
+        return spot;
+    }
+
+    // A safety only happens when the play ENDS (tackle or out of bounds) with the offense's
+    // own ball carrier inside the offense's OWN end zone. The ball merely entering that end
+    // zone (QB drops back, pass flies through, incomplete lands there) is not a safety.
+    // Only the team that ran the play can concede one: if the defense picked it off in its
+    // own end zone and gets tackled there, that's a touchback (see ConstrainDriveStart),
+    // not two points for the offense.
+    PlayEndReason PromoteToSafety(PlayEndReason reason)
+    {
+        if (reason != PlayEndReason.Tackled && reason != PlayEndReason.OutOfBounds) return reason;
+
+        var ball = BallController.Instance;
+        if (ball == null || !ball.IsHeld || ball.Carrier == null) return reason;
+        if (!ball.Carrier.TryGetComponent<TeamMember>(out var holder)) return reason;
+        if (holder.teamId != PossessionTeamId) return reason; // PossessionTeamId hasn't flipped yet — still the offense of this play
+
+        bool inOwnEndZone = DirectionFor(PossessionTeamId).IsInOwnEndZone(GetWhistleSpot(reason).z);
+        return inOwnEndZone ? PlayEndReason.Safety : reason;
+    }
+
+    // A drive can never start inside an end zone. Anything that would (interception or
+    // fumble return whistled in the new offense's own end zone, OOB out the back) becomes a
+    // touchback at kickoffResetZ — i.e. -10 for the team attacking +Z, +10 for the other.
+    // Call AFTER possession has been resolved so AttackDirection is the new offense's.
+    float ConstrainDriveStart(float spotZ)
+    {
+        FieldDirection dir = AttackDirection;
+
+        if (dir.IsInOwnEndZone(spotZ))
+            return dir.FromAxis(kickoffResetZ);
+
+        // Net only — a ball in the target end zone should already have been a Touchdown.
+        if (dir.IsInTargetEndZone(spotZ))
+            return dir.FromAxis(FieldConstants.FarGoalLineZ - 1f);
+
+        return spotZ;
     }
 
     // Fumble drop happens mid-play, before any possession flip — PossessionTeamId is
@@ -665,6 +717,12 @@ public class PlayState : MonoBehaviour
 
     void AssignRoutes()
     {
+        // On a designed run, skill players don't run routes: they block (BlockingCoordinator)
+        // or take the handoff (HandoffCoordinator). Giving them a route made ReceiverAI fight
+        // both — WRs ran 12 units downfield before AllyBlocker's RouteComplete gate let them
+        // block, and the RB got pulled upfield and toward the QB in the same frame.
+        bool isRunPlay = playCall != null && playCall.PlayType == PlayType.Run;
+
         for (int i = 0; i < offensePlayers.Count; i++)
         {
             Transform playerTransform = offensePlayers[i];
@@ -673,9 +731,9 @@ public class PlayState : MonoBehaviour
             ReceiverAI receiver = playerTransform.GetComponent<ReceiverAI>();
             if (receiver == null) continue;
 
-            RoutePattern route = playCall != null
-                ? playCall.GetRouteForReceiver(i)
-                : RoutePattern.Go;
+            RoutePattern route = isRunPlay
+                ? RoutePattern.None
+                : (playCall != null ? playCall.GetRouteForReceiver(i) : RoutePattern.Go);
             receiver.SetRoute(route); // None now means "stay and block," not "silently became Go"
         }
     }

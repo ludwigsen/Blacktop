@@ -49,13 +49,13 @@ public class ScoreBoard : MonoBehaviour
 
         var ps = PlayState.Instance;
 
-        // Touchdown: PossessionTeamId is whoever just carried it in — credit them.
-        // Safety: PossessionTeamId is whoever was tackled in THEIR OWN end zone — the
-        // points go to the OTHER team, not them. This is the one branch that can't
-        // just reuse PossessionTeamId directly.
-        int scoringTeam = reason == PlayState.PlayEndReason.Touchdown
-            ? ps.PossessionTeamId
-            : PlayState.OpponentOf(ps.PossessionTeamId);
+        // PlayState flips possession to the receiving team BEFORE OnPlayEnded fires, so
+        // PossessionTeamId is the team that now has the ball, not the scorer. Use the scorer
+        // PlayState captured (LastScoringTeamId); the old inference credited the wrong team.
+        int scoringTeam = ps.LastScoringTeamId
+            ?? (reason == PlayState.PlayEndReason.Touchdown
+                ? ps.PossessionTeamId
+                : PlayState.OpponentOf(ps.PossessionTeamId));
 
         int points = reason == PlayState.PlayEndReason.Touchdown ? TouchdownPoints : SafetyPoints;
         Add(scoringTeam, points);

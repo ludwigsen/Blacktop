@@ -47,10 +47,11 @@ public class ReceiverAI : MonoBehaviour
 
     void HandleReset()
     {
+        // Fires at the snap, AFTER PlayState.AssignRoutes already ran at the line. Keep the
+        // assigned route and just re-anchor it to the final snap spot. The old version reset
+        // assignedRoute to None here, wiping every route the instant the ball was snapped.
         snapPosition = transform.position;
-        targetPosition = snapPosition;
-        routeComplete = false;
-        assignedRoute = RoutePattern.None;
+        CalculateTargetPosition();
     }
 
     // Called by PlayState when distributing routes
@@ -92,6 +93,10 @@ public class ReceiverAI : MonoBehaviour
                 targetPosition = snapPosition; // stay at snap point
                 break;
         }
+
+        // A route-less player is "done" immediately, so AllyBlocker (which waits on
+        // RouteComplete) can take over from the first live frame instead of a frame late.
+        routeComplete = assignedRoute == RoutePattern.None;
     }
 
     void Update()
