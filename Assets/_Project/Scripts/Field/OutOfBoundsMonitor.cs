@@ -43,12 +43,24 @@ public sealed class OutOfBoundsMonitor : MonoBehaviour
         Evaluate();
     }
 
-    /// <summary>Evaluates immediately. Useful after teleporting a tracked object.</summary>
     public void Evaluate()
     {
-        if (fieldBounds == null || trackedTransform == null) return;
+        if (fieldBounds == null || trackedTransform == null)
+            return;
 
-        FieldBoundsState nextState = fieldBounds.GetState(trackedTransform.position);
+        Vector3 position = trackedTransform.position;
+
+        FieldBoundsState nextState = fieldBounds.GetState(position);
+
+        // A physical wall can temporarily place the tracked object beyond the
+        // legal rectangle while physics resolves the collision. Treat that as
+        // contained rather than genuinely OOB.
+        if (nextState == FieldBoundsState.OutOfBounds &&
+            fieldBounds.IsWallContained(position))
+        {
+            nextState = FieldBoundsState.InPlay;
+        }
+
         if (!hasInitialState)
         {
             CurrentState = nextState;
@@ -56,18 +68,28 @@ public sealed class OutOfBoundsMonitor : MonoBehaviour
             return;
         }
 
-        if (nextState == CurrentState) return;
+        if (nextState == CurrentState)
+            return;
 
         FieldBoundsState previousState = CurrentState;
         CurrentState = nextState;
 
-        if (previousState == FieldBoundsState.InSafetyBand && nextState != FieldBoundsState.InSafetyBand)
+        if (previousState == FieldBoundsState.InSafetyBand &&
+            nextState != FieldBoundsState.InSafetyBand)
+        {
             ExitedSafetyBand?.Invoke(this);
+        }
 
-        if (previousState != FieldBoundsState.InSafetyBand && nextState == FieldBoundsState.InSafetyBand)
+        if (previousState != FieldBoundsState.InSafetyBand &&
+            nextState == FieldBoundsState.InSafetyBand)
+        {
             EnteredSafetyBand?.Invoke(this);
+        }
 
-        if (previousState != FieldBoundsState.OutOfBounds && nextState == FieldBoundsState.OutOfBounds)
+        if (previousState != FieldBoundsState.OutOfBounds &&
+            nextState == FieldBoundsState.OutOfBounds)
+        {
             CrossedOuterBoundary?.Invoke(this);
+        }
     }
 }

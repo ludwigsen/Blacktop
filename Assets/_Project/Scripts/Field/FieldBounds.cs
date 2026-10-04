@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// Identifies the edge crossed when a position is outside the playable rectangle.
@@ -64,6 +65,10 @@ public sealed class FieldBounds : MonoBehaviour
     public float NearGoalLineLocalZ => -HalfPlayableLength + endZoneDepth;
     public float FarGoalLineLocalZ => HalfPlayableLength - endZoneDepth;
 
+    readonly List<FieldBoundaryWall> boundaryWalls = new();
+
+    public IReadOnlyList<FieldBoundaryWall> BoundaryWalls => boundaryWalls;
+
     /// <summary>Converts a world position to this field's local coordinate space.</summary>
     public Vector3 WorldToFieldLocal(Vector3 worldPosition) => transform.InverseTransformPoint(worldPosition);
 
@@ -109,6 +114,21 @@ public sealed class FieldBounds : MonoBehaviour
         return IsInsideSafetyLocal(localPosition)
             ? FieldBoundsState.InSafetyBand
             : FieldBoundsState.OutOfBounds;
+    }
+
+    public void RegisterBoundaryWall(FieldBoundaryWall wall)
+    {
+        if (wall == null) return;
+        if (boundaryWalls.Contains(wall)) return;
+
+        boundaryWalls.Add(wall);
+    }
+
+    public void UnregisterBoundaryWall(FieldBoundaryWall wall)
+    {
+        if (wall == null) return;
+
+        boundaryWalls.Remove(wall);
     }
 
     /// <summary>
@@ -202,5 +222,53 @@ public sealed class FieldBounds : MonoBehaviour
     {
         Gizmos.color = color;
         Gizmos.DrawLine(from, to);
+    }
+
+    /// <summary>
+    /// Returns true when a position that has crossed a field boundary is
+    /// physically contained by a wall covering that portion of the boundary.
+    ///
+    /// The wall's collider determines the covered region, which means partial
+    /// walls and gaps are supported naturally.
+    /// </summary>
+    public bool IsContainedByBoundaryWall(
+        Vector3 worldPosition,
+        FieldBoundarySide boundarySide)
+    {
+        if (boundarySide == FieldBoundarySide.None)
+            return false;
+
+        for (int i = boundaryWalls.Count - 1; i >= 0; i--)
+        {
+            FieldBoundaryWall wall = boundaryWalls[i];
+
+            if (wall == null)
+            {
+                boundaryWalls.RemoveAt(i);
+                continue;
+            }
+
+            if (wall.BoundarySide != boundarySide)
+                continue;
+
+            if (wall.ContainsBoundaryCrossing(worldPosition))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Determines whether a position outside the legal field should still be
+    /// treated as contained by a physical boundary wall.
+    /// </summary>
+    public bool IsWallContained(Vector3 worldPosition)
+    {
+        FieldBoundarySide side = GetOutOfBoundsDirection(worldPosition);
+
+        if (side == FieldBoundarySide.None)
+            return false;
+
+        return IsContainedByBoundaryWall(worldPosition, side);
     }
 }

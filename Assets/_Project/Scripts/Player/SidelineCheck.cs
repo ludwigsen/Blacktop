@@ -1,8 +1,15 @@
 using UnityEngine;
 
-// Dead-ball check against the shared FieldBounds definition. The ball is the ruling point:
-// player feet are irrelevant once the ball leaves the field. FieldBounds is authoritative
-// for both sideline and end-line geometry.
+/// <summary>
+/// Dead-ball check against the shared FieldBounds definition.
+///
+/// FieldBounds determines the legal field.
+/// FieldBoundaryWall determines whether a boundary crossing is physically
+/// enclosed by a wall.
+///
+/// The ball remains the ruling point for OOB — player position is irrelevant
+/// once the ball itself has left the playable area.
+/// </summary>
 public class SidelineCheck : MonoBehaviour
 {
     [SerializeField] FieldBounds fieldBounds;
@@ -15,25 +22,54 @@ public class SidelineCheck : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance == null || !PlayState.Instance.IsLive) return;
-        if (BallController.Instance == null) return;
+        if (PlayState.Instance == null || !PlayState.Instance.IsLive)
+            return;
+
+        if (BallController.Instance == null)
+            return;
 
         Vector3 ballPos = BallController.Instance.transform.position;
 
         if (fieldBounds != null)
         {
-            if (fieldBounds.GetState(ballPos) == FieldBoundsState.OutOfBounds)
-                PlayState.Instance.EndPlay(PlayState.PlayEndReason.OutOfBounds);
+            EvaluateFieldBounds(ballPos);
             return;
         }
 
-        // Legacy fallback for scenes that have not yet added FieldBounds. Both sidelines
-        // AND end lines are dead-ball boundaries; the old check only handled X, so an
-        // end-line exit could never end the play.
-        float xLimit = FieldConstants.HalfWidth + FieldConstants.OutOfBoundsMargin;
-        float zLimit = FieldConstants.PlayLength * 0.5f + FieldConstants.OutOfBoundsMargin;
+        EvaluateLegacyBounds(ballPos);
+    }
 
-        if (Mathf.Abs(ballPos.x) > xLimit || Mathf.Abs(ballPos.z) > zLimit)
-            PlayState.Instance.EndPlay(PlayState.PlayEndReason.OutOfBounds);
+    void EvaluateFieldBounds(Vector3 ballPos)
+    {
+        FieldBoundsState state = fieldBounds.GetState(ballPos);
+
+        if (state != FieldBoundsState.OutOfBounds)
+            return;
+
+        // The ball crossed a legal boundary, but that boundary may be enclosed
+        // by a physical wall. If so, let physics continue the play.
+        if (fieldBounds.IsWallContained(ballPos))
+            return;
+
+        PlayState.Instance.EndPlay(
+            PlayState.PlayEndReason.OutOfBounds);
+    }
+
+    void EvaluateLegacyBounds(Vector3 ballPos)
+    {
+        float xLimit =
+            FieldConstants.HalfWidth +
+            FieldConstants.OutOfBoundsMargin;
+
+        float zLimit =
+            FieldConstants.PlayLength * 0.5f +
+            FieldConstants.OutOfBoundsMargin;
+
+        if (Mathf.Abs(ballPos.x) > xLimit ||
+            Mathf.Abs(ballPos.z) > zLimit)
+        {
+            PlayState.Instance.EndPlay(
+                PlayState.PlayEndReason.OutOfBounds);
+        }
     }
 }
