@@ -23,6 +23,10 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float separationRadius = 1.2f;
     [SerializeField] float separationStrength = 3f;
 
+    [Header("Loose Ball")]
+    [Tooltip("Speed multiplier while pursuing a loose/fumbled ball.")]\n    [SerializeField] float looseBallPursuitSpeedMult = 1.15f;
+    [SerializeField] float looseBallStopDistance = 0.35f;
+
     [SerializeField] float containBreakRadius = 4f;
     [SerializeField] float containLeadDistance = 3f;
 
@@ -114,7 +118,8 @@ public class DefenderAI : MonoBehaviour
                 break;
             case BallController.BallState.Loose:
                 ballInFlightTimer = 0f;
-                break; // hold position — loose-ball pursuit still deferred
+                PursueLooseBall(ball);
+                break;
         }
     }
 
@@ -176,6 +181,19 @@ public class DefenderAI : MonoBehaviour
         Vector3 direction = (landing - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
         transform.position += direction * (MoveSpeed * breakOnBallSpeedMult) * Time.deltaTime;
+    }
+
+    void PursueLooseBall(BallController ball)
+    {
+        Vector3 toBall = ball.transform.position - transform.position;
+        toBall.y = 0f;
+
+        if (toBall.sqrMagnitude <= looseBallStopDistance * looseBallStopDistance)
+            return;
+
+        Vector3 direction = toBall.normalized;
+        transform.rotation = Quaternion.LookRotation(direction);
+        transform.position += direction * (MoveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime;
     }
 
     Vector3 CalculateCoverMove() => coverTarget == null ? Vector3.zero : ShadowMove(coverTarget);
