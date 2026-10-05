@@ -76,7 +76,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return; // play's dead — no input processed
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive && !PlayState.Instance.IsPlayEnding) return; // hard stop only after the presentation window
 
         if (cooldownTimer > 0f) cooldownTimer -= Time.deltaTime;
 
