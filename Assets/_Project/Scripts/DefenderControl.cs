@@ -59,7 +59,7 @@ public class DefenderControl : MonoBehaviour
         var play = PlayState.Instance;
 
         // Same hard stop as PlayerMovement: dead ball = no coasting.
-        if (play != null && !play.IsLive) { velocity = Vector3.zero; return; }
+        if (play != null && !play.IsLive && !play.IsPlayEnding) { velocity = Vector3.zero; return; }
 
         // Stiff-armed / shed: DefenderAI is animating the shove, so input is locked out.
         if (ai.IsStunned) { velocity = Vector3.zero; return; }
