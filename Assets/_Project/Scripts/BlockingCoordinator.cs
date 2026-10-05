@@ -34,7 +34,7 @@ public class BlockingCoordinator : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive && !PlayState.Instance.IsPlayEnding) return;
 
         bool ballHeld = BallController.Instance != null
             && BallController.Instance.Carrier != null
