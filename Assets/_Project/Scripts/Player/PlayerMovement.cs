@@ -65,9 +65,11 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive)
+        if (PlayState.Instance != null &&
+            !PlayState.Instance.IsLive &&
+            !PlayState.Instance.IsPlayEnding)
         {
-            currentVelocity = Vector3.zero; // hard stop — no coasting to a halt after being tackled
+            currentVelocity = Vector3.zero; // hard stop once the presentation window is over
             return;
         }
 
