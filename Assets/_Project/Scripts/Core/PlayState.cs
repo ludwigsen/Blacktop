@@ -95,10 +95,13 @@ public class PlayState : MonoBehaviour
     [SerializeField] float formationArrivalTolerance = 0.15f;
     [Tooltip("Delay-of-game clock. Runs continuously from the whistle; force-completes whatever step is in progress and snaps if it hits zero.")]
     [SerializeField] float playClockDuration = 40f;
+    [Tooltip("How long after an immediate ruling (touchdown/OOB/etc.) the player asset may continue its final movement before the next-play UI appears.")]
+    [SerializeField] float playEndPresentationDelay = 0.65f;
 
     float playClockTimer;
     public bool IsInHuddle => !IsLive && phase == HuddlePhase.InHuddle;
-    public bool IsSetAtLOS => !IsLive && phase == HuddlePhase.SetAtLOS;
+    public bool IsSetAtLOS => !IsLive && !IsPlayEnding && phase == HuddlePhase.SetAtLOS;
+    public bool IsPlayEnding { get; private set; }
     public float PlayClockRemaining => playClockTimer;
 
     bool passerCrossedLOS;
@@ -400,6 +403,7 @@ public class PlayState : MonoBehaviour
     {
         if (!IsLive) return;
         IsLive = false;
+        IsPlayEnding = true;
 
         // Safety is decided by HOW the play ended, not by the ball touching an end zone.
         // Must run before ResolvePossessionAtWhistle can flip PossessionTeamId.
@@ -454,10 +458,8 @@ public class PlayState : MonoBehaviour
             EndGamebreaker(offenseTeamIdThisPlay);
         }
 
-        OnPlayEnded?.Invoke(reason);
-
         StopAllCoroutines();
-        StartCoroutine(RegularPlayEndDelay());
+        StartCoroutine(RegularPlayEndDelay(reason));
     }
 
     // Where the ball is when the whistle blows. Out-of-bounds spots snap to the nearest
@@ -585,10 +587,23 @@ public class PlayState : MonoBehaviour
         return roster;
     }
 
-    // delays the next huddle until after the current play's end animation finishes
-    private IEnumerator RegularPlayEndDelay()
+    List<Transform> GetDefenseRoster()
     {
-        yield return new WaitForSeconds(3f);
+        var roster = new List<Transform>();
+        foreach (var t in defensePlayers)
+            if (t != null) roster.Add(t);
+        return roster;
+    }
+
+    // delays the next huddle until after the current play's end animation finishes
+    private IEnumerator RegularPlayEndDelay(PlayEndReason reason)
+    {
+        // The ruling is immediate: IsLive is already false and all gameplay resolution
+        // above has already happened. Delay only the presentation/UI transition.
+        yield return new WaitForSeconds(playEndPresentationDelay);
+
+        IsPlayEnding = false;
+        OnPlayEnded?.Invoke(reason);
 
         playClockTimer = playClockDuration;
         StartCoroutine(GatherToHuddleRoutine());
@@ -599,19 +614,53 @@ public class PlayState : MonoBehaviour
         phase = HuddlePhase.GatheringToHuddle;
         OnHuddleStarted?.Invoke();
 
-        var members = GetOffenseRoster();
-        if (members.Count == 0) { phase = HuddlePhase.InHuddle; yield break; }
+        var offense = GetOffenseRoster();
+        var defense = GetDefenseRoster();
 
-        // "Behind the LOS" means behind it from the possession team's point of view.
-        Vector3 huddleCenter = new(0f, 1f, AttackDirection.Advance(nextLineOfScrimmageZ, -huddleDistanceBehindLOS));
-        var targets = CircleTargets(members.Count, huddleCenter, huddleRadius);
-
-        yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance, instant: false);
-
-        for (int i = 0; i < members.Count; i++)
+        if (offense.Count == 0 && defense.Count == 0)
         {
-            Vector3 dir = huddleCenter - members[i].position;
-            if (dir.sqrMagnitude > 0.01f) members[i].rotation = Quaternion.LookRotation(dir.normalized);
+            phase = HuddlePhase.InHuddle;
+            yield break;
+        }
+
+        // Both sides huddle independently. Offense gathers behind the LOS from its
+        // attacker's perspective; defense gathers the same distance on the other side.
+        Vector3 offenseHuddleCenter = new(
+            0f, 1f,
+            AttackDirection.Advance(nextLineOfScrimmageZ, -huddleDistanceBehindLOS));
+
+        Vector3 defenseHuddleCenter = new(
+            0f, 1f,
+            AttackDirection.Advance(nextLineOfScrimmageZ, huddleDistanceBehindLOS));
+
+        var members = new List<Transform>(offense.Count + defense.Count);
+        var targets = new List<Vector3>(offense.Count + defense.Count);
+
+        members.AddRange(offense);
+        targets.AddRange(CircleTargets(offense.Count, offenseHuddleCenter, huddleRadius));
+
+        members.AddRange(defense);
+        targets.AddRange(CircleTargets(defense.Count, defenseHuddleCenter, huddleRadius));
+
+        yield return MoveGroupTo(
+            members,
+            targets,
+            formationMoveSpeed,
+            formationArrivalTolerance,
+            instant: false);
+
+        for (int i = 0; i < offense.Count; i++)
+        {
+            Vector3 dir = offenseHuddleCenter - offense[i].position;
+            if (dir.sqrMagnitude > 0.01f)
+                offense[i].rotation = Quaternion.LookRotation(dir.normalized);
+        }
+
+        for (int i = 0; i < defense.Count; i++)
+        {
+            Vector3 dir = defenseHuddleCenter - defense[i].position;
+            if (dir.sqrMagnitude > 0.01f)
+                defense[i].rotation = Quaternion.LookRotation(dir.normalized);
         }
 
         phase = HuddlePhase.InHuddle;
