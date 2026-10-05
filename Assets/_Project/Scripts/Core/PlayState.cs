@@ -392,6 +392,10 @@ public class PlayState : MonoBehaviour
             return;
         }
 
+        // The ruling is already complete during the short presentation window.
+        // Do not let the play clock or delay-of-game path interfere with the final movement.
+        if (IsPlayEnding) return;
+
         if (playClockTimer > 0f)
         {
             playClockTimer -= Time.deltaTime;
