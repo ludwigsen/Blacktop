@@ -80,7 +80,7 @@ public class DefenderAI : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive && !PlayState.Instance.IsPlayEnding) return;
 
         if (pushBackTimer > 0f)
         {
