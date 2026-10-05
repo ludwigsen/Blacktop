@@ -92,7 +92,7 @@ public class ReceiverAI : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive && !PlayState.Instance.IsPlayEnding) return;
 
         // A fumble/loose ball is no longer a route problem. AllyBlocker owns offensive
         // skill-position movement during the scrum; returning here prevents this component
