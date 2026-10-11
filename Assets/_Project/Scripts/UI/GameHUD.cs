@@ -6,16 +6,14 @@ using UnityEngine.UI;
 
 // Single unified HUD for everything that isn't play selection: team score + Gamebreaker
 // on each side, play clock + down/distance/field position in the center. Structure
-// matches the concept board's HUD breakdown, minus quarter (no quarter system — the
-// center clock is PlayState's PLAY clock only) and minus the diagonal/grunge panel art
-// (needs real sprite assets — this is the honest placeholder pass: plain rectangles,
-// not a faked paint texture).
+// matches the concept board's HUD breakdown, including a full-width grunge base,
+// mirrored team panels, and a compact down/distance center panel.
 //
 // Typeface comes from a HUDTheme asset (assign one in the Inspector once you've built
 // TMP Font Assets from your real fonts); leave it unassigned and everything falls back
 // to TMP's default font with zero errors. Center panel (clock/downs) uses
-// theme.legibleFont; TeamScorePanel uses theme.displayFont — matches the concept
-// board's own typographic split.
+// theme.legibleFont; TeamScorePanel reserves theme.displayFont for team names and
+// scores.
 //
 // Pure display — every value comes from ScoreBoard/DownsTracker/PlayState's already-
 // resolved state, with one deliberate exception: the play clock is polled every frame
@@ -36,6 +34,8 @@ public class GameHUD : MonoBehaviour
     [SerializeField, Range(0.2f, 0.45f)] float teamPanelWidth = 0.35f; // each side; center strip gets the rest
 
     [Header("Panel Backgrounds")]
+    [Tooltip("Full scorebug texture. Assign Assets/_Project/Art/scorebug_base.png.")]
+    [SerializeField] Sprite scorebugBase;
     [Tooltip("Background art behind Team 1's logo/name/score. Assign Assets/_Project/Art/ScorebugBG_Left.png.")]
     [SerializeField] Sprite team1PanelBackground;
     [Tooltip("Optional alternate Team 2 background. When empty, Team 1's left-side sprite is mirrored automatically.")]
@@ -256,10 +256,9 @@ public class GameHUD : MonoBehaviour
 
     void BuildScorebug(Transform parent)
     {
-        // position: fixed; top: 0; padding: 5% left/right; height: 10% — anchors, not a
-        // pixel sizeDelta, so it's genuinely that fraction of the real screen at any
-        // resolution/aspect ratio. Plain rectangle, not the concept's diagonal-cut
-        // panel — that needs a sprite/mesh asset, not something worth faking in code.
+        // Anchors keep the art at a consistent broadcast-safe position at every aspect
+        // ratio. The base is intentionally one continuous asset so the split panels
+        // read as a single scorebug, not three floating cards.
         var scorebugGO = new GameObject("Scorebug", typeof(Image));
         scorebugGO.transform.SetParent(parent, false);
 
@@ -268,7 +267,10 @@ public class GameHUD : MonoBehaviour
         scorebugRT.anchorMax = new Vector2(1f - horizontalMargin, 1f);
         scorebugRT.offsetMin = Vector2.zero;
         scorebugRT.offsetMax = Vector2.zero;
-        scorebugGO.GetComponent<Image>().color = backgroundColor;
+        var baseImage = scorebugGO.GetComponent<Image>();
+        baseImage.sprite = scorebugBase;
+        baseImage.type = Image.Type.Simple;
+        baseImage.color = scorebugBase != null ? Color.white : backgroundColor;
 
         BuildTeamPanel(scorebugGO.transform, isTeam1: true);
         BuildGameStatePanel(scorebugGO.transform);
@@ -316,18 +318,14 @@ public class GameHUD : MonoBehaviour
 
         var clockGO = new GameObject("PlayClock", typeof(TextMeshProUGUI));
         clockGO.transform.SetParent(centerGO.transform, false);
-        clockText = ConfigureText(clockGO, legibleFont, centerFontSize);
-        AnchorStrip(clockGO.GetComponent<RectTransform>(), new Vector2(0f, 0f), new Vector2(0.48f, 1f));
-
-        var dividerGO = new GameObject("Divider", typeof(Image));
-        dividerGO.transform.SetParent(centerGO.transform, false);
-        dividerGO.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.25f);
-        AnchorStrip(dividerGO.GetComponent<RectTransform>(), new Vector2(0.49f, 0.15f), new Vector2(0.51f, 0.85f));
+        clockText = ConfigureText(clockGO, legibleFont, Mathf.RoundToInt(centerFontSize * 0.62f));
+        clockText.color = new Color(1f, 1f, 1f, 0.68f);
+        AnchorStrip(clockGO.GetComponent<RectTransform>(), new Vector2(0.10f, 0.08f), new Vector2(0.90f, 0.29f));
 
         var downGO = new GameObject("DownAndDistance", typeof(TextMeshProUGUI));
         downGO.transform.SetParent(centerGO.transform, false);
         downText = ConfigureText(downGO, legibleFont, centerFontSize);
-        AnchorStrip(downGO.GetComponent<RectTransform>(), new Vector2(0.52f, 0f), new Vector2(1f, 1f));
+        AnchorStrip(downGO.GetComponent<RectTransform>(), new Vector2(0.04f, 0.28f), new Vector2(0.96f, 0.94f));
     }
 
     // font left null is fine — TMP falls back to TMP_Settings.defaultFontAsset, same as
@@ -371,7 +369,7 @@ public class GameHUD : MonoBehaviour
         float remaining = Mathf.Max(0f, PlayState.Instance.PlayClockRemaining);
         int minutes = Mathf.FloorToInt(remaining / 60f);
         int seconds = Mathf.FloorToInt(remaining % 60f);
-        clockText.text = $"{minutes}:{seconds:00}";
+        clockText.text = $"PLAY CLOCK  {minutes}:{seconds:00}";
     }
 
     void RefreshDowns()

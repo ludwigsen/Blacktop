@@ -9,9 +9,9 @@ using UnityEngine.UI;
 // project has an HDR/bloom pipeline for UI, which Canvas Overlay doesn't get by default).
 // Self-building, same pattern as every other runtime HUD here.
 //
-// Text elements use the DISPLAY font (team name, score, GAMEBREAKER label) per the
-// concept board's own typographic split — the legible font belongs to GameHUD's center
-// panel instead, not to anything built by this component.
+// Team identity and score use the Blacktop display face; supporting HUD copy uses the
+// Outfit/legible face.  Keeping that distinction here prevents the meter label from
+// competing with the team wordmark.
 public class TeamScorePanel : MonoBehaviour
 {
     const int SegmentCount = 8;
@@ -62,19 +62,25 @@ public class TeamScorePanel : MonoBehaviour
         nameGO.transform.SetParent(transform, false);
         teamNameText = ConfigureText(nameGO, displayFont, nameFontSize);
         teamNameText.text = "TEAM";
-        AnchorStrip(nameGO.GetComponent<RectTransform>(), new Vector2(0f, 0.62f), new Vector2(1f, 1f));
+        teamNameText.alignment = reverseFill ? TextAlignmentOptions.Right : TextAlignmentOptions.Left;
+        AnchorStrip(nameGO.GetComponent<RectTransform>(),
+            reverseFill ? new Vector2(0.08f, 0.52f) : new Vector2(0.20f, 0.52f),
+            reverseFill ? new Vector2(0.80f, 0.94f) : new Vector2(0.92f, 0.94f));
 
         var scoreGO = new GameObject("Score", typeof(TextMeshProUGUI));
         scoreGO.transform.SetParent(transform, false);
-        scoreText = ConfigureText(scoreGO, legibleFont, scoreFontSize);
-        AnchorStrip(scoreGO.GetComponent<RectTransform>(), new Vector2(0f, 0.34f), new Vector2(1f, 0.62f));
+        scoreText = ConfigureText(scoreGO, displayFont, scoreFontSize);
+        scoreText.alignment = reverseFill ? TextAlignmentOptions.Left : TextAlignmentOptions.Right;
+        AnchorStrip(scoreGO.GetComponent<RectTransform>(),
+            reverseFill ? new Vector2(0.08f, 0.32f) : new Vector2(0.70f, 0.32f),
+            reverseFill ? new Vector2(0.30f, 0.68f) : new Vector2(0.92f, 0.68f));
 
         var labelGO = new GameObject("GamebreakerLabel", typeof(TextMeshProUGUI));
         labelGO.transform.SetParent(transform, false);
-        gamebreakerLabel = ConfigureText(labelGO, displayFont, labelFontSize);
+        gamebreakerLabel = ConfigureText(labelGO, legibleFont, labelFontSize);
         gamebreakerLabel.text = "GAMEBREAKER";
         gamebreakerLabel.color = LabelColor;
-        AnchorStrip(labelGO.GetComponent<RectTransform>(), new Vector2(0.06f, 0.20f), new Vector2(0.94f, 0.34f));
+        AnchorStrip(labelGO.GetComponent<RectTransform>(), new Vector2(0.20f, 0.21f), new Vector2(0.80f, 0.34f));
 
         BuildGamebreakerBar(transform);
     }
@@ -123,7 +129,7 @@ public class TeamScorePanel : MonoBehaviour
     {
         var barGO = new GameObject("Gamebreaker", typeof(RectTransform));
         barGO.transform.SetParent(parent, false);
-        AnchorStrip(barGO.GetComponent<RectTransform>(), new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.19f));
+        AnchorStrip(barGO.GetComponent<RectTransform>(), new Vector2(0.20f, 0.05f), new Vector2(0.80f, 0.19f));
 
         segments = new Image[SegmentCount];
         const float gap = 0.02f; // fraction of the bar's own width, between chunks
