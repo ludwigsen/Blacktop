@@ -24,7 +24,8 @@ public class DefenderAI : MonoBehaviour
     [SerializeField] float separationStrength = 3f;
 
     [Header("Loose Ball")]
-    [Tooltip("Speed multiplier while pursuing a loose/fumbled ball.")]\n    [SerializeField] float looseBallPursuitSpeedMult = 1.15f;
+    [Tooltip("Speed multiplier while pursuing a loose/fumbled ball.")]
+    [SerializeField] float looseBallPursuitSpeedMult = 1.15f;
     [SerializeField] float looseBallStopDistance = 0.35f;
 
     [SerializeField] float containBreakRadius = 4f;

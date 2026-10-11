@@ -100,7 +100,7 @@ public class PlayState : MonoBehaviour
 
     float playClockTimer;
     public bool IsInHuddle => !IsLive && phase == HuddlePhase.InHuddle;
-    public bool IsSetAtLOS => !IsLive && !IsPlayEnding && phase == HuddlePhase.SetAtLOS;
+    public bool IsSetAtLOS => !IsLive && !IsPlayEnding && !IsGameOver && phase == HuddlePhase.SetAtLOS;
     public bool IsPlayEnding { get; private set; }
     public float PlayClockRemaining => playClockTimer;
 
@@ -112,6 +112,13 @@ public class PlayState : MonoBehaviour
     public event System.Action OnPlayReset;
     public event System.Action OnHuddleStarted; // fired the instant the huddle begins forming — before any walk-in animation
     public event System.Action OnSetAtLOS;
+
+    // Match over. ScoreBoard decides WHEN (GameRules.scoreToWin); this class just stops the
+    // flow: no more huddles, snaps, or play clock. Restarting is a scene reload (GameHUD's
+    // winner overlay), which rebuilds every singleton from scratch.
+    public bool IsGameOver { get; private set; }
+    public int? WinnerTeamId { get; private set; }
+    public event System.Action<int> OnGameOver;
 
     InputSystem_Actions controls;
     float nextLineOfScrimmageZ;
@@ -385,6 +392,8 @@ public class PlayState : MonoBehaviour
 
     void Update()
     {
+        if (IsGameOver) return; // no live-play latch, no play clock after the final whistle
+
         if (IsLive)
         {
             if (!passerCrossedLOS && quarterback != null && IsPastLineOfScrimmage(quarterback.position.z))
@@ -462,8 +471,25 @@ public class PlayState : MonoBehaviour
             EndGamebreaker(offenseTeamIdThisPlay);
         }
 
+        OnPlayEnded?.Invoke(reason);
+
+        // A subscriber (ScoreBoard) may have just ended the match. Don't gather a huddle.
+        if (IsGameOver) return;
+
         StopAllCoroutines();
         StartCoroutine(RegularPlayEndDelay(reason));
+    }
+
+    // Called by ScoreBoard when a team reaches the winning score. Safe to call from inside
+    // an OnPlayEnded handler (that's the only place it's called from).
+    public void EndGame(int winnerTeamId)
+    {
+        if (IsGameOver) return;
+
+        IsGameOver = true;
+        WinnerTeamId = winnerTeamId;
+        StopAllCoroutines();
+        OnGameOver?.Invoke(winnerTeamId);
     }
 
     // Where the ball is when the whistle blows. Out-of-bounds spots snap to the nearest
@@ -537,6 +563,7 @@ public class PlayState : MonoBehaviour
     // walking INTO the huddle (nothing to break yet) or while already live.
     public void BreakHuddle()
     {
+        if (IsGameOver) return;
         if (IsLive) return;
         if (phase != HuddlePhase.InHuddle) return;
 
@@ -549,6 +576,7 @@ public class PlayState : MonoBehaviour
     // doesn't let you snap out of the huddle either.
     public void ResetPlay()
     {
+        if (IsGameOver) return;
         if (IsLive) return;
         if (phase != HuddlePhase.SetAtLOS) return;
         DoSnap();

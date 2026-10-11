@@ -18,14 +18,27 @@ public class ScoreBoard : MonoBehaviour
     const int SinglePointConversionPoints = 1; // Extra point
     const int SafetyPoints = 2; // Safety
 
+    [Header("Rules")]
+    [Tooltip("Optional. Leave empty for the built-in default (first to 21).")]
+    [SerializeField] GameRules rules;
+
     public static ScoreBoard Instance { get; private set; }
+
+    public int ScoreToWin => rules.scoreToWin;
 
     public int Team1Score { get; private set; }
     public int Team2Score { get; private set; }
 
     public event System.Action OnScoreChanged;
 
-    void Awake() => Instance = this;
+    void Awake()
+    {
+        Instance = this;
+
+        // No asset assigned: use a runtime instance with the field defaults so the scene
+        // works with zero setup. Create one via Assets > Create > Blacktop > Game Rules to tune.
+        if (rules == null) rules = ScriptableObject.CreateInstance<GameRules>();
+    }
 
     // Start(), not OnEnable() — same Awake/Start ordering reasoning as DownsTracker and
     // BallController: guarantees PlayState.Instance already exists regardless of which
@@ -67,6 +80,13 @@ public class ScoreBoard : MonoBehaviour
         else Team2Score += points;
 
         OnScoreChanged?.Invoke();
+
+        // This class owns the RULE (when is the game won); PlayState owns the FLOW (what
+        // stops happening once it is). Called from inside OnPlayEnded, so PlayState skips
+        // scheduling the next huddle when it sees IsGameOver after its event returns.
+        // First to CROSS the target wins — no exact-hit or win-by-2 requirement.
+        if (ScoreFor(teamId) >= rules.scoreToWin && PlayState.Instance != null)
+            PlayState.Instance.EndGame(teamId);
     }
 
     public int ScoreFor(int teamId) => teamId == 0 ? Team1Score : Team2Score;

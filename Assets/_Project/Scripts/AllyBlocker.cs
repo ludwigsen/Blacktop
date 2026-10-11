@@ -21,7 +21,8 @@ public class AllyBlocker : MonoBehaviour
     [SerializeField] float pushBackDuration = 0.15f;
 
     [Header("Loose Ball")]
-    [Tooltip("Speed multiplier while scrambling for a loose/fumbled ball.")]\n    [SerializeField] float looseBallPursuitSpeedMult = 1.15f;
+    [Tooltip("Speed multiplier while scrambling for a loose/fumbled ball.")]
+    [SerializeField] float looseBallPursuitSpeedMult = 1.15f;
 
     // Debounce between block-contact rolls. Without this, CheckBlockContact re-rolls
     // almost every frame while blocker and defender stay within contactDetectRadius

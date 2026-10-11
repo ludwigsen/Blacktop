@@ -1,5 +1,7 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // Single unified HUD for everything that isn't play selection: team score + Gamebreaker
@@ -47,12 +49,32 @@ public class GameHUD : MonoBehaviour
 
     [SerializeField] Color backgroundColor = new Color(0f, 0f, 0f, 0.82f);
 
+    [Header("Game Over")]
+    [Tooltip("Ignore Confirm for this long after the final whistle so a mashed button can't skip the winner screen.")]
+    [SerializeField] float restartInputDelay = 1.5f;
+
     TeamScorePanel team1Panel;
     TeamScorePanel team2Panel;
     TextMeshProUGUI clockText;
     TextMeshProUGUI downText;
 
-    void Awake() => BuildHUD();
+    GameObject gameOverRoot;
+    TextMeshProUGUI winnerText;
+    TextMeshProUGUI finalScoreText;
+    InputSystem_Actions controls;
+    float gameOverTime;
+
+    void Awake()
+    {
+        BuildHUD();
+
+        // Same pattern as PlayCallSelector: each script owns its own actions instance.
+        controls = new InputSystem_Actions();
+        controls.Player.Confirm.performed += HandleConfirm;
+    }
+
+    void OnEnable() => controls?.Player.Enable();
+    void OnDisable() => controls?.Player.Disable();
 
     // Start(), not OnEnable() — same reasoning as DownsTracker/ScoreBoard: guarantees
     // every relevant Awake() has already run regardless of GameObject order in the
@@ -65,6 +87,7 @@ public class GameHUD : MonoBehaviour
             team1Panel.ApplyIdentity(PlayState.Instance.IdentityFor(0));
             team2Panel.ApplyIdentity(PlayState.Instance.IdentityFor(1));
 
+            PlayState.Instance.OnGameOver += ShowGameOver;
             PlayState.Instance.OnTeamMeterChanged += RefreshTeamMeter;
             RefreshTeamMeter(0, PlayState.Instance.MeterFor(0));
             RefreshTeamMeter(1, PlayState.Instance.MeterFor(1));
@@ -87,7 +110,16 @@ public class GameHUD : MonoBehaviour
 
     void OnDestroy()
     {
-        if (PlayState.Instance != null) PlayState.Instance.OnTeamMeterChanged -= RefreshTeamMeter;
+        if (PlayState.Instance != null)
+        {
+            PlayState.Instance.OnTeamMeterChanged -= RefreshTeamMeter;
+            PlayState.Instance.OnGameOver -= ShowGameOver;
+        }
+        if (controls != null)
+        {
+            controls.Player.Confirm.performed -= HandleConfirm;
+            controls.Dispose();
+        }
         if (DownsTracker.Instance != null) DownsTracker.Instance.OnDownsChanged -= RefreshDowns;
         if (ScoreBoard.Instance != null) ScoreBoard.Instance.OnScoreChanged -= RefreshScore;
     }
@@ -105,6 +137,75 @@ public class GameHUD : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
         BuildScorebug(canvasGO.transform);
+        BuildGameOverOverlay(canvasGO.transform);
+    }
+
+    // Full-screen dim + winner + final score + prompt. Built hidden, last, with its own
+    // override-sorting canvas so it covers the scorebug and play-call list. Same plain-
+    // rectangle placeholder approach as the rest of this HUD.
+    void BuildGameOverOverlay(Transform parent)
+    {
+        gameOverRoot = new GameObject("GameOver", typeof(Image), typeof(Canvas));
+        gameOverRoot.transform.SetParent(parent, false);
+
+        var overlayCanvas = gameOverRoot.GetComponent<Canvas>();
+        overlayCanvas.overrideSorting = true;
+        overlayCanvas.sortingOrder = 100;
+
+        gameOverRoot.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
+        AnchorStrip(gameOverRoot.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
+
+        var displayFont = theme != null ? theme.displayFont : null;
+        var legibleFont = theme != null ? theme.legibleFont : null;
+
+        var winnerGO = new GameObject("Winner", typeof(TextMeshProUGUI));
+        winnerGO.transform.SetParent(gameOverRoot.transform, false);
+        winnerText = ConfigureText(winnerGO, displayFont, 110);
+        AnchorStrip(winnerGO.GetComponent<RectTransform>(), new Vector2(0f, 0.55f), new Vector2(1f, 0.8f));
+
+        var scoreGO = new GameObject("FinalScore", typeof(TextMeshProUGUI));
+        scoreGO.transform.SetParent(gameOverRoot.transform, false);
+        finalScoreText = ConfigureText(scoreGO, legibleFont, 56);
+        AnchorStrip(scoreGO.GetComponent<RectTransform>(), new Vector2(0f, 0.42f), new Vector2(1f, 0.55f));
+
+        var promptGO = new GameObject("RestartPrompt", typeof(TextMeshProUGUI));
+        promptGO.transform.SetParent(gameOverRoot.transform, false);
+        var prompt = ConfigureText(promptGO, legibleFont, 30);
+        prompt.text = "PRESS CONFIRM TO PLAY AGAIN";
+        prompt.color = new Color(1f, 1f, 1f, 0.7f);
+        AnchorStrip(promptGO.GetComponent<RectTransform>(), new Vector2(0f, 0.25f), new Vector2(1f, 0.35f));
+
+        gameOverRoot.SetActive(false);
+    }
+
+    void ShowGameOver(int winnerTeamId)
+    {
+        if (gameOverRoot == null) return;
+
+        var identity = PlayState.Instance != null ? PlayState.Instance.IdentityFor(winnerTeamId) : null;
+        string winnerName = identity != null ? identity.teamName : $"TEAM {winnerTeamId + 1}";
+
+        winnerText.text = $"{winnerName.ToUpperInvariant()} WINS";
+        winnerText.color = identity != null ? identity.accentColor : Color.white;
+
+        int s1 = ScoreBoard.Instance != null ? ScoreBoard.Instance.Team1Score : 0;
+        int s2 = ScoreBoard.Instance != null ? ScoreBoard.Instance.Team2Score : 0;
+        finalScoreText.text = $"FINAL  {s1} - {s2}";
+
+        gameOverTime = Time.unscaledTime;
+        gameOverRoot.SetActive(true);
+    }
+
+    // Restart = reload the scene. Every singleton (PlayState, ScoreBoard, BallController...)
+    // sets itself up in Awake, so a reload is a guaranteed-clean rematch with no reset code
+    // to keep in sync as systems get added. SampleScene is in Build Settings, so this is
+    // safe in the editor and in builds.
+    void HandleConfirm(InputAction.CallbackContext _)
+    {
+        if (PlayState.Instance == null || !PlayState.Instance.IsGameOver) return;
+        if (Time.unscaledTime - gameOverTime < restartInputDelay) return;
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     void BuildScorebug(Transform parent)
