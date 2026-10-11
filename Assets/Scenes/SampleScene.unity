@@ -1750,6 +1750,9 @@ MonoBehaviour:
   formationMoveSpeed: 6
   formationArrivalTolerance: 0.15
   playClockDuration: 40
+  playEndPresentationDelay: 3
+  postPlayReactionDistance: 3
+  postPlayReactionSpeed: 2.25
 --- !u!4 &1314477356
 Transform:
   m_ObjectHideFlags: 0
@@ -1911,7 +1914,7 @@ MonoBehaviour:
   horizontalMargin: 0.05
   heightPercent: 0.1
   teamPanelWidth: 0.45
-  team1PanelBackground: {fileID: 21300000, guid: 1df3f1918c9094b7294ce86d246644ee, type: 3}
+  team1PanelBackground: {fileID: 21300000, guid: 424e0f112910e43318cda21c1d24e79c, type: 3}
   team2PanelBackground: {fileID: 0}
   teamNameFontSize: 22
   scoreFontSize: 30

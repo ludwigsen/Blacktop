@@ -101,6 +101,7 @@ public class PlayCallSelector : MonoBehaviour
         if (PlayState.Instance != null)
         {
             PlayState.Instance.OnPlayEnded += HandlePlayEnded;
+            PlayState.Instance.OnPostPlayPresentationCompleted += HandlePresentationCompleted;
             PlayState.Instance.OnPlayReset += HandlePlayReset;
             PlayState.Instance.OnPossessionChanged += HandlePossessionChanged;
             PlayState.Instance.OnHuddleStarted += HandleHuddleStarted;
@@ -125,6 +126,7 @@ public class PlayCallSelector : MonoBehaviour
         if (PlayState.Instance != null)
         {
             PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
+            PlayState.Instance.OnPostPlayPresentationCompleted -= HandlePresentationCompleted;
             PlayState.Instance.OnPlayReset -= HandlePlayReset;
             PlayState.Instance.OnPossessionChanged -= HandlePossessionChanged;
             PlayState.Instance.OnHuddleStarted -= HandleHuddleStarted;
@@ -319,6 +321,7 @@ public class PlayCallSelector : MonoBehaviour
     }
 
     void HandlePlayEnded(PlayState.PlayEndReason _) => UpdateVisibility();
+    void HandlePresentationCompleted(PlayState.PlayEndReason _) => UpdateVisibility();
     void HandlePlayReset() => UpdateVisibility();
 
     public void ResetSelection()
@@ -339,6 +342,8 @@ public class PlayCallSelector : MonoBehaviour
                        !PlayState.Instance.IsLive &&
                        !PlayState.Instance.IsPlayEnding;
         canvasGroup.alpha = visible ? 1f : 0f;
+        canvasGroup.interactable = visible;
+        canvasGroup.blocksRaycasts = visible;
     }
 
     void BuildHUD()
@@ -384,10 +389,10 @@ public class PlayCallSelector : MonoBehaviour
         rt.anchoredPosition = new Vector2(0f, -18f);
         rt.sizeDelta = new Vector2(0f, 54f);
 
-        titleText = CreateText(header.transform, "OFFENSE", titleFontSize, TextAlignmentOptions.Left);
+        titleText = CreateText(header.transform, "OFFENSE", titleFontSize, TextAlignmentOptions.Left, theme != null ? theme.displayFont : null);
         Anchor(titleText.rectTransform, new Vector2(0f, 0f), new Vector2(0.45f, 1f));
 
-        situationText = CreateText(header.transform, "", detailFontSize, TextAlignmentOptions.Right);
+        situationText = CreateText(header.transform, "", detailFontSize, TextAlignmentOptions.Right, theme != null ? theme.legibleFont : null);
         Anchor(situationText.rectTransform, new Vector2(0.45f, 0f), new Vector2(1f, 1f));
         situationText.color = mutedColor;
     }
@@ -418,7 +423,7 @@ public class PlayCallSelector : MonoBehaviour
             cardRT.offsetMin = new Vector2(6f, 0f);
             cardRT.offsetMax = new Vector2(-6f, 0f);
 
-            var label = CreateText(card.transform, "", categoryFontSize, TextAlignmentOptions.Center);
+            var label = CreateText(card.transform, "", categoryFontSize, TextAlignmentOptions.Center, theme != null ? theme.displayFont : null);
             Anchor(label.rectTransform, Vector2.zero, Vector2.one);
             categoryTexts.Add(label);
         }
@@ -451,12 +456,12 @@ public class PlayCallSelector : MonoBehaviour
             cardRT.offsetMin = new Vector2(cardGap / 2f, 0f);
             cardRT.offsetMax = new Vector2(-cardGap / 2f, 0f);
 
-            var title = CreateText(card.transform, "", playFontSize, TextAlignmentOptions.Center);
+            var title = CreateText(card.transform, "", playFontSize, TextAlignmentOptions.Center, theme != null ? theme.legibleFont : null);
             title.enableAutoSizing = false;
             Anchor(title.rectTransform, new Vector2(0f, 0.42f), new Vector2(1f, 0.82f));
             cardTitleTexts.Add(title);
 
-            var detail = CreateText(card.transform, "", detailFontSize, TextAlignmentOptions.Center);
+            var detail = CreateText(card.transform, "", detailFontSize, TextAlignmentOptions.Center, theme != null ? theme.legibleFont : null);
             detail.color = mutedColor;
             Anchor(detail.rectTransform, new Vector2(0f, 0.08f), new Vector2(1f, 0.38f));
             cardDetailTexts.Add(detail);
@@ -573,11 +578,12 @@ public class PlayCallSelector : MonoBehaviour
         return $"{Ordinal(downs.CurrentDown)} & {distance}   |   ON {Mathf.RoundToInt(downs.YardLine)}";
     }
 
-    static TextMeshProUGUI CreateText(Transform parent, string value, int size, TextAlignmentOptions alignment)
+    TextMeshProUGUI CreateText(Transform parent, string value, int size, TextAlignmentOptions alignment, TMP_FontAsset font)
     {
         var go = new GameObject("Text", typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         var text = go.GetComponent<TextMeshProUGUI>();
+        if (font != null) text.font = font;
         text.text = value;
         text.fontSize = size;
         text.fontStyle = FontStyles.Bold;
@@ -585,8 +591,6 @@ public class PlayCallSelector : MonoBehaviour
         text.enableWordWrapping = false;
         text.overflowMode = TextOverflowModes.Ellipsis;
 
-        // Use the project's legible font when available. The attitude/display font can
-        // be introduced later without changing this selector's behavior.
         return text;
     }
 

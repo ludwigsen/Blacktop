@@ -95,13 +95,18 @@ public class PlayState : MonoBehaviour
     [SerializeField] float formationArrivalTolerance = 0.15f;
     [Tooltip("Delay-of-game clock. Runs continuously from the whistle; force-completes whatever step is in progress and snaps if it hits zero.")]
     [SerializeField] float playClockDuration = 40f;
-    [Tooltip("How long after an immediate ruling (touchdown/OOB/etc.) the player asset may continue its final movement before the next-play UI appears.")]
-    [SerializeField] float playEndPresentationDelay = 0.65f;
+    [Header("Post-play Presentation")]
+    [Tooltip("How long the whistle/result presentation plays before the next huddle and play-call screen begin.")]
+    [SerializeField, Min(0f)] float playEndPresentationDelay = 3f;
+    [Tooltip("Maximum distance a player can travel during the canned post-play reaction.")]
+    [SerializeField, Min(0f)] float postPlayReactionDistance = 3f;
+    [SerializeField, Min(0f)] float postPlayReactionSpeed = 2.25f;
 
     float playClockTimer;
     public bool IsInHuddle => !IsLive && phase == HuddlePhase.InHuddle;
     public bool IsSetAtLOS => !IsLive && !IsPlayEnding && !IsGameOver && phase == HuddlePhase.SetAtLOS;
     public bool IsPlayEnding { get; private set; }
+    public bool IsPostPlayPresentation => IsPlayEnding;
     public float PlayClockRemaining => playClockTimer;
 
     bool passerCrossedLOS;
@@ -109,6 +114,8 @@ public class PlayState : MonoBehaviour
 
     public bool IsLive { get; private set; } = false;
     public event System.Action<PlayEndReason> OnPlayEnded;
+    public event System.Action<PlayEndReason> OnPostPlayPresentationStarted;
+    public event System.Action<PlayEndReason> OnPostPlayPresentationCompleted;
     public event System.Action OnPlayReset;
     public event System.Action OnHuddleStarted; // fired the instant the huddle begins forming — before any walk-in animation
     public event System.Action OnSetAtLOS;
@@ -124,6 +131,7 @@ public class PlayState : MonoBehaviour
     float nextLineOfScrimmageZ;
     public float CurrentLineOfScrimmageZ => nextLineOfScrimmageZ;
     PlayEndReason lastEndReason;
+    bool terminalPlayResolved;
 
     // ------------------------------------------------------------------------------
     // Possession API
@@ -414,7 +422,10 @@ public class PlayState : MonoBehaviour
 
     public void EndPlay(PlayEndReason reason)
     {
-        if (!IsLive) return;
+        // All terminal sources converge here. Latch before notifying observers so same-
+        // frame overlap/flight callbacks cannot resolve one snap twice.
+        if (!IsLive || terminalPlayResolved) return;
+        terminalPlayResolved = true;
         IsLive = false;
         IsPlayEnding = true;
 
@@ -477,7 +488,7 @@ public class PlayState : MonoBehaviour
         if (IsGameOver) return;
 
         StopAllCoroutines();
-        StartCoroutine(RegularPlayEndDelay(reason));
+        StartCoroutine(RegularPlayEndDelay(reason, offenseTeamIdThisPlay));
     }
 
     // Called by ScoreBoard when a team reaches the winning score. Safe to call from inside
@@ -564,7 +575,7 @@ public class PlayState : MonoBehaviour
     public void BreakHuddle()
     {
         if (IsGameOver) return;
-        if (IsLive) return;
+        if (IsLive || IsPlayEnding) return;
         if (phase != HuddlePhase.InHuddle) return;
 
         StopAllCoroutines();
@@ -577,7 +588,7 @@ public class PlayState : MonoBehaviour
     public void ResetPlay()
     {
         if (IsGameOver) return;
-        if (IsLive) return;
+        if (IsLive || IsPlayEnding) return;
         if (phase != HuddlePhase.SetAtLOS) return;
         DoSnap();
     }
@@ -591,6 +602,7 @@ public class PlayState : MonoBehaviour
             if (offense.possessionsRemaining <= 0) EndGamebreaker(PossessionTeamId);
         }
 
+        terminalPlayResolved = false;
         IsLive = true;
         snapTimestamp = Time.time;
         OnPlayReset?.Invoke();
@@ -628,17 +640,67 @@ public class PlayState : MonoBehaviour
     }
 
     // delays the next huddle until after the current play's end animation finishes
-    private IEnumerator RegularPlayEndDelay(PlayEndReason reason)
+    private IEnumerator RegularPlayEndDelay(PlayEndReason reason, int offenseTeamIdThisPlay)
     {
-        // The ruling is immediate: IsLive is already false and all gameplay resolution
-        // above has already happened. Delay only the presentation/UI transition.
-        yield return new WaitForSeconds(playEndPresentationDelay);
+        // Rules, stats, possession and the whistle spot are final before this starts.
+        // This coroutine owns movement during the presentation; normal player systems
+        // are gated by IsPostPlayPresentation and cannot create new gameplay events.
+        OnPostPlayPresentationStarted?.Invoke(reason);
+        var actors = FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        var targets = new Dictionary<Transform, Vector3>(actors.Length);
+        BuildPostPlayTargets(actors, targets, reason, offenseTeamIdThisPlay);
+
+        float elapsed = 0f;
+        while (elapsed < playEndPresentationDelay)
+        {
+            if (IsGameOver || !IsPlayEnding) yield break;
+
+            elapsed += Time.deltaTime;
+            foreach (var actor in actors)
+            {
+                if (actor == null || !targets.TryGetValue(actor.transform, out var target)) continue;
+                Transform t = actor.transform;
+                Vector3 flatTarget = new Vector3(target.x, t.position.y, target.z);
+                Vector3 delta = flatTarget - t.position;
+                delta.y = 0f;
+                if (delta.sqrMagnitude <= 0.0025f) continue;
+
+                Vector3 direction = delta.normalized;
+                t.position = Vector3.MoveTowards(t.position, flatTarget, postPlayReactionSpeed * Time.deltaTime);
+                t.rotation = Quaternion.RotateTowards(t.rotation, Quaternion.LookRotation(direction), 540f * Time.deltaTime);
+            }
+            yield return null;
+        }
 
         IsPlayEnding = false;
-        OnPlayEnded?.Invoke(reason);
+        OnPostPlayPresentationCompleted?.Invoke(reason);
 
         playClockTimer = playClockDuration;
         StartCoroutine(GatherToHuddleRoutine());
+    }
+
+    void BuildPostPlayTargets(TeamMember[] actors, Dictionary<Transform, Vector3> targets,
+        PlayEndReason reason, int offenseTeamIdThisPlay)
+    {
+        bool score = reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety;
+        int celebratingTeam = score ? LastScoringTeamId ?? offenseTeamIdThisPlay : offenseTeamIdThisPlay;
+
+        for (int i = 0; i < actors.Length; i++)
+        {
+            var actor = actors[i];
+            if (actor == null) continue;
+
+            Vector3 start = actor.transform.position;
+            FieldDirection direction = DirectionFor(actor.teamId);
+            bool celebrate = score && actor.teamId == celebratingTeam;
+            float forward = celebrate ? 1f : -0.55f;
+            if (!score && actor.teamId != offenseTeamIdThisPlay) forward = 0.35f;
+            float lane = ((i % 4) - 1.5f) * 0.38f;
+            float distance = postPlayReactionDistance * (0.55f + 0.1f * (i % 3));
+            Vector3 target = start + direction.Forward * (forward * distance) + Vector3.right * lane;
+            target.y = start.y;
+            targets[actor.transform] = target;
+        }
     }
 
     IEnumerator GatherToHuddleRoutine()

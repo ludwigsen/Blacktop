@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4be9347d73934555b5825f838e5f54b, type: 3}
   m_Name: BlacktopHUDTheme
   m_EditorClassIdentifier: Blacktop::HUDTheme
-  displayFont: {fileID: 0}
+  displayFont: {fileID: 11400000, guid: 886f8440721fc4d0f8963767db486a17, type: 2}
   legibleFont: {fileID: 11400000, guid: ccd38227a631d4594bbc1ddb7592d040, type: 2}

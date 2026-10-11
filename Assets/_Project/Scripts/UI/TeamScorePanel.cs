@@ -29,7 +29,8 @@ public class TeamScorePanel : MonoBehaviour
     bool reverseFill;
     float lastGamebreakerValue;
 
-    public void Build(TMP_FontAsset displayFont, int nameFontSize, int scoreFontSize, int labelFontSize, bool reverseFill, Sprite backgroundSprite = null)
+    public void Build(TMP_FontAsset displayFont, TMP_FontAsset legibleFont, int nameFontSize, int scoreFontSize, int labelFontSize,
+        bool reverseFill, Sprite backgroundSprite = null, bool flipBackground = false)
     {
         this.reverseFill = reverseFill;
 
@@ -43,7 +44,9 @@ public class TeamScorePanel : MonoBehaviour
             bgImage.sprite = backgroundSprite;
             bgImage.type = Image.Type.Simple;
             bgImage.raycastTarget = false;
-            AnchorStrip(bgGO.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
+            var backgroundRect = bgGO.GetComponent<RectTransform>();
+            AnchorStrip(backgroundRect, Vector2.zero, Vector2.one);
+            if (flipBackground) backgroundRect.localScale = new Vector3(-1f, 1f, 1f);
         }
 
         var logoGO = new GameObject("Logo", typeof(Image));
@@ -63,7 +66,7 @@ public class TeamScorePanel : MonoBehaviour
 
         var scoreGO = new GameObject("Score", typeof(TextMeshProUGUI));
         scoreGO.transform.SetParent(transform, false);
-        scoreText = ConfigureText(scoreGO, displayFont, scoreFontSize);
+        scoreText = ConfigureText(scoreGO, legibleFont, scoreFontSize);
         AnchorStrip(scoreGO.GetComponent<RectTransform>(), new Vector2(0f, 0.34f), new Vector2(1f, 0.62f));
 
         var labelGO = new GameObject("GamebreakerLabel", typeof(TextMeshProUGUI));

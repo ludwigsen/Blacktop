@@ -38,7 +38,7 @@ public class GameHUD : MonoBehaviour
     [Header("Panel Backgrounds")]
     [Tooltip("Background art behind Team 1's logo/name/score. Assign Assets/_Project/Art/ScorebugBG_Left.png.")]
     [SerializeField] Sprite team1PanelBackground;
-    [Tooltip("Mirrored background for Team 2's panel, once that asset exists. Leave unassigned for now — falls back to the plain background color.")]
+    [Tooltip("Optional alternate Team 2 background. When empty, Team 1's left-side sprite is mirrored automatically.")]
     [SerializeField] Sprite team2PanelBackground;
 
     [Header("Typography")]
@@ -61,6 +61,8 @@ public class GameHUD : MonoBehaviour
     GameObject gameOverRoot;
     TextMeshProUGUI winnerText;
     TextMeshProUGUI finalScoreText;
+    GameObject postPlayRoot;
+    TextMeshProUGUI postPlayText;
     InputSystem_Actions controls;
     float gameOverTime;
 
@@ -89,6 +91,8 @@ public class GameHUD : MonoBehaviour
 
             PlayState.Instance.OnGameOver += ShowGameOver;
             PlayState.Instance.OnTeamMeterChanged += RefreshTeamMeter;
+            PlayState.Instance.OnPostPlayPresentationStarted += ShowPostPlayResult;
+            PlayState.Instance.OnPostPlayPresentationCompleted += HidePostPlayResult;
             RefreshTeamMeter(0, PlayState.Instance.MeterFor(0));
             RefreshTeamMeter(1, PlayState.Instance.MeterFor(1));
         }
@@ -114,6 +118,8 @@ public class GameHUD : MonoBehaviour
         {
             PlayState.Instance.OnTeamMeterChanged -= RefreshTeamMeter;
             PlayState.Instance.OnGameOver -= ShowGameOver;
+            PlayState.Instance.OnPostPlayPresentationStarted -= ShowPostPlayResult;
+            PlayState.Instance.OnPostPlayPresentationCompleted -= HidePostPlayResult;
         }
         if (controls != null)
         {
@@ -137,7 +143,27 @@ public class GameHUD : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
         BuildScorebug(canvasGO.transform);
+        BuildPostPlayResult(canvasGO.transform);
         BuildGameOverOverlay(canvasGO.transform);
+    }
+
+    void BuildPostPlayResult(Transform parent)
+    {
+        postPlayRoot = new GameObject("PostPlayResult", typeof(Image));
+        postPlayRoot.transform.SetParent(parent, false);
+        var image = postPlayRoot.GetComponent<Image>();
+        image.color = new Color(0f, 0f, 0f, 0.78f);
+        var rt = postPlayRoot.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.32f, 0.72f);
+        rt.anchorMax = new Vector2(0.68f, 0.79f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        var textGO = new GameObject("Result", typeof(TextMeshProUGUI));
+        textGO.transform.SetParent(postPlayRoot.transform, false);
+        postPlayText = ConfigureText(textGO, theme != null ? theme.displayFont : null, 34);
+        AnchorStrip(postPlayText.rectTransform, Vector2.zero, Vector2.one);
+        postPlayRoot.SetActive(false);
     }
 
     // Full-screen dim + winner + final score + prompt. Built hidden, last, with its own
@@ -196,6 +222,26 @@ public class GameHUD : MonoBehaviour
         gameOverRoot.SetActive(true);
     }
 
+    void ShowPostPlayResult(PlayState.PlayEndReason reason)
+    {
+        if (postPlayRoot == null || PlayState.Instance == null || PlayState.Instance.IsGameOver) return;
+        postPlayText.text = reason switch
+        {
+            PlayState.PlayEndReason.Touchdown => "TOUCHDOWN!",
+            PlayState.PlayEndReason.Safety => "SAFETY",
+            PlayState.PlayEndReason.Interception => "TURNOVER!",
+            PlayState.PlayEndReason.Incomplete => "INCOMPLETE",
+            PlayState.PlayEndReason.OutOfBounds => "OUT OF BOUNDS",
+            _ => "PLAY DEAD"
+        };
+        postPlayRoot.SetActive(true);
+    }
+
+    void HidePostPlayResult(PlayState.PlayEndReason _)
+    {
+        if (postPlayRoot != null) postPlayRoot.SetActive(false);
+    }
+
     // Restart = reload the scene. Every singleton (PlayState, ScoreBoard, BallController...)
     // sets itself up in Awake, so a reload is a guaranteed-clean rematch with no reset code
     // to keep in sync as systems get added. SampleScene is in Build Settings, so this is
@@ -243,11 +289,13 @@ public class GameHUD : MonoBehaviour
         var panel = teamGO.AddComponent<TeamScorePanel>();
         panel.Build(
             displayFont: theme != null ? theme.displayFont : null,
+            legibleFont: theme != null ? theme.legibleFont : null,
             nameFontSize: teamNameFontSize,
             scoreFontSize: scoreFontSize,
             labelFontSize: gamebreakerLabelFontSize,
             reverseFill: !isTeam1,
-            backgroundSprite: isTeam1 ? team1PanelBackground : team2PanelBackground
+            backgroundSprite: isTeam1 ? team1PanelBackground : (team2PanelBackground != null ? team2PanelBackground : team1PanelBackground),
+            flipBackground: !isTeam1 && team2PanelBackground == null
         );
         panel.SetScore(0);
 

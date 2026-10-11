@@ -63,7 +63,7 @@ public class AllyBlocker : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive && !PlayState.Instance.IsPlayEnding) return;
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
         if (contactCooldownTimer > 0f) contactCooldownTimer -= Time.deltaTime;
 
         if (IsCarrier)

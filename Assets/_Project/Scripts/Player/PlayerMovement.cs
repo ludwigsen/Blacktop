@@ -65,11 +65,9 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null &&
-            !PlayState.Instance.IsLive &&
-            !PlayState.Instance.IsPlayEnding)
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive)
         {
-            currentVelocity = Vector3.zero; // hard stop once the presentation window is over
+            currentVelocity = Vector3.zero;
             return;
         }
 
