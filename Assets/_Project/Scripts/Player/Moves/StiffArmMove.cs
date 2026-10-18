@@ -41,8 +41,7 @@ public class StiffArmMove : IPlayerMove
 
     float Duration => baseDuration;
     float ForwardBurst => baseForwardBurst * attr.Speed();
-    float ShedChance => Mathf.Clamp01(baseShedChance * attr.RunPower(null, GB(AttributeStat.RunPower)));
-    static float GB(AttributeStat stat) => PlayState.Instance != null ? PlayState.Instance.GetGamebreakerMult(stat) : 1f;
+    float ShedChance => Mathf.Clamp01(baseShedChance * attr.RunPower());
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
         => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;

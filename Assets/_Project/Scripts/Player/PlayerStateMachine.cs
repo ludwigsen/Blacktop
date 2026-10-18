@@ -52,7 +52,7 @@ public class PlayerStateMachine : MonoBehaviour
             isDefenderInRange = () => defenderDetector != null && defenderDetector.DefenderInRange,
             setTackleImmune = v => IsTackleImmune = v,
             setCooldown = t => cooldownTimer = t,
-            addOffensePoints = pts => PlayState.Instance?.AddOffensePoints(pts),
+            addOffensePoints = pts => PlayState.Instance?.AddTeamPoints(GetComponent<TeamMember>().teamId, pts * (attributes != null ? attributes.Swagger() : 1f)),
         };
     }
 

@@ -566,6 +566,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""a5637282-bf90-4476-9856-3eedbf252b32"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Gamebreaker"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""b488922e-e176-40cb-ad46-f820684374ff"",
                     ""path"": ""<Keyboard>/enter"",
                     ""interactions"": """",

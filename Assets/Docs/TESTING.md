@@ -120,11 +120,17 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 
 ## Gamebreaker
 
-### T-70: Meter and activation
-**Steps:** Build the meter (`GamebreakerHUD` should reflect it). Activate it when full.
-**Expected:** Activation is player-triggered (no cutscene). A flat boost applies for the rest of the possession and clears when the play ends per the possession rule.
-**Watch for:** Boost persisting after possession changes; HUD not matching controller state; stacking weirdly with field modifiers.
-**Note:** Defensive equivalent is an open design question; nothing to test there yet.
+### T-70: Offense and defense activation
+**Steps:** In a live play hold T or gamepad X/Square with the controlled carrier to earn meter (neutral Swagger: 2.5 points/second). Moves also earn points; sacks/fumbles/interceptions earn the tackler/interceptor's team meter. At READY press G or LB/L1. Repeat while controlling a defender. A temporary full-meter test setup may call `PlayState.AddTeamPoints(teamId, 100)`; no debug fill ships on a gameplay binding.
+**Expected:** Only the controlled human's team spends its meter. The existing scorebug reads ACTIVE and stays lit. Empty/partial meters and dead plays reject activation. CPU uses its own full meter on its next live opportunity, on either side. Both teams may activate. No cutscene or forced turnover.
+
+### T-71: Possession duration and team isolation
+**Steps:** Activate, then play several downs including an incompletion, first down, same-team fumble recovery and fourth-down failure. Repeat with a score, safety, interception and opponent fumble recovery. Finish a match and rematch.
+**Expected:** Boost persists across ordinary downs, huddles and same-team recoveries. Both teams' active boosts end when the possession ends or a score/game over occurs. Unspent meter remains team-owned; rematch resets everything. Every teammate receives the same 1.2 multiplier before existing caps; opponents remain unchanged unless they activate too. Defense improves normal pursuit/coverage/tackle odds without guaranteeing a fumble or interception. Check both keyboard and controller in a normal standalone app; tune boost strength only after feel review.
+
+### T-72: Issue #2 model facing
+**Steps:** Run both teams in both attacking directions, make cuts, switch defenders, and watch CPU routes/returns in Editor and the standalone app.
+**Expected:** Visible body faces the direction the gameplay root is running. The correction is on PlayerModel's visual body only; capsule bounds, shared skeleton and root motion configuration remain intact. Idle animation alone does not verify running direction.
 
 ## UI
 
@@ -240,8 +246,17 @@ A **standalone build** is an exported game executable (macOS `.app`, Windows `.e
 **Watch for:** Floating/offset models, a capsule still visible, missing materials, root-motion drift, feedback on the wrong renderer, or the QB retaining its old visual offset. Full locomotion/football animations remain future work.
 **Validation performed:** Isolated Unity asset validation passed across all fourteen scene players, and all 28 existing Editor Play Mode tests passed. No physical controller or Windows validation is claimed for this change.
 
-The imported body faces local -Z; PlayerModel rotates only its visual child 180 degrees to face the gameplay root's +Z. The animated front/back preview confirmed the corrected facing and existing idle pose.
+Issue #2 supersedes the earlier preview: gameplay exposed backwards facing on both teams. The visual body's rotation is corrected by 180 degrees relative to that committed state, with fitting offsets mirrored. Automated checks verify all fourteen players inherit the correction; manual running-direction confirmation is still required.
 
 The normal macOS app was rebuilt successfully with the final model assets (0 errors; 440 existing build warnings). Output: `Builds/macOS/Blacktop.app`. The rendered animated front/back preview is saved locally at `Builds/Validation/PlayerModel-preview.png`; Editor test results are at `Builds/Validation/character-playmode.xml`.
 
 The refreshed app passed a headless scene-startup smoke check with no logged runtime exceptions, then was stopped intentionally. Manual controller play, running/football animation coverage, and Windows remain unverified for this visual change.
+
+## 2026-10-18 — Gamebreaker and issue #2 validation
+
+- Unity 6000.5.6f1 isolated-project Editor Play Mode: **39/39 passed**.
+- macOS standalone test player: **39/39 passed**. Includes the prior 28 resolution/match/rematch cases plus 11 Gamebreaker/input/prefab cases.
+- New coverage: real G/LB input on offense and defense, one controlled-team activation despite fourteen listeners, underfilled/dead/duplicate/game-over rejection, all twelve team-owned attribute multipliers and caps, defensive coverage/fumble odds without guaranteed outcomes, boosts across downs through fourth-down turnover, CPU activation on both sides, fourteen inherited model/input stacks.
+- Synthetic input devices explicitly route to gameplay in the headless Editor; test settings are restored. This does not substitute for a physical-controller playtest.
+- Full diff review and `git diff --check` passed. Final UI design, human gameplay balance/readability, visual running-direction review and Windows validation remain manual work.
+- Normal macOS development app rebuilt successfully: zero build errors, 408 reported warnings (including obsolete Unity API warnings). Headless startup loaded the match scene without logged exceptions; stopped after startup. Physical controller, graphics and gameplay feel were not checked by that smoke run.

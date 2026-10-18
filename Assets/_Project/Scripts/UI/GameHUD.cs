@@ -360,7 +360,7 @@ public class GameHUD : MonoBehaviour
 
     void RefreshTeamMeter(int teamId, float value)
     {
-        (teamId == 0 ? team1Panel : team2Panel)?.SetGamebreaker(value);
+        (teamId == 0 ? team1Panel : team2Panel)?.SetGamebreaker(value, PlayState.Instance.IsGamebreakerActiveFor(teamId));
     }
 
     void RefreshClock()

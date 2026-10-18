@@ -58,6 +58,14 @@ public class CPUPlayCaller : MonoBehaviour
         ps.OnSetAtLOS -= HandleSetAtLOS;
     }
 
+    void Update()
+    {
+        var ps = PlayState.Instance;
+        // CPU spends a full meter on its next live opportunity on either side of the ball.
+        if (ps != null && ps.IsLive && !ps.IsGameOver)
+            ps.TryActivateGamebreaker(1 - ps.UserTeamId);
+    }
+
     bool CpuHasBall => PlayState.Instance != null && !PlayState.Instance.IsUserTeam(PlayState.Instance.PossessionTeamId);
 
     void PickForCpuSide()

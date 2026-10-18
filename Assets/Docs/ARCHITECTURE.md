@@ -65,7 +65,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
    - **Run play:** WRs block. A visible handoff is required (handoff visuals are not built yet).
    - Defense engages: the closest defender engages the carrier, others contain, with an override once the carrier breaks the LOS.
 4. **Resolution.** Play ends by tackle, touchdown, incomplete pass, out of bounds, or safety. Held/loose-ball OOB is polled automatically; airborne balls finish flight before a ruling. `PlayState` validates held-ball touchdowns inside the legal rectangle, with the same boundary checks used before contact/fumble rolls.
-5. **Play ended.** `PlayState.OnPlayEnded` fires after score-team, next possession, and whistle spot are resolved. Player moves cancel through `IPlayerMove.Cancel`, independently of successful `Exit` (which releases passes/pitches). The existing three-second presentation then gathers the next huddle. Gamebreaker lifetime remains a separate known discrepancy.
+5. **Play ended.** `PlayState.OnPlayEnded` fires after score-team, next possession, and whistle spot are resolved. Player moves cancel through `IPlayerMove.Cancel`, independently of successful `Exit` (which releases passes/pitches). The existing three-second presentation then gathers the next huddle. Gamebreaker persists across these ordinary whistles; scores and changes of possession end both teams' active boosts.
 6. **Next play or possession change.** Drive/score/win check runs; first team to 21 wins.
 
 ### Ball states
@@ -87,7 +87,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 | `IPlayerMove` | Interface for moves (Juke, Hurdle, StiffArm, future StumbleMove) | |
 | `BlockingCoordinator` / `AllyBlocker` | Assigns and runs blocking for offensive players | Untested in observed play. |
 | Defender coordination | Closest engages, others contain, LOS-break override | Loose-ball defense uses DefenderAI; offense uses AllyBlocker; selected defender movement stays with human control. |
-| `GamebreakerController` / `GamebreakerHUD` | Gamebreaker meter, activation, HUD | Spec in `PROJECT_STATUS.md`; current lifetime and missing player input components remain known discrepancies. |
+| `GamebreakerController` / `GamebreakerHUD` | Gamebreaker meter, activation, HUD | PlayState owns team meters and possession-long boosts; every Player prefab listens for activation through canonical control. GameHUD displays ready/active state. |
 | `ReceiverSelectionUI` | Lets the user pick a receiver on pass plays | |
 | Play-call UI | Formation and play selection | Operates against the current possession team. |
 | `FieldLines` | Procedural LOS, first-down, and goal lines | Reads distance from the scene's `DownsTracker`. |
@@ -121,7 +121,7 @@ BlockingCoordinator ──► PlayState, BallController.Carrier (live)
 Defender coordination ► BallController.Carrier (live), FieldConstants
 PlayerStateMachine ───► IPlayerMove implementations, PlayerAttributes
 IPlayerMove impls ────► PlayerAttributes / DefenderAttributes, FieldModifiers
-GamebreakerController ► PlayState.OnPlayEnded, PlayerAttributes
+GamebreakerController ► PossessionController.ActivelyControlled, PlayState, PlayerAttributes
 PossessionController ─► BallController
 ```
 
@@ -179,4 +179,12 @@ FieldLines and CarrierHighlight construct URP Unlit materials at runtime. `Proje
 
 The humanoid uses the existing BlacktopCharacterController idle animation with Animator root motion disabled, preserving transform-based movement. PlayerVisualFeedback's existing Renderer reference now points to the primary SkinnedMeshRenderer; MaterialPropertyBlock tinting is unchanged. SampleScene has fourteen model-backed roster players and no unassigned character preview. The QB's old model-only position overrides were cleared so it inherits the same aligned visual prefab.
 
-The imported body faces local -Z; PlayerModel rotates only its visual child 180 degrees to face the gameplay root's +Z. The animated front/back preview confirmed the corrected facing and existing idle pose.
+Issue #2 supersedes the earlier front/back preview: gameplay showed both teams facing backwards. PlayerModel's imported visual child is now rotated 180 degrees relative to that committed state (local identity), with its small X/Z fitting offsets mirrored to preserve centering. Gameplay roots, avatar, skeleton and root-motion settings are unchanged. Confirm facing while actually running both ways; an isolated idle preview was insufficient.
+
+## Gamebreaker ownership and lifetime
+
+`CharacterApplier` creates a private runtime `PlayerAttributes` for each player (including the rosterless Balanced fallback), binds its team ID, distributes it before other Awakes, and destroys it with the player. `PlayerAttributes.Effective` resolves that team's active multiplier live from `PlayState`; callers must not also pass the team multiplier as the optional explicit multiplier. Shared data assets never hold mutable team state.
+
+`GamebreakerController` remains enabled per player but gates spending through `PossessionController.ActivelyControlled` and the user team. Styling additionally requires the held live ball. `CPUPlayCaller` explicitly activates the CPU team's full meter during live play. `PlayState.TryActivateGamebreaker` guards live/full/inactive state and publishes meter changes for READY/ACTIVE feedback. `GamebreakerBuffs` now stores one flat multiplier; the checked-in asset is migrated to 1.2. AI movement paths that bypass ratings apply only this live team boost, preserving neutral speed defaults.
+
+`ApplyPossession`, scoring resolution and `EndGame` end active boosts. Neither a normal down ending nor a loose-ball drop ends the possession. Defensive effects use the existing capped attribute/probability checks; there is no pending guaranteed-turnover state. Unspent meter stays team-owned across possession changes; scene reload resets the match. The PlayMode test assembly references `Unity.InputSystem` to exercise real keyboard/gamepad action bindings.

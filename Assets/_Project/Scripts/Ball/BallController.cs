@@ -286,17 +286,18 @@ public class BallController : MonoBehaviour
             if (throwingTeamId.HasValue && member.teamId == throwingTeamId.Value) continue;
 
             interceptionResolved = true;
-            bool guaranteed = PlayState.Instance != null && PlayState.Instance.ConsumeGuaranteedTurnover();
 
             float defenderCoverage = hit.TryGetComponent<DefenderAI>(out var defAI) ? defAI.CoverageMult : 1f;
             float chance = Mathf.Clamp01(baseInterceptChance * defenderCoverage);
 
-            if (guaranteed || Random.value < chance)
+            if (Random.value < chance)
             {
                 AttachTo(hit.transform);
                 if (PlayState.Instance != null)
                 {
-                    PlayState.Instance.AddDefensePoints(8f);
+                    // Swagger controls meter earnings; the interceptor owns this award.
+                    var attr = member.GetComponent<PlayerStateMachine>()?.Attributes;
+                    PlayState.Instance.AddTeamPoints(member.teamId, 8f * (attr != null ? attr.Swagger() : 1f));
                     PlayState.Instance.EndPlay(PlayState.PlayEndReason.Interception);
                 }
             }

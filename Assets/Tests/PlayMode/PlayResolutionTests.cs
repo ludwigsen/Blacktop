@@ -4,6 +4,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 // Exercise the actual match scene and prefab stacks, including subscription order.
 // Reflection only sets up rare gameplay situations; assertions use public outcomes.
@@ -463,5 +465,163 @@ public class PlayResolutionTests
         for (int team = 0; team < 2; team++)
             for (int slot = 0; slot < 7; slot++)
                 Assert.That(counts[team, slot], Is.EqualTo(1), $"Team {team}, slot {(TeamMember.RosterSlot)slot}");
+    }
+
+    [TestCase(0, false)]
+    [TestCase(1, false)]
+    [TestCase(0, true)]
+    [TestCase(1, true)]
+    public void GamebreakerRealInputActivatesOnlyControlledTeam(int possession, bool gamepad)
+    {
+        Assert.That(play.TrySetPossession(possession), Is.True);
+        GoLive();
+        var controlled = Player(0, TeamMember.RosterSlot.QB);
+        PossessionController.ClaimControl(controlled.transform, 0);
+        play.AddTeamPoints(0, 100f);
+        play.AddTeamPoints(1, 100f);
+        // Batch Editor has no focused Game View. Route synthetic devices to gameplay, then restore settings.
+        var previousBackground = InputSystem.settings.backgroundBehavior;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+#if UNITY_EDITOR
+        var previousEditorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+#endif
+        InputDevice device = gamepad ? (InputDevice)InputSystem.AddDevice<Gamepad>() : InputSystem.AddDevice<Keyboard>();
+        try
+        {
+            // Exercise the actual binding and fourteen prefab listeners, not just the public activation API.
+            InputSystem.Update();
+            if (gamepad) InputSystem.QueueStateEvent((Gamepad)device, new GamepadState().WithButton(GamepadButton.LeftShoulder));
+            else InputSystem.QueueStateEvent((Keyboard)device, new KeyboardState(Key.G));
+            InputSystem.Update();
+            Assert.That(controlled.GetComponent<GamebreakerController>().enabled, Is.True);
+            var input = (InputSystem_Actions)controlled.GetComponent<GamebreakerController>().GetType().GetField("controls", PrivateInstance).GetValue(controlled.GetComponent<GamebreakerController>());
+            Assert.That(input.Player.Gamebreaker.enabled, Is.True, "Activation action enabled");
+            Assert.That(input.Player.Gamebreaker.IsPressed(), Is.True, "Queued button reaches activation binding");
+            Assert.That(PossessionController.ActivelyControlled, Is.EqualTo(controlled.transform));
+            Assert.That(play.IsGamebreakerActiveFor(0), Is.True);
+            Assert.That(play.MeterFor(0), Is.Zero);
+            Assert.That(play.IsGamebreakerActiveFor(1), Is.False);
+            Assert.That(play.MeterFor(1), Is.EqualTo(100f));
+        }
+        finally
+        {
+            InputSystem.RemoveDevice(device);
+            InputSystem.settings.backgroundBehavior = previousBackground;
+#if UNITY_EDITOR
+            InputSystem.settings.editorInputBehaviorInPlayMode = previousEditorInput;
+#endif
+        }
+    }
+
+    [Test]
+    public void GamebreakerCannotActivateDeadUnderfilledOrTwice()
+    {
+        play.AddTeamPoints(0, 99f);
+        Assert.That(play.TryActivateGamebreaker(0), Is.False);
+        GoLive();
+        Assert.That(play.TryActivateGamebreaker(0), Is.False);
+        play.AddTeamPoints(0, 1f);
+        Assert.That(play.TryActivateGamebreaker(0), Is.True);
+        play.AddTeamPoints(0, 100f);
+        Assert.That(play.MeterFor(0), Is.Zero, "Active teams cannot refill during the boost");
+        Assert.That(play.TryActivateGamebreaker(0), Is.False);
+        play.EndGame(0);
+        Assert.That(play.IsGamebreakerActiveFor(0), Is.False);
+        Assert.That(play.TryActivateGamebreaker(0), Is.False);
+    }
+
+    [TestCase(0)]
+    [TestCase(1)]
+    public void GamebreakerBoostsAllAttributesOfOnlyItsTeam(int team)
+    {
+        GoLive();
+        play.AddTeamPoints(team, 100f);
+        Assert.That(play.TryActivateGamebreaker(team), Is.True);
+        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsSortMode.None))
+        {
+            var attr = member.GetComponent<PlayerStateMachine>().Attributes;
+            Assert.That(attr.ownerTeamId, Is.EqualTo(member.teamId));
+            foreach (AttributeStat stat in System.Enum.GetValues(typeof(AttributeStat)))
+            {
+                float curve = attr.curves != null ? attr.curves.Evaluate(stat, 10) : 1f;
+                var cap = attr.curves != null ? attr.curves.HardCap(stat) : (0.5f, 2f);
+                float expected = Mathf.Clamp(curve * (member.teamId == team ? 1.2f : 1f), cap.Item1, cap.Item2);
+                Assert.That(attr.Effective(stat, 10), Is.EqualTo(expected).Within(0.0001f), $"{member.name}: {stat}");
+            }
+        }
+    }
+
+    [Test]
+    public void DefensiveGamebreakerImprovesCoverageAndFumbleOddsWithoutGuarantee()
+    {
+        GoLive();
+        var runner = Player(0, TeamMember.RosterSlot.QB);
+        var defender = Player(1, TeamMember.RosterSlot.QB);
+        var contact = runner.GetComponent<TackleContact>();
+        var defense = defender.GetComponent<DefenderAI>();
+        float coverage = defense.CoverageMult;
+        float chance = (float)Call(contact, "CalculateFumbleChance", defender.transform);
+        play.AddTeamPoints(1, 100f);
+        Assert.That(play.TryActivateGamebreaker(1), Is.True);
+        Assert.That(defense.CoverageMult, Is.GreaterThan(coverage));
+        float boosted = (float)Call(contact, "CalculateFumbleChance", defender.transform);
+        Assert.That(boosted, Is.GreaterThan(chance));
+        Assert.That(boosted, Is.LessThan(1f));
+    }
+
+    [UnityTest]
+    public IEnumerator BothGamebreakersPersistAcrossDownsAndExpireOnFourthDownTurnover()
+    {
+        Set(play, "playEndPresentationDelay", 0.01f);
+        Set(play, "formationMoveSpeed", 1000f);
+        yield return ReadyAndSnap();
+        for (int team = 0; team < 2; team++)
+        {
+            play.AddTeamPoints(team, 100f);
+            Assert.That(play.TryActivateGamebreaker(team), Is.True);
+        }
+        ball.Fumble(ball.Carrier.position, ball.Carrier.position + Vector3.right);
+        Assert.That(play.IsGamebreakerActiveFor(0), Is.True, "A fumble can be recovered by the same offense");
+        for (int down = 1; down <= DownsTracker.MaxDowns; down++)
+        {
+            ball.Drop();
+            play.EndPlay(PlayState.PlayEndReason.Incomplete);
+            for (int team = 0; team < 2; team++)
+                Assert.That(play.IsGamebreakerActiveFor(team), Is.EqualTo(down < DownsTracker.MaxDowns));
+            if (down < DownsTracker.MaxDowns) yield return ReadyAndSnap();
+        }
+        Assert.That(play.PossessionTeamId, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void CpuSpendsItsOwnFullMeterOnBothSides()
+    {
+        var cpu = Object.FindFirstObjectByType<CPUPlayCaller>();
+        for (int possession = 0; possession < 2; possession++)
+        {
+            Set(play, "<IsLive>k__BackingField", false);
+            Assert.That(play.TrySetPossession(possession), Is.True);
+            GoLive();
+            play.AddTeamPoints(1, 100f);
+            Call(cpu, "Update");
+            Assert.That(play.IsGamebreakerActiveFor(1), Is.True);
+            Assert.That(play.IsGamebreakerActiveFor(0), Is.False);
+        }
+    }
+
+    [Test]
+    public void EveryPlayerInheritsCorrectedBodyAndActivationComponent()
+    {
+        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsSortMode.None))
+        {
+            Assert.That(member.GetComponent<GamebreakerController>(), Is.Not.Null);
+            Transform body = member.transform.Find("PlayerVisuals/PlayerModel/PlayerBody");
+            Assert.That(body, Is.Not.Null, member.name);
+            // Issue #2: rotate the previous backwards visual by 180 degrees, without rotating the gameplay root.
+            Assert.That(Quaternion.Angle(body.localRotation, Quaternion.identity), Is.LessThan(0.01f));
+            Assert.That(body.GetComponent<Animator>().applyRootMotion, Is.False);
+            Assert.That(member.GetComponent<MeshRenderer>().enabled, Is.False);
+        }
     }
 }

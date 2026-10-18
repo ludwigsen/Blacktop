@@ -62,21 +62,23 @@ public class TackleContact : MonoBehaviour
             if (otherTeam == null) continue;
             if (otherTeam.teamId == teamMember.teamId) continue;
 
+            // Award the actual tackler's team, including tackles during turnover returns.
+            var tacklerAttributes = otherTeam.GetComponent<PlayerStateMachine>()?.Attributes;
+            float styleAward = 8f * (tacklerAttributes != null ? tacklerAttributes.Swagger() : 1f);
+
             // Sack — specifically the designated passer, tackled behind the current LOS,
             // before ever throwing. Not "any tackle for loss" — a receiver tackled behind
             // the LOS after a catch doesn't count.
             if (PlayState.Instance.Passer == transform && PlayState.Instance.YardsPastLineOfScrimmage(transform.position.z) < 0f)
-                PlayState.Instance.AddDefensePoints(8f);
+                PlayState.Instance.AddTeamPoints(otherTeam.teamId, styleAward);
 
             if (BallController.Instance != null && BallController.Instance.IsHeld)
             {
-                bool guaranteed = PlayState.Instance.ConsumeGuaranteedTurnover();
                 float fumbleChance = CalculateFumbleChance(hit.transform);
-                if (guaranteed || Random.value < fumbleChance)
+                if (Random.value < fumbleChance)
                 {
                     BallController.Instance.Fumble(transform.position, hit.transform.position); // was: Drop()
-                    PlayState.Instance.AddDefensePoints(8f);
-                    PlayState.Instance.NotifyFumble();
+                    PlayState.Instance.AddTeamPoints(otherTeam.teamId, styleAward);
                     // A fumble remains a live ball. BallController's recovery pass runs in
                     // LateUpdate once the pop-arc lands, so ending the play here would prevent
                     // any recovery.

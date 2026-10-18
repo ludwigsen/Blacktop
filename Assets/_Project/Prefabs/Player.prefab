@@ -57,6 +57,7 @@ GameObject:
   - component: {fileID: 4609209659204268853}
   - component: {fileID: 5906274877810500750}
   - component: {fileID: 6791215661319204177}
+  - component: {fileID: 7364829102648102351}
   m_Layer: 0
   m_Name: Player
   m_TagString: Teammate
@@ -558,3 +559,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
   m_PrefabInstance: {fileID: 7984187470477920727}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7364829102648102351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6555219639277062554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33d67016fcebf4fe384b48313ab79193, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::GamebreakerController
+  attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  basePointsPerSecond: 2.5

@@ -37,6 +37,8 @@ public class CPUCarrierAI : MonoBehaviour
     [SerializeField] float avoidanceWeight = 1.2f;
     [SerializeField] int threatsConsidered = 2;
 
+    float SpeedBoost => PlayState.Instance.GetGamebreakerMult(teamMember.teamId, AttributeStat.Speed);
+    float PassingBoost => PlayState.Instance.GetGamebreakerMult(teamMember.teamId, AttributeStat.Passing);
     TeamMember teamMember;
     float readTimer;
 
@@ -84,13 +86,13 @@ public class CPUCarrierAI : MonoBehaviour
             if (flushed || readTimer >= maxReadTime * 1.5f) { UpdateRunner(); return; } // nobody's open — tuck it and go
         }
 
-        transform.position += -PlayState.Instance.AttackDirection.Forward * (dropbackSpeed * Time.deltaTime);
+        transform.position += -PlayState.Instance.AttackDirection.Forward * (dropbackSpeed * SpeedBoost * Time.deltaTime);
     }
 
     void ThrowTo(Transform target)
     {
         float distance = Vector3.Distance(transform.position, target.position);
-        float duration = Mathf.Max(distance / baseThrowSpeed, minFlightDuration);
+        float duration = Mathf.Max(distance / (baseThrowSpeed * PassingBoost), minFlightDuration);
         float arc = baseArcHeight + distance * arcHeightPerDistance;
         BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arc, duration: duration);
         readTimer = 0f;
@@ -115,7 +117,7 @@ public class CPUCarrierAI : MonoBehaviour
         desired.Normalize();
 
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(desired), rotationSpeed * Time.deltaTime);
-        transform.position += desired * (runSpeed * Time.deltaTime);
+        transform.position += desired * (runSpeed * SpeedBoost * Time.deltaTime);
     }
 
     float NearestOpponentDistance()

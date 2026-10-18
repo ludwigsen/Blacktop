@@ -15,6 +15,9 @@ using UnityEngine;
 public class AllyBlocker : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 5f;
+    // Keep base AI tuning intact while applying the same team speed boost as controlled movement.
+    float EffectiveMoveSpeed => moveSpeed * (PlayState.Instance != null
+        ? PlayState.Instance.GetGamebreakerMult(GetComponent<TeamMember>().teamId, AttributeStat.Speed) : 1f);
     [SerializeField] float stopDistance = 0.5f;
     [SerializeField] float contactDetectRadius = 1.2f; // OverlapSphere radius for contact resolution
     [SerializeField] float pushBackDistance = 0.8f;
@@ -138,7 +141,7 @@ public class AllyBlocker : MonoBehaviour
 
         Vector3 direction = toBall.normalized;
         transform.rotation = Quaternion.LookRotation(direction);
-        transform.position += direction * (moveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime;
+        transform.position += direction * (EffectiveMoveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime;
     }
 
     void MoveTowardTarget()
@@ -149,7 +152,7 @@ public class AllyBlocker : MonoBehaviour
 
         Vector3 direction = toTarget.normalized;
         transform.rotation = Quaternion.LookRotation(direction);
-        transform.position += direction * moveSpeed * Time.deltaTime;
+        transform.position += direction * EffectiveMoveSpeed * Time.deltaTime;
     }
 
     void CheckBlockContact()

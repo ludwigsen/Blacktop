@@ -112,10 +112,12 @@ public class TeamScorePanel : MonoBehaviour
     // value: 0-100. Lights whole chunks only — "62%" reads as 5 of 8 chunks lit, not
     // one chunk sitting at a fractional fill. That's the "unified, one flow" chunky
     // read the concept board is going for.
-    public void SetGamebreaker(float value)
+    public void SetGamebreaker(float value, bool active = false)
     {
         lastGamebreakerValue = value;
-        int lit = Mathf.FloorToInt(Mathf.Clamp01(value / 100f) * SegmentCount);
+        // Display state in the existing label; final UI artwork/layout is a separate task.
+        gamebreakerLabel.text = active ? "GAMEBREAKER ACTIVE" : value >= 100f ? "GAMEBREAKER READY" : "GAMEBREAKER";
+        int lit = Mathf.FloorToInt(Mathf.Clamp01(active ? 1f : value / 100f) * SegmentCount);
         Color litColor = value >= 100f ? readyColor : accent;
 
         for (int i = 0; i < SegmentCount; i++)

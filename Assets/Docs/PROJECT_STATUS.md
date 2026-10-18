@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -43,7 +43,9 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 
 ### Attributes
 - `PlayerAttributes` 12-stat system with `AttributeCurves` and `FieldModifiers`. **(verify how much of the 12-stat list below is wired versus planned.)**
-- `GamebreakerController` exists. **(verify: how closely it matches the spec below.)**
+- Gamebreaker input is on the shared Player prefab. Human offense/defense activate with G or gamepad LB/L1; CPU spends its own full meter at the next live opportunity.
+- Both sides use the same flat all-attribute boost (Inspector-tunable 1.2 multiplier, existing attribute hard caps still apply), lasting until the possession ends. Team-owned runtime attributes cover AI and controlled players.
+- Issue #2: PlayerModel visual body rotated 180 degrees from its committed backwards orientation; gameplay roots, skeleton and collider stay intact. Manual running-direction review remains required.
 
 ## Known issues
 
@@ -53,13 +55,13 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Downs and first-down marker | Automated match cases verify first downs, incompletions, OOB gains and fourth-down possession changes; visual line placement still needs manual review. |
 | `carryOffset` untuned | On `BallController`. Ball position relative to the carrier. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
-| Gamebreaker wiring/lifetime | Player controller is absent from inspected scene/prefab stacks; active lifetime differs from documented intent. Deferred. |
+| Gamebreaker balance/readability | Wiring and possession lifetime implemented; manual feel and final UI design remain. Existing scorebug shows READY / ACTIVE. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
 | Ball is a sphere primitive | Placeholder until the football mesh is imported. |
 
 ## Incomplete (next up, in order)
 
-1. **Normal standalone gameplay pass** — owner verified the prior four-fix Editor gameplay. The expanded 28-case suite passes in both Editor and a macOS standalone player, including matches to 21 and rematches. Manual controller/graphics checks of the normal app remain.
+1. **Normal standalone gameplay pass** — owner verified the prior four-fix Editor gameplay. The expanded 39-case suite passes in both Editor and a macOS standalone player, including matches to 21 and rematches. Manual controller/graphics checks of the normal app remain.
 2. **Loose-ball gameplay feel** — ownership is now exclusive; manually verify scrum readability and recovery/control transfer.
 3. **Handoff visuals + football mesh** — proximity transfer exists; visible exchange animation remains missing.
 4. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
@@ -80,8 +82,10 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 
 ### Gamebreaker
 - Merge NFL Street 1's flat all-stat boost for the whole possession with NFL Street 3's player-triggered activation (no cutscene).
-- Applied as a temporary multiplier on top of `PlayerAttributes` / `DefenderAttributes`; cleared on `PlayState.OnPlayEnded`.
-- **Open question:** defensive equivalent. Auto-fumble-on-contact versus a contain-break boost.
+- Applied once in team-bound `PlayerAttributes.Effective`, after field addition and before hard caps. A possession spans multiple downs: clear both active boosts on a score, possession change (including fourth-down failure / opponent fumble recovery), or game over. Ordinary whistles and same-team fumble recoveries preserve it. Unspent meter remains with its team.
+- Defensive decision: player-triggered flat team boost, same as offense; better speed, coverage and tackling improve existing outcomes. No automatic spending and no guaranteed turnover. Both teams may activate in the same possession. Active teams cannot refill until their boost ends.
+- Swagger scales styling and actor-attributed move/sack/fumble/interception/touchdown earnings. CPU earns from existing gameplay awards; it does not simulate holding Style.
+- Styling: hold T or gamepad X/Square while the controlled player holds the live ball. Activation: G or LB/L1 during live play, full meter only, including while controlling a defender. No cutscene.
 
 ### Walls and fences
 - Hazards only. No wall-running or traversal.
@@ -103,7 +107,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 
 ## Current blockers
 
-- No automated match-loop blocker remains in the 28-case Editor/macOS player suite. Finish a manual controller-played match/rematch in the normal app before treating game feel and visuals as verified.
+- No automated match-loop blocker remains in the 39-case Editor/macOS player suite. Finish a manual controller-played match/rematch in the normal app before treating game feel and visuals as verified.
 - Wrong-team return scoring, unheld-ball touchdowns, competing carrier/defender claims, and interrupted-hurdle immunity have code fixes; runtime validation is recorded separately in `TESTING.md`.
 - Match progression already includes downs, possession changes, first-to-21 scoring, winner UI, and scene-reload rematch. No conversions or main menu yet.
 
@@ -132,8 +136,17 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - Existing idle controller is wired to the visual model with root motion disabled; state tint now targets the skinned body. Running/throwing/catching/tackling animation coverage remains unfinished; this task does not add animation clips.
 - Unity asset validation passed for all fourteen players (bounds/alignment, colliders, valid material references, body feedback, humanoid avatar, idle controller and disabled root motion). All 28 existing Editor Play Mode regressions passed with the replacement assets. Visual preview/build checks are recorded in TESTING.md.
 
-The imported body faces local -Z; PlayerModel rotates only its visual child 180 degrees to face the gameplay root's +Z. The animated front/back preview confirmed the corrected facing and existing idle pose.
+Issue #2 supersedes the earlier preview: gameplay exposed backwards facing on both teams. The visual body's rotation is corrected by 180 degrees relative to that committed state, with fitting offsets mirrored. Automated checks verify all fourteen players inherit the correction; manual running-direction confirmation is still required.
 
 The normal macOS app was rebuilt successfully with the final model assets (0 errors; 440 existing build warnings). Output: `Builds/macOS/Blacktop.app`. The rendered animated front/back preview is saved locally at `Builds/Validation/PlayerModel-preview.png`; Editor test results are at `Builds/Validation/character-playmode.xml`.
 
 The refreshed app passed a headless scene-startup smoke check with no logged runtime exceptions, then was stopped intentionally. Manual controller play, running/football animation coverage, and Windows remain unverified for this visual change.
+
+## 2026-10-18 — Gamebreaker and issue #2 validation
+
+- Unity 6000.5.6f1 isolated-project Editor Play Mode: **39/39 passed**.
+- macOS standalone test player: **39/39 passed**. Includes the prior 28 resolution/match/rematch cases plus 11 Gamebreaker/input/prefab cases.
+- New coverage: real G/LB input on offense and defense, one controlled-team activation despite fourteen listeners, underfilled/dead/duplicate/game-over rejection, all twelve team-owned attribute multipliers and caps, defensive coverage/fumble odds without guaranteed outcomes, boosts across downs through fourth-down turnover, CPU activation on both sides, fourteen inherited model/input stacks.
+- Synthetic input devices explicitly route to gameplay in the headless Editor; test settings are restored. This does not substitute for a physical-controller playtest.
+- Full diff review and `git diff --check` passed. Final UI design, human gameplay balance/readability, visual running-direction review and Windows validation remain manual work.
+- Normal macOS development app rebuilt successfully: zero build errors, 408 reported warnings (including obsolete Unity API warnings). Headless startup loaded the match scene without logged exceptions; stopped after startup. Physical controller, graphics and gameplay feel were not checked by that smoke run.

@@ -20,10 +20,9 @@ public class JukeMove : IPlayerMove
     Vector3 direction;
     PlayerAttributes attr;
 
-    float Duration => baseDuration / attr.Agility(null, GB(AttributeStat.Agility));
-    float LateralDistance => baseLateralDistance * attr.Agility(null, GB(AttributeStat.Agility));
+    float Duration => baseDuration / attr.Agility();
+    float LateralDistance => baseLateralDistance * attr.Agility();
 
-    static float GB(AttributeStat stat) => PlayState.Instance != null ? PlayState.Instance.GetGamebreakerMult(stat) : 1f;
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
         => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;

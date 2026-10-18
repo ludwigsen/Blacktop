@@ -1,6 +1,6 @@
 {
     "name": "Blacktop.PlayMode.Tests",
-    "references": ["Blacktop"],
+    "references": ["Blacktop", "Unity.InputSystem"],
     "optionalUnityReferences": ["TestAssemblies"],
     "defineConstraints": ["UNITY_INCLUDE_TESTS"]
 }

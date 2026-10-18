@@ -9,6 +9,9 @@ public class PlayerAttributes : ScriptableObject
 {
     public AttributeCurves curves;
 
+    // Bound only on a private runtime copy. Shared assets must never acquire a team's match state.
+    [System.NonSerialized] public int ownerTeamId = -1;
+
     [Range(0, 20)] public int passing = 10;
     [Range(0, 20)] public int speed = 10;
     [Range(0, 20)] public int blocking = 10;
@@ -46,14 +49,17 @@ public class PlayerAttributes : ScriptableObject
 
     // Stack order: curve output (identity) + field additive% (environment, small &
     // bounded by design) -> combined, THEN x gamebreaker (temporary, multiplicative,
-    // cleared on PlayState.OnPlayEnded per the Gamebreaker design note) -> hard clamp.
+    // cleared when the possession ends) -> hard clamp.
     // The clamp is the backstop against ANY combination running away, independent of
     // how field/gamebreaker individually stack.
     public float Effective(AttributeStat stat, int rating, FieldModifiers field = null, float gamebreakerMult = 1f)
     {
         float curveMult = curves != null ? curves.Evaluate(stat, rating) : 1f;
         float fieldAdd = field != null ? field.Get(stat) : 0f;
-        float combined = (curveMult + fieldAdd) * gamebreakerMult;
+        // Resolve the boost live for this attribute owner's team, including defenders and AI teammates.
+        float teamBoost = PlayState.Instance != null
+            ? PlayState.Instance.GetGamebreakerMult(ownerTeamId, stat) : 1f;
+        float combined = (curveMult + fieldAdd) * gamebreakerMult * teamBoost;
 
         var (min, max) = curves != null ? curves.HardCap(stat) : (0.5f, 2f);
         return Mathf.Clamp(combined, min, max);

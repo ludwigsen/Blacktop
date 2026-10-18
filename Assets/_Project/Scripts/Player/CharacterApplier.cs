@@ -26,13 +26,17 @@ public class CharacterApplier : MonoBehaviour
     [SerializeField] float nameplateHeight = 2.6f;
     [SerializeField] int nameplateFontSize = 28;
 
+    PlayerAttributes runtimeAttributes;
+
     public TeamRoster.PlayerRecord? Record { get; private set; }
 
     void Awake()
     {
         if (roster == null)
         {
-            Debug.LogWarning($"[CharacterApplier] {name} has no TeamRoster assigned — leaving whatever attributes are already wired per-component.", this);
+            // The prototype's rosterless team still needs its own team-bound attributes, not a shared asset.
+            var fallback = GetComponent<PlayerStateMachine>()?.Attributes;
+            if (fallback != null) ApplyAttributes(Instantiate(fallback));
             return;
         }
 
@@ -50,8 +54,15 @@ public class CharacterApplier : MonoBehaviour
         if (showNameplate) BuildNameplate(record.Value);
     }
 
+    void OnDestroy()
+    {
+        if (runtimeAttributes != null) Destroy(runtimeAttributes);
+    }
+
     void ApplyAttributes(PlayerAttributes attr)
     {
+        runtimeAttributes = attr;
+        attr.ownerTeamId = GetComponent<TeamMember>().teamId;
         if (TryGetComponent<PlayerMovement>(out var movement)) movement.SetAttributes(attr);
         if (TryGetComponent<PlayerStateMachine>(out var stateMachine)) stateMachine.SetAttributes(attr);
         if (TryGetComponent<ReceiverAI>(out var receiverAI)) receiverAI.SetAttributes(attr);

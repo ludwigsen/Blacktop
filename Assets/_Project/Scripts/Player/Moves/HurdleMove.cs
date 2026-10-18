@@ -25,8 +25,7 @@ public class HurdleMove : IPlayerMove
     float startingHeight; // restore ground height if the whistle interrupts the arc
     PlayerAttributes attr;
 
-    float PeakHeight => basePeakHeight * attr.Agility(null, GB(AttributeStat.Agility));
-    static float GB(AttributeStat stat) => PlayState.Instance != null ? PlayState.Instance.GetGamebreakerMult(stat) : 1f;
+    float PeakHeight => basePeakHeight * attr.Agility();
 
     float Duration => baseDuration;
 
