@@ -1,8 +1,8 @@
 using UnityEngine;
 
 // Polled touchdown check against the end zone the ball is being driven toward. Deliberately
-// checks the BALL rather than the carrier: passes, fumbles, and interceptions all use the
-// same rule. FieldBounds performs the test in FieldRoot-local coordinates, so moving or
+// checks a HELD BALL rather than the carrier's feet: possession is required before
+// crossing the goal line can score. FieldBounds performs the test in FieldRoot-local coordinates, so moving or
 // rotating the complete field does not require any scoring-code changes.
 //
 // This class NEVER ends a play as a Safety. A safety is a result of how a play ends (tackled
@@ -30,24 +30,9 @@ public class TouchdownZone : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance == null || !PlayState.Instance.IsLive) return;
-        if (BallController.Instance == null) return;
-
-        Vector3 ballPos = BallController.Instance.transform.position;
-
-        // Resolve live, not from PossessionTeamId: during a live turnover the carrier is on
-        // the other team and PossessionTeamId hasn't flipped yet (that happens in EndPlay).
-        FieldDirection dir = PlayState.Instance.ViewDirection;
-
-        if (fieldBounds != null)
-        {
-            if (fieldBounds.GetEndZone(ballPos) == dir.TargetEndZone)
-                PlayState.Instance.EndPlay(PlayState.PlayEndReason.Touchdown);
-            return;
-        }
-
-        // Compatibility for scenes not yet migrated to a FieldRoot (SampleScene has none
-        // today). New fields should always assign FieldBounds so this fallback is unused.
-        if (dir.IsInTargetEndZone(ballPos.z))
+        // PlayState validates held possession AND legal field position for every caller.
+        // This poll only requests the ruling; it cannot score a pass or a loose fumble.
+        if (PlayState.Instance.TryGetTouchdownTeam(out _, fieldBounds))
             PlayState.Instance.EndPlay(PlayState.PlayEndReason.Touchdown);
     }
 }

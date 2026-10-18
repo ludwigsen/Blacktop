@@ -37,6 +37,21 @@ public class TackleContact : MonoBehaviour
         // which races against this component with no defined execution order.
         if (BallController.Instance == null || BallController.Instance.Carrier != transform) return;
 
+        // A sideline crossing is dead before a tackle can roll a live fumble.
+        if (PlayState.Instance.IsBallOutOfBounds())
+        {
+            PlayState.Instance.EndPlay(PlayState.PlayEndReason.OutOfBounds);
+            return;
+        }
+
+        // A legal held ball across the goal line has already scored. Do this before
+        // any fumble roll so component Update order cannot turn that score into a drop.
+        if (PlayState.Instance.TryGetTouchdownTeam(out _))
+        {
+            PlayState.Instance.EndPlay(PlayState.PlayEndReason.Touchdown);
+            return;
+        }
+
         Collider[] hits = Physics.OverlapSphere(transform.position, contactRadius);
         foreach (var hit in hits)
         {

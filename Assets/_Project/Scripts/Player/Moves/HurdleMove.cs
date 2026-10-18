@@ -22,6 +22,7 @@ public class HurdleMove : IPlayerMove
     [SerializeField] float baseNegateChance = 0.2f; // flat 20% base, scaled by hurdleMult
 
     float timer, lastHeightSample, lastForwardSample;
+    float startingHeight; // restore ground height if the whistle interrupts the arc
     PlayerAttributes attr;
 
     float PeakHeight => basePeakHeight * attr.Agility(null, GB(AttributeStat.Agility));
@@ -35,6 +36,7 @@ public class HurdleMove : IPlayerMove
     public void Enter(PlayerContext ctx)
     {
         attr = ctx.attributes;
+        startingHeight = ctx.transform.position.y;
         timer = 0f;
         lastHeightSample = 0f;
         lastForwardSample = 0f;
@@ -83,5 +85,14 @@ public class HurdleMove : IPlayerMove
     {
         ctx.setTackleImmune(false); // immunity only lasts the move's duration — never lingers into normal Run state
         ctx.setCooldown(cooldownDuration);
+    }
+
+    public void Cancel(PlayerContext ctx)
+    {
+        // Only remove this move's vertical displacement; preserve the whistle's X/Z.
+        Vector3 position = ctx.transform.position;
+        position.y = startingHeight;
+        ctx.transform.position = position;
+        ctx.setTackleImmune(false);
     }
 }

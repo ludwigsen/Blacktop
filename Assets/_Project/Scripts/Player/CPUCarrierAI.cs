@@ -56,7 +56,10 @@ public class CPUCarrierAI : MonoBehaviour
 
         if (!ShouldDrive) { readTimer = 0f; return; }
 
-        if (teamMember.slot == TeamMember.RosterSlot.QB)
+        // A QB who recovers the other team's fumble is a returner, not the passer
+        // for the old play call. Never let him throw to the opposing offense's roster.
+        if (teamMember.slot == TeamMember.RosterSlot.QB &&
+            teamMember.teamId == PlayState.Instance.PossessionTeamId)
             UpdateQuarterback();
         else
             UpdateRunner();
@@ -95,7 +98,8 @@ public class CPUCarrierAI : MonoBehaviour
 
     void UpdateRunner()
     {
-        Vector3 desired = PlayState.Instance.AttackDirection.Forward;
+        // PossessionTeamId changes at the whistle; return direction changes immediately.
+        Vector3 desired = PlayState.Instance.DirectionFor(teamMember.teamId).Forward;
 
         foreach (var threatPos in NearestThreatPositions(threatsConsidered))
         {

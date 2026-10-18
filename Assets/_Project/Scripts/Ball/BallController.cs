@@ -32,6 +32,12 @@ public class BallController : MonoBehaviour
     public BallState State { get; private set; } = BallState.Held;
     public Transform Carrier => carrier;
     public bool IsHeld => State == BallState.Held;
+
+    // Rendering follows in LateUpdate, but rulings can happen during Update. Resolve
+    // the held spot live so goal-line/contact order never reads last frame's ball.
+    public Vector3 RulingPosition => IsHeld && carrier != null
+        ? carrier.position + carrier.TransformDirection(carryOffset)
+        : transform.position;
     public Vector3 FlightTarget => targetPoint; // where the current pass/pitch is headed — used to auto-switch defenders
     public Transform IntendedReceiver => intendedReceiver; // who the ball is thrown to, while InFlight — ReceiverAI uses this to know a pass is coming for THEM specifically, not just that some ball is in the air
  
@@ -159,8 +165,7 @@ public class BallController : MonoBehaviour
     {
         if (carrier == null) return; // shouldn't happen while Held, but cheap to guard
 
-        Vector3 forwardUp = carrier.TransformDirection(new Vector3(0f, carryOffset.y, carryOffset.z));
-        transform.SetPositionAndRotation(carrier.position + forwardUp + carrier.right * carryOffset.x, carrier.rotation);
+        transform.SetPositionAndRotation(RulingPosition, carrier.rotation);
     }
 
     // Entry point called by PassMove/PitchMove on Exit. arcHeight/duration are supplied
@@ -422,6 +427,7 @@ public class BallController : MonoBehaviour
     public void Drop()
     {
         carrier = null;
+        intendedReceiver = null; // a dead/loose ball has no live receiving team for control
         State = BallState.Loose;
     }
 

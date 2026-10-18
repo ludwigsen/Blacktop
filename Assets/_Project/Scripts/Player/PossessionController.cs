@@ -134,12 +134,18 @@ public class PossessionController : MonoBehaviour
 
         if (controlled)
         {
+            // Recovery can turn the selected defender into the carrier in the same
+            // frame. Release that locomotion stack BEFORE publishing the carrier claim.
+            if (TryGetComponent<DefenderControl>(out var defenderControl))
+                defenderControl.SetControlled(false);
             ActivelyControlled = transform;
             ActivelyControlledTeamId = teamMember != null ? teamMember.teamId : (int?)null;
         }
-        else if (ActivelyControlled == transform)
+        else if (ActivelyControlled == transform &&
+                 (!TryGetComponent<DefenderAI>(out var defenderAI) || !defenderAI.IsUserControlled))
         {
-            // don't clear a DIFFERENT object's claim if this instance never held it
+            // A CPU recovery may make the former carrier the selected human defender
+            // before this Update. Preserve that newer claim as well as other players'.
             ActivelyControlled = null;
             ActivelyControlledTeamId = null;
         }

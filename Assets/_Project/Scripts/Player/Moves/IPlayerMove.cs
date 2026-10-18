@@ -8,4 +8,7 @@ public interface IPlayerMove
     void Tick(PlayerContext ctx, float deltaTime);
     bool IsComplete { get; }
     void Exit(PlayerContext ctx);
+
+    // Cleanup only: called on interruption, never commit a throw or award a result.
+    void Cancel(PlayerContext ctx);
 }

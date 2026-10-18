@@ -1,6 +1,6 @@
 # TESTING.md — Blacktop
 
-Repeatable play-test scenarios and known limitations. Blacktop has no automated tests yet; everything here is manual play-testing in the Unity Editor. Run the relevant scenarios after any change to the area it covers, and add a scenario when you add behavior.
+Repeatable play-test scenarios and known limitations. Blacktop has Play Mode regression tests in `Assets/Tests/PlayMode/PlayResolutionTests.cs` for the four play-resolution fixes; the scenarios below are manual play-testing in the Unity Editor. Run the relevant scenarios after any change to the area it covers, and add a scenario when you add behavior.
 
 Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure there is not a regression.
 
@@ -40,7 +40,7 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 ### T-11: Incomplete pass
 **Steps:** Throw to a covered receiver or throw away from everyone.
 **Expected:** Play ends as incomplete. No possession change, no score.
-**Watch for:** Ball landing in the end zone being treated as a touchdown (**TouchdownZone vs incomplete-pass race, known open item**).
+**Watch for:** Ball landing in the end zone being treated as a touchdown (held-ball-only scoring regression).
 
 ### T-12: Pitch / lateral
 **Steps:** Use a pitch.
@@ -100,14 +100,14 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 ### T-43: Field lines
 **Steps:** Observe LOS, first-down, and goal lines across several plays and both possessions.
 **Expected:** LOS follows the ball spot. Lines are visible and flip with possession direction.
-**Watch for:** Lines in the wrong place after a possession change. The first-down line is a placeholder (LOS + 10) until downs are built; its position is not a bug right now.
+**Watch for:** Lines in the wrong place after a possession change. The first-down line reads `DownsTracker.YardsToGo`, including goal-to-go.
 
 ## Out of bounds
 
-### T-50: Out of bounds **(KNOWN BROKEN)**
+### T-50: Out of bounds / goal-line precedence
 **Steps:** Run the ball out through the sideline. Repeat on both sides and in both directions.
 **Expected:** The play ends with the ball spotted where it went out.
-**Current behavior:** Still not working after the 2026-10-05 fix pass.
+**Current implementation:** automatic SidelineCheck and pre-contact boundary checks share the live ball ruling position. A ball outside the legal scoring rectangle must never score, even past the target goal line.
 **When fixing:** retest T-31, T-40, and T-41, since out of bounds touches the same resolution paths.
 
 ## Loose ball
@@ -115,7 +115,7 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 ### T-60: Fumble and recovery **(partially known limited)**
 **Steps:** Force a fumble if possible; watch who recovers.
 **Expected (target):** Nearest player recovers.
-**Current behavior:** Recovery uses the first collider in the hits array, with no distance tie-breaking, and defenders freeze while the ball is loose.
+**Current implementation:** nearest eligible player recovers with an entity-ID tie-break; pursuit exists. Some players may receive both DefenderAI and AllyBlocker movement during scrums (deferred).
 **Watch for:** Wrong player recovering, recovery from far away, and possession set to the wrong team.
 
 ## Gamebreaker
@@ -151,16 +151,50 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 
 - Ball is a sphere placeholder; the football mesh isn't imported.
 - No visible handoff; run plays are not fully designed.
-- No downs/yardage tracking; first-down line is `LOS + 10f`.
+- Downs and distance are implemented; regression-test fourth-down turnovers and goal-to-go.
 - No game clock.
 - `carryOffset` on `BallController` is untuned.
 - Blocking is untested; expect rough behavior.
-- Fumble recovery picks the first collider found.
-- Defenders freeze when the ball is loose.
+- Recovery uses nearest distance plus entity-ID tie-break; exercise overlapping players.
+- Loose-ball pursuit can have competing movement owners.
 - Trick plays are not handled in route/block logic.
-- Out of bounds is broken.
-- No automated tests, so regressions are caught only by playing.
+- Goal-line/sideline precedence fixes require corner testing in both attack directions.
+- Automated cases cover the four resolution fixes; controller feel and a full match still require manual play.
 
 ## Adding a scenario
 
 Use the same format: **ID, Steps, Expected, Watch for.** Mark it `(KNOWN BROKEN)` if it fails on purpose. Add new limitations to the list above and to `PROJECT_STATUS.md`.
+
+## Four Must Have fixes: regression checklist (2026-10-17)
+
+Open **Window > General > Test Runner > PlayMode**, select `PlayResolutionTests`, and Run Selected. Tests load the real SampleScene and change runtime objects only. No scene/prefab authoring changes are required. Tests deliberately arrange rare recoveries/whistles via reflection; they do not simulate human input or validate game feel.
+
+### T-90: Held-ball scoring and competing terminal sources
+**Steps:** Throw/deflect a ball into the target end zone without a catch; separately force a loose fumble there. Carry/catch a held ball across each team's target goal line. Repeat with defender contact at the line and just outside either sideline.
+**Expected:** No airborne/loose touchdown. A legal held ball scores once. Goal-line contact cannot roll a fumble after a legal score. Outside the legal scoring rectangle, there is no touchdown; held/loose OOB resolves via the existing boundary rule.
+**Watch for:** Wrong result depending on component Update order; score before catch; score while outside the field. Repeat with a FieldBounds test setup as well as the scene's constants fallback.
+
+### T-91: Defensive fumble return and next drive
+**Steps:** Force a live defensive recovery (use TackleContact's fumble chance temporarily in Play Mode for repeatability), return for a TD, and repeat for both teams. Include a return that reaches the winning score.
+**Expected:** Recovering team gets six exactly once. Scorer's opponent starts the next drive on its own side, first-and-ten. Winning return displays the correct winner and schedules no next huddle. Interceptions still end immediately; return testing uses fumbles.
+**Watch for:** Original offense credited, incorrect receiving team/direction, or next drive after game over. Runtime-only tuning changes must not be saved.
+
+### T-92: Live recovery control and CPU direction
+**Steps:** On defense, recover with the selected defender and then another teammate; hold movement input through recovery. On offense, let the CPU recover, including its QB. Switch defenders after CPU recovery. Repeat while the returner pitches laterally.
+**Expected:** Human recovery becomes carrier control; previous defender locomotion stops. CPU recovery gives the human one defender and runs toward the recovering team's target end zone immediately. A recovering QB runs, never throws to the original offense. Camera/highlight follow the canonical controlled player.
+**Watch for:** Two players moving from one stick, a lost highlight, frozen carrier, wrong-way CPU run, or control snapping back to the old carrier. Drive possession changes only at the whistle.
+
+### T-93: Whistle/control loss during committed moves
+**Steps:** Hurdle near a defender and end the play mid-arc through OOB or TD. On the next play, allow an ordinary tackle. Also interrupt a pass/pitch windup with a tackle and test a fumble during a hurdle.
+**Expected:** Interrupted hurdle returns to its starting height and clears immunity. No interrupted pass/pitch releases after the whistle or after losing carrier control. Normal completed moves still finish normally.
+**Watch for:** Floating players, a persistent immune carrier, or a ball released during post-play presentation. Repeat after a rematch to exercise fresh Awake/Start ordering.
+
+Then run T-01, T-10/T-11, T-21/T-31, T-40/T-41 and play to 21, confirm the winner, restart, and complete another play. Keep the Console open throughout.
+
+
+### Validation recorded for this change
+
+- Unity 6000.5.6f1 batchmode Play Mode run in an isolated copy of this repository: **20 passed, 0 failed, 0 skipped** (`PlayResolutionTests`). Includes scene/prefab loading, false-score rejection, goal-line/sideline contact precedence, correct return scorer/drive/winner, both control-update orders, CPU QB return direction, and whistle/control-loss cancellation.
+- Runtime source compilation against the installed Unity assembly references passed. Existing obsolete-API/serialized-field warnings remain.
+- `git diff --check` passed. No scene, prefab, Input Actions, tuning asset, or gameplay number was changed.
+- Not performed: manual controller play, a full match to 21/rematch, visual HUD/animation review, Windows Editor, or a player build. The scenarios above remain required for those checks.

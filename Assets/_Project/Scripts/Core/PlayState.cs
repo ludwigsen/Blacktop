@@ -156,7 +156,21 @@ public class PlayState : MonoBehaviour
 
     public int UserTeamId => userTeamId;
     public bool IsUserTeam(int teamId) => teamId == userTeamId;
-    public bool IsUserDefending => userTeamId != PossessionTeamId;
+    // Drive possession stays fixed until the whistle; live control follows the ball.
+    public bool IsUserDefending
+    {
+        get
+        {
+            var ball = BallController.Instance;
+            if (IsLive && ball != null)
+            {
+                Transform owner = ball.IsHeld ? ball.Carrier : ball.IntendedReceiver;
+                if (owner != null && owner.TryGetComponent<TeamMember>(out var member))
+                    return !IsUserTeam(member.teamId);
+            }
+            return userTeamId != PossessionTeamId;
+        }
+    }
 
     // Each team has a fixed attack direction; possession decides which one is "the" direction.
     public FieldDirection DirectionFor(int teamId)
@@ -420,11 +434,57 @@ public class PlayState : MonoBehaviour
         }
     }
 
+    // Shared by the polling zone and terminal resolution: airborne/loose balls cannot
+    // score, and a held ball outside the legal rectangle loses to the sideline ruling.
+    public bool TryGetTouchdownTeam(out int scoringTeamId, FieldBounds bounds = null)
+    {
+        scoringTeamId = -1;
+        var ball = BallController.Instance;
+        if (ball == null || !ball.IsHeld || ball.Carrier == null ||
+            !ball.Carrier.TryGetComponent<TeamMember>(out var holder)) return false;
+
+        if (bounds == null) bounds = FindAnyObjectByType<FieldBounds>();
+        Vector3 spot = ball.RulingPosition;
+        FieldDirection direction = DirectionFor(holder.teamId);
+        bool inEndZone = bounds != null
+            ? bounds.GetEndZone(spot) == direction.TargetEndZone
+            : Mathf.Abs(spot.x) <= FieldConstants.HalfWidth &&
+              Mathf.Abs(spot.z) <= FieldConstants.PlayLength * 0.5f &&
+              direction.IsInTargetEndZone(spot.z);
+        if (!inEndZone) return false;
+
+        scoringTeamId = holder.teamId;
+        return true;
+    }
+
+    // Contact and sideline polling share this decision. In-flight balls still finish
+    // their flight; a wall-contained crossing preserves the existing venue behavior.
+    public bool IsBallOutOfBounds(FieldBounds bounds = null)
+    {
+        var ball = BallController.Instance;
+        if (ball == null || ball.State == BallController.BallState.InFlight) return false;
+        if (bounds == null) bounds = FindAnyObjectByType<FieldBounds>();
+        Vector3 spot = ball.RulingPosition;
+        return bounds != null
+            ? bounds.GetState(spot) == FieldBoundsState.OutOfBounds && !bounds.IsWallContained(spot)
+            : Mathf.Abs(spot.x) > FieldConstants.HalfWidth ||
+              Mathf.Abs(spot.z) > FieldConstants.PlayLength * 0.5f;
+    }
+
     public void EndPlay(PlayEndReason reason)
     {
         // All terminal sources converge here. Latch before notifying observers so same-
         // frame overlap/flight callbacks cannot resolve one snap twice.
         if (!IsLive || terminalPlayResolved) return;
+        // Validate before latching. A tackle at the goal line must produce the same
+        // result whether TackleContact or TouchdownZone polls first this frame.
+        bool touchdown = TryGetTouchdownTeam(out int touchdownTeamId);
+        if (reason == PlayEndReason.Touchdown && !touchdown) return;
+        if (reason == PlayEndReason.Tackled && IsBallOutOfBounds())
+            reason = PlayEndReason.OutOfBounds;
+        if (touchdown && (reason == PlayEndReason.Tackled || reason == PlayEndReason.OutOfBounds))
+            reason = PlayEndReason.Touchdown;
+
         terminalPlayResolved = true;
         IsLive = false;
         IsPlayEnding = true;
@@ -457,18 +517,21 @@ public class PlayState : MonoBehaviour
         }
         else if (reason == PlayEndReason.Touchdown || reason == PlayEndReason.Safety)
         {
-            // Score first, then possession flips below. The next drive's kickoff
-            // position must be interpreted in the NEXT team's attack direction.
-            nextLineOfScrimmageZ = DirectionFor(OpponentOf(offenseTeamIdThisPlay)).FromAxis(kickoffResetZ);
+            // After a TD the scorer's opponent receives; after a safety the scoring
+            // defense receives. A defensive return must not reuse the old offense.
+            int receivingTeamId = reason == PlayEndReason.Touchdown
+                ? OpponentOf(touchdownTeamId) : OpponentOf(offenseTeamIdThisPlay);
+            nextLineOfScrimmageZ = DirectionFor(receivingTeamId).FromAxis(kickoffResetZ);
         }
 
         if (reason == PlayEndReason.Touchdown)
         {
             // Capture the scorer BEFORE flipping possession for the next drive.
-            LastScoringTeamId = offenseTeamIdThisPlay;
-            AddPoints(offenseTeamIdThisPlay, 6f);
+            LastScoringTeamId = touchdownTeamId;
+            AddPoints(touchdownTeamId, 6f);
             EndGamebreaker(offenseTeamIdThisPlay);
-            TrySetPossession(OpponentOf(offenseTeamIdThisPlay));
+            EndGamebreaker(touchdownTeamId);
+            TrySetPossession(OpponentOf(touchdownTeamId));
         }
         else if (reason == PlayEndReason.Safety)
         {
@@ -507,7 +570,7 @@ public class PlayState : MonoBehaviour
     // playable point so a wall-margin overshoot doesn't read as past the end line.
     Vector3 GetWhistleSpot(PlayEndReason reason)
     {
-        Vector3 spot = BallController.Instance.transform.position;
+        Vector3 spot = BallController.Instance.RulingPosition;
 
         if (reason == PlayEndReason.OutOfBounds)
         {

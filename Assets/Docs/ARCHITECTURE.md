@@ -64,13 +64,13 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
    - **Pass play:** receivers run routes to completion or until a ball carrier crosses the LOS. User selects a receiver via `ReceiverSelectionUI`.
    - **Run play:** WRs block. A visible handoff is required (handoff visuals are not built yet).
    - Defense engages: the closest defender engages the carrier, others contain, with an override once the carrier breaks the LOS.
-4. **Resolution.** Play ends by tackle, touchdown, incomplete pass, out of bounds, or safety. Out of bounds is **currently broken**.
-5. **Play ended.** `PlayState.OnPlayEnded` fires. Anything possession-scoped (Gamebreaker boost) clears here.
+4. **Resolution.** Play ends by tackle, touchdown, incomplete pass, out of bounds, or safety. Held/loose-ball OOB is polled automatically; airborne balls finish flight before a ruling. `PlayState` validates held-ball touchdowns inside the legal rectangle, with the same boundary checks used before contact/fumble rolls.
+5. **Play ended.** `PlayState.OnPlayEnded` fires after score-team, next possession, and whistle spot are resolved. Player moves cancel through `IPlayerMove.Cancel`, independently of successful `Exit` (which releases passes/pitches). The existing three-second presentation then gathers the next huddle. Gamebreaker lifetime remains a separate known discrepancy.
 6. **Next play or possession change.** Drive/score/win check runs; first team to 21 wins.
 
 ### Ball states
 
-`BallState` (top-level enum) describes the ball's condition: in carrier's hands, in flight (pass or pitch, parabolic arc), loose. Possession transfer and fumble recovery key off it. Fumble recovery currently takes the first collider in the hits array with no distance tie-breaking. **(verify enum members.)**
+`BallState` describes the ball's condition: in carrier's hands, in flight (pass or pitch, parabolic arc), loose. Possession transfer and fumble recovery key off it. Recovery selects the nearest eligible player, with an entity-ID tie-break. Actual enum members are `BallController.BallState.Held`, `InFlight`, and `Loose`; the existing nested enum is unchanged.
 
 ### Player move states
 
@@ -83,18 +83,18 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 | `PlayState` | Phase of the play, `PossessionTeamId`, `OnPlayEnded` event | Central game-flow hub. Possession-relative direction depends on it. |
 | `BallController` | Ball state, carrier, passing/pitching arc, play reset | `Instance` singleton. `Carrier` is the only source of truth for who has the ball. Ball is currently a sphere primitive. |
 | `PossessionController` | Enables/disables per-player control behavior; exposes `ActivelyControlled` | Canonical for "which player does the user control." Because it toggles per-object behavior, those behaviors can't be global singletons. |
-| `PlayerStateMachine` | Runs the current `IPlayerMove` per player | One per player. |
+| `PlayerStateMachine` | Runs the current `IPlayerMove` per player | One per player. Whistle subscription occurs in `Start`; both whistle and component disable cancel temporary move effects. |
 | `IPlayerMove` | Interface for moves (Juke, Hurdle, StiffArm, future StumbleMove) | |
 | `BlockingCoordinator` / `AllyBlocker` | Assigns and runs blocking for offensive players | Untested in observed play. |
-| Defender coordination | Closest engages, others contain, LOS-break override | Defenders freeze on a loose ball. |
-| `GamebreakerController` / `GamebreakerHUD` | Gamebreaker meter, activation, HUD | Spec in `PROJECT_STATUS.md`. Boost clears on `PlayState.OnPlayEnded`. |
+| Defender coordination | Closest engages, others contain, LOS-break override | Loose-ball pursuit exists; competing movement ownership remains deferred. |
+| `GamebreakerController` / `GamebreakerHUD` | Gamebreaker meter, activation, HUD | Spec in `PROJECT_STATUS.md`; current lifetime and missing player input components remain known discrepancies. |
 | `ReceiverSelectionUI` | Lets the user pick a receiver on pass plays | |
 | Play-call UI | Formation and play selection | Operates against the current possession team. |
-| `FieldLines` | Procedural LOS, first-down, and goal lines | First-down line is a placeholder (`LOS + 10f`) in `Update()`. |
+| `FieldLines` | Procedural LOS, first-down, and goal lines | Reads distance from the scene's `DownsTracker`. |
 | `CarrierHighlight` | Visual highlight on the ball carrier | Resolve the carrier live; don't cache. Use `MaterialPropertyBlock`. |
 | `FieldConstants` | Field geometry | The only place field dimensions live. All fields share identical dimensions. |
 | `FormationData` | ScriptableObject describing a formation (e.g. the 7-defender set) | Data-driven. |
-| `TouchdownZone` | End zone detection | Has a known race with incomplete-pass resolution. |
+| `TouchdownZone` | End zone detection | Requests a validated ruling from `PlayState`; never scores airborne or loose balls. |
 
 ## Attributes and modifiers
 
@@ -148,7 +148,16 @@ PossessionController ─► BallController
 ## Planned architecture (not built)
 
 - **StumbleMove:** an `IPlayerMove` triggered by wall/fence contact; zero velocity, apply knockback, no evasion window.
-- **Downs/yardage tracker:** will feed `FieldLines` with the real first-down line.
+- **Downs/yardage tracker:** already implemented as `DownsTracker` and scene-wired; listed here previously as planned.
 - **Roster/character assignment:** per-slot character binding (`T1Player02`, `T2Player07`, ...) with GUID identity; each slot carries its own attributes and likeness. Create-a-Team is in; trades and free agency are not.
 - **Appearance system:** 5 body meshes on a shared skeleton, height bands as uniform scale, pooled faces / hair / facial hair.
 - **Handoff animation and designed run plays.**
+
+## Play-resolution and live-turnover ownership (2026-10-17)
+
+- `BallController.RulingPosition` resolves a held ball from the current carrier transform and carry offset, avoiding the previous rendered position before `LateUpdate`.
+- `PlayState.TryGetTouchdownTeam` requires a held ball, a carrier team, and a legal end-zone position. `EndPlay` rechecks this and promotes goal-line tackles to touchdowns. `IsBallOutOfBounds` is shared with `SidelineCheck` and checked before contact can fumble.
+- `LastScoringTeamId` is the actual carrier team on a touchdown. The scorer's opponent receives at its possession-relative drive start; safeties retain the existing scoring/receiving rule.
+- `PossessionTeamId` remains drive-owned until the whistle. During live play, `IsUserDefending` follows the held carrier or intended receiver, so the existing defender manager releases/selects control on live recoveries. `PossessionController.ActivelyControlled` remains the input authority; carrier/defender claims preserve each other's newer assignments regardless of Update order.
+- `CPUCarrierAI` uses the carrier's team direction on returns. A recovering defensive QB runs as a returner instead of executing the old offensive play call.
+- `IPlayerMove.Cancel(PlayerContext)` is cleanup only. All five moves implement it; hurdle restores its starting height and clears immunity, while pass/pitch discard their pending release. Future moves must implement both completion and cancellation.

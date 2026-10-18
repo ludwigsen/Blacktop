@@ -29,57 +29,12 @@ public class SidelineCheck : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance == null || !PlayState.Instance.IsLive)
-            return;
+        var play = PlayState.Instance;
+        if (play == null || !play.IsLive) return;
 
-        var ball = BallController.Instance;
-        if (ball == null)
-            return;
-
-        if (ball.State == BallController.BallState.InFlight)
-            return;
-
-        Vector3 ballPos = ball.transform.position;
-
-        if (fieldBounds != null)
-        {
-            EvaluateFieldBounds(ballPos);
-            return;
-        }
-
-        EvaluateLegacyBounds(ballPos);
-    }
-
-    void EvaluateFieldBounds(Vector3 ballPos)
-    {
-        FieldBoundsState state = fieldBounds.GetState(ballPos);
-
-        if (state != FieldBoundsState.OutOfBounds)
-            return;
-
-        // The ball crossed a legal boundary, but that boundary may be enclosed
-        // by a physical wall. If so, let physics continue the play.
-        if (fieldBounds.IsWallContained(ballPos))
-            return;
-
-        PlayState.Instance.EndPlay(
-            PlayState.PlayEndReason.OutOfBounds);
-    }
-
-    // No FieldBounds in the scene: rule at the actual painted lines. The old version added
-    // FieldConstants.OutOfBoundsMargin (2u) here, but that margin exists for walls sitting
-    // flush at the boundary — with no walls it just let the ball run 2u past the line.
-    // Wall-enclosed fields should use FieldBounds + FieldBoundaryWall instead.
-    void EvaluateLegacyBounds(Vector3 ballPos)
-    {
-        float xLimit = FieldConstants.HalfWidth;
-        float zLimit = FieldConstants.PlayLength * 0.5f;
-
-        if (Mathf.Abs(ballPos.x) > xLimit ||
-            Mathf.Abs(ballPos.z) > zLimit)
-        {
-            PlayState.Instance.EndPlay(
-                PlayState.PlayEndReason.OutOfBounds);
-        }
+        // PlayState also applies this check before tackle/fumble resolution, so the
+        // same live ball position yields one ruling regardless of polling order.
+        if (play.IsBallOutOfBounds(fieldBounds))
+            play.EndPlay(PlayState.PlayEndReason.OutOfBounds);
     }
 }

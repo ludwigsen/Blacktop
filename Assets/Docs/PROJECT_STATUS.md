@@ -8,7 +8,7 @@ Items marked **(verify)** were recorded from planning notes and should be confir
 
 ## Summary
 
-Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop is playable end-to-end in rough form: formation, play call, movement, passing, tackling, possession change, touchdown, win condition. The current phase is **bug-fixing the loop and filling in the missing game-flow pieces** (loose ball, out of bounds, downs), not polish.
+Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop is playable end-to-end in rough form: formation, play call, movement, passing, tackling, possession change, touchdown, win condition. The current phase is **validating match correctness and filling in presentation/content gaps** (the core downs, OOB, and loose-ball paths exist), not polish.
 
 ## What works
 
@@ -20,7 +20,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Passing and pitching with a parabolic arc; `BallState` enum.
 - Possession transfer.
 - `PossessionController` with `ActivelyControlled` as the user-control authority.
-- `PlayState.PossessionTeamId` and possession-relative field direction. **(verify completeness: the four-item "possession foundation" was in progress as of 2026-09-20.)**
+- `PlayState.PossessionTeamId` owns drive direction; live carrier ownership drives return control/direction before the whistle.
 - QB starts with the ball in hand (no snap).
 
 ### Offense and defense
@@ -31,12 +31,12 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Route/block rule: on Pass plays receivers run their route to completion or until a ball carrier crosses the LOS; on Run plays WRs block. Trick plays are deferred.
 
 ### Game flow
-- Drives start at -10 / +10 (own side, per team direction). **(verify: fixed in the 2026-10-05 pass.)**
+- Drives start at -10 / +10 on the receiving team's own side. Scorer/receiving-drive regression tests pass for offensive and defensive touchdowns.
 - Safety only when the play *ends* in the team's own end zone, not merely when the ball touches it. **(verify: same pass.)**
-- Win condition: first to 21 (first team to reach the target wins; no win-by-2). **(verify implementation state.)**
+- Win condition: first to 21 via ScoreBoard/GameRules; a winning defensive-return test passes with a runtime test target of six. Full manual match/rematch remains required.
 
 ### UI and feedback
-- `ReceiverSelectionUI`, play-call UI, `GamebreakerHUD`.
+- `ReceiverSelectionUI`, play-call UI, unified `GameHUD` scorebug and winner/rematch overlay (scene-wired).
 - `CarrierHighlight`.
 - `FieldLines.cs`: procedural LOS, first-down, and goal lines.
 
@@ -48,23 +48,22 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 
 | Issue | Notes |
 |---|---|
-| **Out of bounds not working** | Still broken after the first fix pass on 2026-10-05. Highest-priority bug. |
-| First-down line is a placeholder | `LOS + 10f` in `FieldLines.Update()`. One-line change once downs tracking exists. |
+| OOB / goal-line rulings need Editor validation | Automatic OOB polling exists. Held-ball goal-line and sideline checks now share live ruling position and contact precedence; test both directions and corners. |
+| Downs and first-down marker need match regression | `DownsTracker` is scene-wired; field lines consume its real distance. |
 | `carryOffset` untuned | On `BallController`. Ball position relative to the carrier. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
-| Fumble recovery picks first collider | Uses the first collider in the hits array; no distance tie-breaking. |
-| Defenders freeze on loose ball | Acceptable for now; needs real loose-ball behavior. |
-| Score / clock | Score exists via the win condition **(verify)**; no game clock. |
+| Loose-ball movement ownership | Nearest recovery with tie-break exists; DefenderAI and AllyBlocker can both move some players during a scrum. Deferred outside the four resolution fixes. |
+| Gamebreaker wiring/lifetime | Player controller is absent from inspected scene/prefab stacks; active lifetime differs from documented intent. Deferred. |
+| Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
 | Ball is a sphere primitive | Placeholder until the football mesh is imported. |
 
 ## Incomplete (next up, in order)
 
-1. **Out of bounds** — fix; it's a blocker for realistic drives and sideline play.
-2. **Loose-ball behavior** — defenders and offense should react to a loose ball; fix first-collider recovery.
-3. **`TouchdownZone` vs incomplete-pass race** — a pass that is incomplete must not score or resolve ambiguously when it lands in or near the end zone.
-4. **Handoff visuals + football mesh** — a visible handoff is required. Direct snap-to-RB was explicitly rejected. Replace the sphere in `BallController` with the football `.obj`.
-5. **Downs / yardage tracking** — unlocks the real first-down line.
-6. **Main menu** — separate `MainMenu` scene with a Start New Game button that loads the game scene. Requested 2026-10-06. **(verify whether built.)**
+1. **Validate the four play-resolution fixes** — held-ball-only scoring, correct return scorer/receiving drive, live turnover control/direction, and move cancellation. All 20 automated scene regression cases pass in Unity 6000.5.6f1; manual controller/full-match scenarios remain in `TESTING.md`.
+2. **Loose-ball movement ownership** — pursuit/recovery exist, but some players can receive both DefenderAI and AllyBlocker movement.
+3. **Handoff visuals + football mesh** — proximity transfer exists; visible exchange animation remains missing.
+4. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
+5. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
 
 ## Design backlog (hard constraints when reached)
 
@@ -104,9 +103,9 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 
 ## Current blockers
 
-- **Out of bounds** is the only item actively blocking realistic play-testing.
-- Downs tracking blocks first-down line correctness but not core play-testing.
-- No other hard blockers recorded. Everything else is sequencing.
+- Complete an Editor match regression after the four resolution/control fixes. Compilation alone does not establish gameplay correctness.
+- Wrong-team return scoring, unheld-ball touchdowns, competing carrier/defender claims, and interrupted-hurdle immunity have code fixes; runtime validation is recorded separately in `TESTING.md`.
+- Match progression already includes downs, possession changes, first-to-21 scoring, winner UI, and scene-reload rematch. No conversions or main menu yet.
 
 ## Tooling
 

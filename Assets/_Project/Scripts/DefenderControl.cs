@@ -45,12 +45,15 @@ public class DefenderControl : MonoBehaviour
     // "who is the user piloting" authority — in one place so they can't drift apart.
     public void SetControlled(bool controlled)
     {
+        // Releasing an already-released defender must not erase a newer carrier claim
+        // on the same player (recovery and manager updates can happen in either order).
+        bool wasControlled = ai.IsUserControlled;
         ai.SetUserControlled(controlled);
         enabled = controlled;
 
         if (controlled && TryGetComponent<TeamMember>(out var member))
             PossessionController.ClaimControl(transform, member.teamId);
-        else
+        else if (wasControlled)
             PossessionController.ReleaseControl(transform);
     }
 
@@ -60,6 +63,11 @@ public class DefenderControl : MonoBehaviour
 
         // PlayState's canned presentation owns actor transforms after the whistle.
         if (play != null && !play.IsLive) { velocity = Vector3.zero; return; }
+
+        // A live recovery can occur before the manager's next Update. Stop the old
+        // defender locomotion immediately, even if its component is still enabled.
+        if (play != null && !play.IsUserDefending) { velocity = Vector3.zero; return; }
+        if (PossessionController.ActivelyControlled != transform) { velocity = Vector3.zero; return; }
 
         // Stiff-armed / shed: DefenderAI is animating the shove, so input is locked out.
         if (ai.IsStunned) { velocity = Vector3.zero; return; }

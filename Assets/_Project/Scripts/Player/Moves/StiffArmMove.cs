@@ -101,4 +101,9 @@ public class StiffArmMove : IPlayerMove
     public bool IsComplete => timer >= Duration;
 
     public void Exit(PlayerContext ctx) => ctx.setCooldown(cooldownDuration);
+
+    public void Cancel(PlayerContext ctx)
+    {
+        // No persistent effects: abandoning Tick stops the committed movement.
+    }
 }

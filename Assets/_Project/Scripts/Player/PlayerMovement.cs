@@ -71,6 +71,15 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        // Component toggles settle during Update; stale carrier input must never move
+        // a second player in the frame that a fumble changes the control owner.
+        if (PossessionController.ActivelyControlled != transform ||
+            BallController.Instance == null || BallController.Instance.Carrier != transform)
+        {
+            currentVelocity = Vector3.zero;
+            return;
+        }
+
         Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
 
         // Input is screen-relative: stick-up = up on screen, whichever way the camera is

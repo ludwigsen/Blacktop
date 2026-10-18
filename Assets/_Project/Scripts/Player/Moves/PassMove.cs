@@ -162,5 +162,8 @@ public class PassMove : IPlayerMove
         return dist <= maxReceiverSearchRadius;
     }
 
-
+    public void Cancel(PlayerContext ctx)
+    {
+        target = null; // discard the pending release without throwing
+    }
 }

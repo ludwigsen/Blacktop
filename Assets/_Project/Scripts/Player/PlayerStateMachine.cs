@@ -54,7 +54,12 @@ public class PlayerStateMachine : MonoBehaviour
             setCooldown = t => cooldownTimer = t,
             addOffensePoints = pts => PlayState.Instance?.AddOffensePoints(pts),
         };
+    }
 
+    void Start()
+    {
+        // Start runs after every Awake, so scene object order cannot lose the whistle
+        // subscription. Keep it while disabled: benched/AI players need cleanup too.
         if (PlayState.Instance != null)
             PlayState.Instance.OnPlayEnded += HandlePlayEnded;
     }
@@ -64,7 +69,19 @@ public class PlayerStateMachine : MonoBehaviour
     // celebration state, etc.) doesn't require another signature change later.
     void HandlePlayEnded(PlayState.PlayEndReason reason)
     {
+        CancelActiveMove();
+    }
+
+    void OnDisable() => CancelActiveMove();
+
+    void CancelActiveMove()
+    {
+        // Exit is successful completion (Pass/Pitch release there). An interruption
+        // only cleans up temporary effects and must never launch a post-whistle ball.
+        activeMove?.Cancel(ctx);
         activeMove = null;
+        IsTackleImmune = false;
+        cooldownTimer = 0f;
         currentState = PlayerState.Idle;
     }
 
@@ -77,6 +94,15 @@ public class PlayerStateMachine : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+
+        // A recovery may change carriers before PossessionController toggles this
+        // component. Cancel stale moves before they can tick or release another ball.
+        if (BallController.Instance == null || BallController.Instance.Carrier != transform ||
+            PossessionController.ActivelyControlled != transform)
+        {
+            CancelActiveMove();
+            return;
+        }
 
         if (cooldownTimer > 0f) cooldownTimer -= Time.deltaTime;
 
