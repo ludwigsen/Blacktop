@@ -86,7 +86,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 | `PlayerStateMachine` | Runs the current `IPlayerMove` per player | One per player. Whistle subscription occurs in `Start`; both whistle and component disable cancel temporary move effects. |
 | `IPlayerMove` | Interface for moves (Juke, Hurdle, StiffArm, future StumbleMove) | |
 | `BlockingCoordinator` / `AllyBlocker` | Assigns and runs blocking for offensive players | Untested in observed play. |
-| Defender coordination | Closest engages, others contain, LOS-break override | Loose-ball pursuit exists; competing movement ownership remains deferred. |
+| Defender coordination | Closest engages, others contain, LOS-break override | Loose-ball defense uses DefenderAI; offense uses AllyBlocker; selected defender movement stays with human control. |
 | `GamebreakerController` / `GamebreakerHUD` | Gamebreaker meter, activation, HUD | Spec in `PROJECT_STATUS.md`; current lifetime and missing player input components remain known discrepancies. |
 | `ReceiverSelectionUI` | Lets the user pick a receiver on pass plays | |
 | Play-call UI | Formation and play selection | Operates against the current possession team. |
@@ -161,3 +161,22 @@ PossessionController ─► BallController
 - `PossessionTeamId` remains drive-owned until the whistle. During live play, `IsUserDefending` follows the held carrier or intended receiver, so the existing defender manager releases/selects control on live recoveries. `PossessionController.ActivelyControlled` remains the input authority; carrier/defender claims preserve each other's newer assignments regardless of Update order.
 - `CPUCarrierAI` uses the carrier's team direction on returns. A recovering defensive QB runs as a returner instead of executing the old offensive play call.
 - `IPlayerMove.Cancel(PlayerContext)` is cleanup only. All five moves implement it; hurdle restores its starting height and clears immunity, while pass/pitch discard their pending release. Future moves must implement both completion and cancellation.
+
+
+## Loose-ball movement ownership (2026-10-17)
+
+With no carrier, `PlayState.PossessionTeamId` still identifies the drive's offense. `AllyBlocker` owns that team's scramble movement and any blocker pushback already in progress. `DefenderAI` owns the other team's pursuit and stun/pushback; its offense gate runs before any displacement. Selected defenders retain `DefenderControl`, with both AI pursuit paths deferring. `ReceiverAI` already aborts loose-ball routes, carrier movement requires a held carrier, and CPU carrier AI requires a held ball. No new manager, execution-order dependency, or movement system is introduced; recovery remains owned by BallController.
+
+
+## Standalone procedural rendering dependency
+
+FieldLines and CarrierHighlight construct URP Unlit materials at runtime. `ProjectSettings/GraphicsSettings.asset` retains `Universal Render Pipeline/Unlit` in Always Included Shaders so shader stripping cannot remove the shader or its runtime-selected transparency variants. This is a build dependency; gameplay state and procedural geometry are unchanged.
+
+
+## Player model hierarchy (2026-10-18)
+
+`Player.prefab` keeps all gameplay components and its unchanged CapsuleCollider on the root. Its capsule MeshRenderer is disabled. Visible geometry lives under `PlayerVisuals/PlayerModel/PlayerBody`: PlayerModel.prefab is the reusable visual wrapper, and PlayerBody.fbx is the GUID-preserving rename of Biped_Humanoid.fbx. The bone hierarchy/avatar are unchanged. Only the visual child receives a uniform scale and offset to align the imported rest-pose body bounds with the existing two-unit gameplay capsule; the gameplay root/collider are not resized.
+
+The humanoid uses the existing BlacktopCharacterController idle animation with Animator root motion disabled, preserving transform-based movement. PlayerVisualFeedback's existing Renderer reference now points to the primary SkinnedMeshRenderer; MaterialPropertyBlock tinting is unchanged. SampleScene has fourteen model-backed roster players and no unassigned character preview. The QB's old model-only position overrides were cleared so it inherits the same aligned visual prefab.
+
+The imported body faces local -Z; PlayerModel rotates only its visual child 180 degrees to face the gameplay root's +Z. The animated front/back preview confirmed the corrected facing and existing idle pose.

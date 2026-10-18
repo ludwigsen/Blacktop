@@ -2,13 +2,12 @@ using UnityEngine;
 
 namespace Blacktop.Player
 {
-    // Colors the player capsule based on current PlayerStateMachine state.
-    // Cheap way to visually confirm state transitions during playtesting
-    // before any real animation/model exists.
+    // Colors the visible humanoid body based on PlayerStateMachine state.
+    // The capsule remains an invisible gameplay collider, not the visual target.
     [RequireComponent(typeof(PlayerStateMachine))]
     public class PlayerVisualFeedback : MonoBehaviour
     {
-        [Header("Target renderer (the capsule's MeshRenderer)")]
+        [Header("Visible body renderer (the humanoid's SkinnedMeshRenderer)")]
         [SerializeField] private Renderer bodyRenderer;
 
         [Header("State Colors")]
@@ -53,6 +52,8 @@ namespace Blacktop.Player
                 _ => idleColor
             };
 
+            // The prefab points at the skinned body so feedback follows the model;
+            // changing its tint never instantiates or alters the shared body material.
             bodyRenderer.GetPropertyBlock(mpb);
             // URP Lit shader uses "_BaseColor". If you're on Built-in RP, swap to "_Color".
             mpb.SetColor("_BaseColor", c);

@@ -269,4 +269,199 @@ public class PlayResolutionTests
         Assert.That(machine.enabled, Is.False);
         Assert.That(holder.transform.position.y, Is.EqualTo(1f).Within(0.001f));
     }
+
+    [TestCase(0, false)]
+    [TestCase(1, false)]
+    [TestCase(0, true)]
+    [TestCase(1, true)]
+    public void LooseBallHasOneAiMovementOwnerPerPlayer(int driveTeam, bool pushed)
+    {
+        Assert.That(play.TrySetPossession(driveTeam), Is.True);
+        GoLive();
+        ball.Drop();
+        ball.transform.position = new Vector3(0f, 1f, 0f);
+
+        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsSortMode.None))
+        {
+            var blocker = member.GetComponent<AllyBlocker>();
+            var defender = member.GetComponent<DefenderAI>();
+            defender.SetUserControlled(false);
+            PossessionController.ReleaseControl(member.transform);
+            member.transform.position = new Vector3(10f, 1f, 0f);
+            // Force a stale shove on BOTH stacks; only the owning stack may advance it.
+            Set(blocker, "pushBackTimer", pushed ? 1f : 0f);
+            Set(defender, "pushBackTimer", pushed ? 1f : 0f);
+            Set(blocker, "pushBackTarget", new Vector3(12f, 1f, 0f));
+            Set(defender, "pushBackTarget", new Vector3(12f, 1f, 0f));
+            Set(defender, "shedTimer", 0f);
+            member.GetComponent<ReceiverAI>()?.AbortRoute();
+            Vector3 before = member.transform.position;
+            Call(blocker, "Update");
+            Vector3 afterBlocker = member.transform.position;
+            Call(defender, "Update");
+            Vector3 afterDefender = member.transform.position;
+            if (member.teamId == driveTeam)
+            {
+                Assert.That(afterBlocker, Is.Not.EqualTo(before), member.name + " offense must move");
+                Assert.That(afterDefender, Is.EqualTo(afterBlocker), member.name + " defense must defer");
+            }
+            else
+            {
+                Assert.That(afterBlocker, Is.EqualTo(before), member.name + " blocker must defer");
+                Assert.That(afterDefender, Is.Not.EqualTo(before), member.name + " defense must move");
+            }
+        }
+    }
+
+    [Test]
+    public void SelectedDefenderOwnsLooseBallMovement()
+    {
+        Assert.That(play.TrySetPossession(1), Is.True);
+        GoLive();
+        HoldAt(Player(1, TeamMember.RosterSlot.QB), 0f, 0f);
+        var manager = DefenderControlManager.Instance;
+        Call(manager, "Update");
+        Transform selected = PossessionController.ActivelyControlled;
+        var defender = selected.GetComponent<DefenderAI>();
+        var control = selected.GetComponent<DefenderControl>();
+        ball.Drop();
+        ball.transform.position = Vector3.zero;
+        selected.position = new Vector3(10f, 1f, 0f);
+        Vector3 before = selected.position;
+        Call(selected.GetComponent<AllyBlocker>(), "Update");
+        Call(defender, "Update");
+        Assert.That(selected.position, Is.EqualTo(before), "AI must defer to selected defender");
+        Set(control, "moveInput", Vector2.up);
+        Call(control, "Update");
+        Assert.That(selected.position, Is.Not.EqualTo(before), "Human movement remains available");
+    }
+
+    [UnityTest]
+    public IEnumerator CompleteMatchAndRematchWithTeamZeroWinner() => CompleteMatchAndRematch(0);
+
+    [UnityTest]
+    public IEnumerator CompleteMatchAndRematchWithTeamOneWinner() => CompleteMatchAndRematch(1);
+
+    IEnumerator ReadyAndSnap()
+    {
+        float deadline = Time.realtimeSinceStartup + 5f;
+        while (!play.IsInHuddle && !play.IsGameOver && Time.realtimeSinceStartup < deadline)
+            yield return null;
+        Assert.That(play.IsInHuddle, Is.True, "Post-play must reach the next huddle");
+        play.BreakHuddle();
+        while (!play.IsSetAtLOS && !play.IsLive && Time.realtimeSinceStartup < deadline)
+            yield return null;
+        if (!play.IsLive) play.ResetPlay();
+        Assert.That(play.IsLive, Is.True, "Formation must lead to a live play");
+        Assert.That(ball.Carrier, Is.EqualTo(play.Passer), "QB starts holding the ball");
+    }
+
+    IEnumerator CompleteMatchAndRematch(int winner)
+    {
+        // Accelerate presentation only in this test instance. Rules, possession,
+        // downs events and the actual formation/huddle coroutines still run normally.
+        Set(play, "playEndPresentationDelay", 0.01f);
+        Set(play, "formationMoveSpeed", 1000f);
+        Set(ball, "carryOffset", Vector3.zero);
+        var downs = DownsTracker.Instance;
+        yield return ReadyAndSnap();
+        float start = play.CurrentLineOfScrimmageZ;
+        HoldAt(Player(0, TeamMember.RosterSlot.QB), FieldConstants.HalfWidth + 1f,
+            play.AttackDirection.Advance(start, 4f));
+        play.EndPlay(PlayState.PlayEndReason.OutOfBounds);
+        Assert.That(downs.CurrentDown, Is.EqualTo(2));
+        Assert.That(downs.YardsToGo, Is.EqualTo(6f).Within(0.001f));
+
+        yield return ReadyAndSnap();
+        float incompleteSpot = play.CurrentLineOfScrimmageZ;
+        ball.Drop();
+        play.EndPlay(PlayState.PlayEndReason.Incomplete);
+        Assert.That(play.CurrentLineOfScrimmageZ, Is.EqualTo(incompleteSpot));
+        Assert.That(downs.CurrentDown, Is.EqualTo(3));
+
+        yield return ReadyAndSnap();
+        HoldAt(Player(0, TeamMember.RosterSlot.QB), 0f,
+            play.AttackDirection.Advance(play.CurrentLineOfScrimmageZ, 6f));
+        play.EndPlay(PlayState.PlayEndReason.Tackled);
+        Assert.That(downs.CurrentDown, Is.EqualTo(1));
+        Assert.That(downs.YardsToGo, Is.EqualTo(10f).Within(0.001f));
+
+        for (int down = 1; down <= DownsTracker.MaxDowns; down++)
+        {
+            yield return ReadyAndSnap();
+            Assert.That(downs.CurrentDown, Is.EqualTo(down));
+            ball.Drop();
+            play.EndPlay(PlayState.PlayEndReason.Incomplete);
+        }
+        Assert.That(play.PossessionTeamId, Is.EqualTo(1), "Fourth-down failure must turn over");
+        Assert.That(downs.DriveTeamId, Is.EqualTo(1));
+        Assert.That(downs.CurrentDown, Is.EqualTo(1));
+
+        yield return ReadyAndSnap();
+        FieldDirection direction = play.AttackDirection;
+        HoldAt(Player(1, TeamMember.RosterSlot.QB), 0f,
+            direction.Advance(direction.OwnGoalLineZ, -1f));
+        play.EndPlay(PlayState.PlayEndReason.Tackled);
+        Assert.That(ScoreBoard.Instance.Team1Score, Is.EqualTo(2));
+        Assert.That(play.PossessionTeamId, Is.EqualTo(0));
+
+        // Alternate legal touchdowns up to the real default target (21). Team 0 has
+        // the safety's two points; a defensive return lets either team win the match.
+        for (int score = 0; score < 10 && !play.IsGameOver; score++)
+        {
+            yield return ReadyAndSnap();
+            int team = score == 6 ? winner : play.PossessionTeamId;
+            direction = play.DirectionFor(team);
+            HoldAt(Player(team, TeamMember.RosterSlot.RB), 0f,
+                direction.Advance(direction.TargetGoalLineZ, 1f));
+            play.EndPlay(PlayState.PlayEndReason.Touchdown);
+            Assert.That(play.LastScoringTeamId, Is.EqualTo(team));
+            Assert.That(play.PossessionTeamId, Is.EqualTo(1 - team));
+            if (!play.IsGameOver) Assert.That(downs.CurrentDown, Is.EqualTo(1));
+        }
+        Assert.That(play.IsGameOver, Is.True);
+        Assert.That(play.WinnerTeamId, Is.EqualTo(winner));
+        Assert.That(ScoreBoard.Instance.ScoreFor(winner), Is.GreaterThanOrEqualTo(21));
+        int huddlesAfterWin = 0;
+        play.OnHuddleStarted += () => huddlesAfterWin++;
+        yield return new WaitForSeconds(0.05f);
+        Assert.That(huddlesAfterWin, Is.Zero, "Winner must stop match progression");
+        var hud = Object.FindAnyObjectByType<GameHUD>();
+        var overlay = (GameObject)typeof(GameHUD).GetField("gameOverRoot", PrivateInstance).GetValue(hud);
+        Assert.That(overlay.activeSelf, Is.True, "Winner UI must appear");
+
+        // Invoke the real Confirm handler after its input delay; this is the shipped
+        // scene-reload rematch path, not a bespoke test reset of managers/scores.
+        Set(hud, "restartInputDelay", 0f);
+        var confirm = typeof(GameHUD).GetMethod("HandleConfirm", PrivateInstance);
+        confirm.Invoke(hud, new[] { System.Activator.CreateInstance(confirm.GetParameters()[0].ParameterType) });
+        yield return null;
+        yield return null;
+        play = PlayState.Instance;
+        ball = BallController.Instance;
+        Assert.That(play.IsGameOver, Is.False);
+        Assert.That(ScoreBoard.Instance.Team1Score, Is.Zero);
+        Assert.That(ScoreBoard.Instance.Team2Score, Is.Zero);
+        Assert.That(DownsTracker.Instance.CurrentDown, Is.EqualTo(1));
+        Set(play, "formationMoveSpeed", 1000f);
+        yield return ReadyAndSnap();
+        ball.Drop();
+        play.EndPlay(PlayState.PlayEndReason.Incomplete);
+        Assert.That(DownsTracker.Instance.CurrentDown, Is.EqualTo(2), "Rematch must advance normally");
+    }
+
+    [Test]
+    public void MatchHasSevenUniqueRosterSlotsOnEachTeam()
+    {
+        // Catch stale prefab overrides that silently leave a formation slot empty.
+        var counts = new int[2, 7];
+        foreach (var member in Object.FindObjectsByType<TeamMember>(FindObjectsSortMode.None))
+        {
+            Assert.That(member.teamId, Is.InRange(0, 1), member.name);
+            counts[member.teamId, (int)member.slot]++;
+        }
+        for (int team = 0; team < 2; team++)
+            for (int slot = 0; slot < 7; slot++)
+                Assert.That(counts[team, slot], Is.EqualTo(1), $"Team {team}, slot {(TeamMember.RosterSlot)slot}");
+    }
 }

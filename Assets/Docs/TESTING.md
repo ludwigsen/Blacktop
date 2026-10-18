@@ -115,7 +115,7 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 ### T-60: Fumble and recovery **(partially known limited)**
 **Steps:** Force a fumble if possible; watch who recovers.
 **Expected (target):** Nearest player recovers.
-**Current implementation:** nearest eligible player recovers with an entity-ID tie-break; pursuit exists. Some players may receive both DefenderAI and AllyBlocker movement during scrums (deferred).
+**Current implementation:** nearest eligible player recovers with an entity-ID tie-break; pursuit exists. Offense pursuit/shove recovery belongs to AllyBlocker; defense pursuit/shove recovery belongs to DefenderAI; selected defenders remain human-controlled.
 **Watch for:** Wrong player recovering, recovery from far away, and possession set to the wrong team.
 
 ## Gamebreaker
@@ -156,7 +156,7 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 - `carryOffset` on `BallController` is untuned.
 - Blocking is untested; expect rough behavior.
 - Recovery uses nearest distance plus entity-ID tie-break; exercise overlapping players.
-- Loose-ball pursuit can have competing movement owners.
+- Loose-ball pursuit now has exclusive movement ownership; controller feel still requires manual scrum testing.
 - Trick plays are not handled in route/block logic.
 - Goal-line/sideline precedence fixes require corner testing in both attack directions.
 - Automated cases cover the four resolution fixes; controller feel and a full match still require manual play.
@@ -192,9 +192,56 @@ Open **Window > General > Test Runner > PlayMode**, select `PlayResolutionTests`
 Then run T-01, T-10/T-11, T-21/T-31, T-40/T-41 and play to 21, confirm the winner, restart, and complete another play. Keep the Console open throughout.
 
 
-### Validation recorded for this change
+### Validation recorded for the initial four fixes
 
 - Unity 6000.5.6f1 batchmode Play Mode run in an isolated copy of this repository: **20 passed, 0 failed, 0 skipped** (`PlayResolutionTests`). Includes scene/prefab loading, false-score rejection, goal-line/sideline contact precedence, correct return scorer/drive/winner, both control-update orders, CPU QB return direction, and whistle/control-loss cancellation.
 - Runtime source compilation against the installed Unity assembly references passed. Existing obsolete-API/serialized-field warnings remain.
 - `git diff --check` passed. No scene, prefab, Input Actions, tuning asset, or gameplay number was changed.
 - Not performed: manual controller play, a full match to 21/rematch, visual HUD/animation review, Windows Editor, or a player build. The scenarios above remain required for those checks.
+
+
+## Loose-ball ownership and complete-match validation
+
+### T-94: One loose-ball movement owner
+**Steps:** Force fumbles with each team on offense. Watch offensive linemen, skill players, defenders, and the selected human defender. Include a fumble during blocker/defender pushback, then recover with either team and continue the play.
+**Expected:** Offense scrambles through AllyBlocker, defense through DefenderAI, and the selected defender follows input. No player receives both AI displacements. Blocker pushback finishes while the ball is loose, then pursuit resumes. Recovery/control behavior remains unchanged.
+**Watch for:** Double-speed pursuit, jitter, a permanently stuck shove, or AI moving the selected defender.
+
+### T-95: Complete match and rematch
+**Steps:** Run `PlayResolutionTests` in Test Runner > PlayMode. The two CompleteMatchAndRematch cases cover both winners at the real default target (21), OOB yardage, incompletions, first downs, fourth-down turnovers, safety, scoring/possession transitions, winner overlay, stopped post-win flow, real Confirm-handler scene reload, and another down after rematch. Run the same suite in a macOS standalone test player as well.
+**Expected:** Every case passes with one unique QB/RB/WR1/WR2/WR3/OL1/OL2 on each team. A standalone player loads SampleScene and uses the same rules and rematch code outside the Editor.
+**Watch for:** Empty formation slots, wrong down/distance/direction, more huddles after victory, scores persisting across rematch, or player-only missing assets/shaders.
+**Scope:** Automated cases arrange terminal situations and invoke movement methods/Confirm directly. They do not replace a normal controller-played match or visual inspection. Runtime acceleration is limited to test instances; shipped defaults are unchanged.
+
+A **standalone build** is an exported game executable (macOS `.app`, Windows `.exe`) that runs without Unity Editor. For manual validation, open the normal Blacktop app, play to 21, restart, then complete another play. Check movement, input, scorebug, camera, and recovery in the built game. A test-player build additionally contains Unity's automated test runner and is separate from the normal game app.
+
+
+### T-96: Standalone field/highlight shader retention
+**Steps:** Build and launch the enabled SampleScene as a normal macOS player. Check Player.log and observe LOS/first-down/goal lines plus the carrier and user-control rings.
+**Expected:** No `ArgumentNullException` for a missing shader. Procedural line and ring materials use the retained Universal Render Pipeline/Unlit shader, including runtime transparency variants.
+**Watch for:** Missing or pink lines/rings, or repeated material-construction exceptions on scene load/rematch. Shader.Find by name alone does not keep a shader in a player build; ProjectSettings/GraphicsSettings.asset explicitly includes the package shader.
+
+
+### Validation recorded for loose-ball / full-match follow-up
+
+- Unity 6000.5.6f1 Editor Play Mode: **28 passed, 0 failed, 0 skipped** on the final scene/settings.
+- macOS standalone test player: **28 passed, 0 failed, 0 skipped** on the same runtime sources, scene and graphics settings.
+- The two complete-match/rematch cases ran in each environment: four scripted matches to the real default target of 21, covering both winners, plus a new live down after each shipped scene-reload rematch.
+- The first standalone run failed scene setup because URP Unlit was stripped. Retaining the shader fixed the failure; the final player run above is clean of test failures. Results are saved locally in ignored `Builds/Validation/editor-playmode.xml` and `Builds/Validation/macos-player.xml`.
+- `git diff --check` passed and the tested runtime source, SampleScene and GraphicsSettings match the working checkout byte for byte. No prefab or gameplay tuning defaults were changed.
+- Previous four-fix Editor gameplay was verified by the owner. The new full-match cases are scripted; manual controller play of the normal app, graphics/feel review, and Windows validation remain separate checks.
+- Normal macOS development build: succeeded with 0 errors and 468 warnings (primarily installed AI inference compute-shader variants). Output: `Builds/macOS/Blacktop.app`; no test-runner/NUnit assemblies are shipped in that normal app. The headless startup smoke loaded SampleScene and produced no logged runtime exceptions before being stopped intentionally. This does not establish visual quality or physical controller behavior.
+
+
+## T-97: Humanoid replaces capsule visuals (2026-10-18)
+
+**Steps:** Open SampleScene. Inspect either team's Player instances and the Player prefab. Confirm PlayerVisuals > PlayerModel > PlayerBody, enter Play Mode, call a play, move, pass/pitch, switch defenders, hurdle, and finish a play. Check the feet and model position while both teams face their attack direction.
+**Expected:** Fourteen visible humanoids, no visible player capsules or detached preview character. Body rest-pose bounds align with the existing two-unit collider. Movement/contact remains rooted on Player; the invisible capsule collider stays enabled. The existing idle animation plays without moving the gameplay root. State-color feedback appears on the humanoid body. Bone hierarchy is unchanged.
+**Watch for:** Floating/offset models, a capsule still visible, missing materials, root-motion drift, feedback on the wrong renderer, or the QB retaining its old visual offset. Full locomotion/football animations remain future work.
+**Validation performed:** Isolated Unity asset validation passed across all fourteen scene players, and all 28 existing Editor Play Mode tests passed. No physical controller or Windows validation is claimed for this change.
+
+The imported body faces local -Z; PlayerModel rotates only its visual child 180 degrees to face the gameplay root's +Z. The animated front/back preview confirmed the corrected facing and existing idle pose.
+
+The normal macOS app was rebuilt successfully with the final model assets (0 errors; 440 existing build warnings). Output: `Builds/macOS/Blacktop.app`. The rendered animated front/back preview is saved locally at `Builds/Validation/PlayerModel-preview.png`; Editor test results are at `Builds/Validation/character-playmode.xml`.
+
+The refreshed app passed a headless scene-startup smoke check with no logged runtime exceptions, then was stopped intentionally. Manual controller play, running/football animation coverage, and Windows remain unverified for this visual change.

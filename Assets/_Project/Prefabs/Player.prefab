@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8913779436201755825}
   m_Layer: 0
-  m_Name: Visual
+  m_Name: PlayerVisuals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -95,7 +95,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6555219639277062554}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -400,7 +400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5fdaf9de399a445387dcd50c7449f67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blacktop::Blacktop.Player.PlayerVisualFeedback
-  bodyRenderer: {fileID: 9149566800909270431}
+  bodyRenderer: {fileID: 4901101267496981474}
   idleColor: {r: 1, g: 1, b: 1, a: 1}
   walkColor: {r: 0, g: 1, b: 1, a: 1}
   runColor: {r: 0, g: 0.3, b: 1, a: 1}
@@ -501,7 +501,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 132864934065619634, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_Name
-      value: BlacktopCharacter
+      value: PlayerModel
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalPosition.x
@@ -509,11 +509,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.99894
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.96746993
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalRotation.w
@@ -521,15 +521,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -548,6 +548,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+--- !u!137 &4901101267496981474 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3083203852337011253, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+  m_PrefabInstance: {fileID: 7984187470477920727}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7508448050962641498 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}

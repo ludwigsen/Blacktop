@@ -10,8 +10,8 @@ using UnityEngine;
 //
 // Movement branches on BallController.State, not just "is there a carrier": Held runs the
 // role logic, InFlight lets a man defender on the target (or a zone defender near the
-// landing spot) break on the ball, Loose still holds position (loose-ball pursuit is a
-// separate, still-deferred system).
+// landing spot) break on the ball. Loose-ball pursuit belongs to the drive's defense;
+// offensive players use AllyBlocker instead, so each transform has one movement owner.
 [RequireComponent(typeof(TeamMember))]
 public class DefenderAI : MonoBehaviour
 {
@@ -83,6 +83,13 @@ public class DefenderAI : MonoBehaviour
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
+        // A loose ball has no carrier to infer roles from. Check the drive team BEFORE
+        // shove/stun movement too, or offense could still be moved by both AI stacks.
+        var ball = BallController.Instance;
+        if (ball != null && ball.State == BallController.BallState.Loose &&
+            PlayState.Instance != null && teamMember != null &&
+            teamMember.teamId == PlayState.Instance.PossessionTeamId) return;
+
         if (pushBackTimer > 0f)
         {
             transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
@@ -98,7 +105,6 @@ public class DefenderAI : MonoBehaviour
 
         if (IsUserControlled) return;
 
-        var ball = BallController.Instance;
         if (ball == null) return;
 
         // Both-ways roster: every player carries DefenderAI, but only the team that does NOT
@@ -126,8 +132,8 @@ public class DefenderAI : MonoBehaviour
 
     // Resolved live from the ball, never cached (project rule). Held: anyone not on the
     // carrier's team defends. InFlight: the offense is the intended receiver's team (falls
-    // back to PossessionTeamId for a pop/fumble flight with no receiver). Loose: nobody acts
-    // anyway, so return true and let the Loose case hold position.
+    // back to PossessionTeamId for a pop/fumble flight with no receiver). Loose-ball
+    // offense is gated before pushback above; only the drive's defense reaches pursuit.
     bool IsDefendingBall(BallController ball)
     {
         if (teamMember == null) return true;

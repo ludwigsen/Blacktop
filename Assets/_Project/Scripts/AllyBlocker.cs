@@ -48,6 +48,7 @@ public class AllyBlocker : MonoBehaviour
     // Present only on RB/WR/TE slots (the ones that also carry ReceiverAI). Null on OL
     // — GetComponent returning null there is expected and harmless.
     ReceiverAI receiverAI;
+    TeamMember teamMember; // team membership is stable; ball ownership is always read live
     
     // True once this transform is the live ball carrier. BlockingCoordinator uses this
     // to skip us entirely during assignment — a carrier can't also be its own blocker,
@@ -59,6 +60,7 @@ public class AllyBlocker : MonoBehaviour
     void Awake()
     {
         receiverAI = GetComponent<ReceiverAI>();
+        teamMember = GetComponent<TeamMember>();
     }
 
     void Update()
@@ -72,14 +74,21 @@ public class AllyBlocker : MonoBehaviour
             return;
         }
 
-        // Ball's loose — drop whatever you were doing (route, block target) and dive for
-        // it, same as DefenderAI does on the other side of the ball. Pushback (mid-shove)
-        // still finishes first below — it's a ~0.15s state, not worth interrupting for this.
-        if (pushBackTimer <= 0f && BallController.Instance != null && BallController.Instance.State == BallController.BallState.Loose)
+        var ball = BallController.Instance;
+        if (ball != null && ball.State == BallController.BallState.Loose)
         {
-            receiverAI?.AbortRoute(); // stop ReceiverAI from also driving this transform mid-route
             currentTarget = null;
-            ScrambleForBall();
+            receiverAI?.AbortRoute();
+
+            // While nobody holds the ball, the drive team is still the offense.
+            // Its AllyBlocker owns pursuit/shove recovery; the other team's
+            // DefenderAI (or selected human defender) owns that player's movement.
+            var play = PlayState.Instance;
+            if (play == null || teamMember == null || teamMember.teamId != play.PossessionTeamId ||
+                PossessionController.ActivelyControlled == transform) return;
+
+            if (pushBackTimer > 0f) UpdatePushBack();
+            else ScrambleForBall();
             return;
         }
 
@@ -101,8 +110,7 @@ public class AllyBlocker : MonoBehaviour
         // DefenderAI's pushBackTimer gate.
         if (pushBackTimer > 0f)
         {
-            transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
-            pushBackTimer -= Time.deltaTime;
+            UpdatePushBack();
             return;
         }
 
@@ -112,10 +120,16 @@ public class AllyBlocker : MonoBehaviour
         if (contactCooldownTimer <= 0f) CheckBlockContact();
     }
 
-    // No separation logic here (unlike DefenderAI's CalculateSeparation) — a pile of
-    // teammates converging on one spot is honestly correct for a fumble scrum. Flagged,
-    // not fixed: whoever's OverlapSphere hit lands first in BallController.CheckRecovery
-    // still wins with no tie-breaking, same known gap as everywhere else recovery happens.
+    // Shove recovery takes priority over pursuit and must keep advancing while loose;
+    // the held-ball gate below must not strand a blocker in a permanent pushback.
+    void UpdatePushBack()
+    {
+        transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
+        pushBackTimer -= Time.deltaTime;
+    }
+
+    // No separation while scrambling: BallController chooses the nearest eligible
+    // recovery and breaks exact-distance ties independently of collider ordering.
     void ScrambleForBall()
     {
         Vector3 toBall = BallController.Instance.transform.position - transform.position;
