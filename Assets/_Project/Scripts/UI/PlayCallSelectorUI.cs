@@ -389,7 +389,7 @@ public class PlayCallSelector : MonoBehaviour
         rt.anchoredPosition = new Vector2(0f, -18f);
         rt.sizeDelta = new Vector2(0f, 54f);
 
-        titleText = CreateText(header.transform, "OFFENSE", titleFontSize, TextAlignmentOptions.Left, theme != null ? theme.displayFont : null);
+        titleText = CreateText(header.transform, "OFFENSE", titleFontSize, TextAlignmentOptions.Left, theme != null ? theme.legibleFont : null);
         Anchor(titleText.rectTransform, new Vector2(0f, 0f), new Vector2(0.45f, 1f));
 
         situationText = CreateText(header.transform, "", detailFontSize, TextAlignmentOptions.Right, theme != null ? theme.legibleFont : null);
@@ -423,7 +423,7 @@ public class PlayCallSelector : MonoBehaviour
             cardRT.offsetMin = new Vector2(6f, 0f);
             cardRT.offsetMax = new Vector2(-6f, 0f);
 
-            var label = CreateText(card.transform, "", categoryFontSize, TextAlignmentOptions.Center, theme != null ? theme.displayFont : null);
+            var label = CreateText(card.transform, "", categoryFontSize, TextAlignmentOptions.Center, theme != null ? theme.legibleFont : null);
             Anchor(label.rectTransform, Vector2.zero, Vector2.one);
             categoryTexts.Add(label);
         }

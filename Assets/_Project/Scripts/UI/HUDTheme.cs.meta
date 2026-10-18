@@ -4,7 +4,7 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - displayFont: {fileID: 11400000, guid: 886f8440721fc4d0f8963767db486a17, type: 2}
+  - displayFont: {fileID: 11400000, guid: 80a15b7428bee40719125114dee0c2d2, type: 2}
   - legibleFont: {fileID: 11400000, guid: ccd38227a631d4594bbc1ddb7592d040, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}

@@ -2,124 +2,113 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// One team's slice of the scorebug — logo, name, score, GAMEBREAKER label, and a
-// SEGMENTED Gamebreaker meter (discrete chunks, not a smooth fill) matching the concept
-// board's three states: Empty (all dark), Charging (some chunks lit), Full/Ready (all
-// chunks lit and visibly brighter — a brightness swap stands in for real glow until this
-// project has an HDR/bloom pipeline for UI, which Canvas Overlay doesn't get by default).
-// Self-building, same pattern as every other runtime HUD here.
-//
-// Team identity and score use the Blacktop display face; supporting HUD copy uses the
-// Outfit/legible face.  Keeping that distinction here prevents the meter label from
-// competing with the team wordmark.
+// One horizontal slice: crest, wordmark, score, then meter toward the center.
+// Only placement/background art mirror; lettering and crests always face normally.
 public class TeamScorePanel : MonoBehaviour
 {
     const int SegmentCount = 8;
-    static readonly Color EmptyColor = new Color(0.18f, 0.18f, 0.18f);
-    static readonly Color LabelColor = new Color(1f, 1f, 1f, 0.75f);
+    static readonly Color EmptyColor = new Color(0.12f, 0.13f, 0.14f);
+    static readonly Color LabelColor = new Color(0.9f, 0.9f, 0.87f);
     static readonly Color DefaultAccent = new Color(0.6f, 0.6f, 0.6f);
 
     TextMeshProUGUI teamNameText;
     TextMeshProUGUI scoreText;
     TextMeshProUGUI gamebreakerLabel;
     Image logoImage;
+    Image backgroundImage;
+    Image accentRule;
+    Outline meterFrame;
     Image[] segments;
+    Material wordmarkMaterial;
     Color accent = DefaultAccent;
     Color readyColor = Color.white;
     bool reverseFill;
+    bool lastActive;
     float lastGamebreakerValue;
 
     public void Build(TMP_FontAsset displayFont, TMP_FontAsset legibleFont, int nameFontSize, int scoreFontSize, int labelFontSize,
-        bool reverseFill, Sprite backgroundSprite = null, bool flipBackground = false)
+        bool reverseFill, Sprite backgroundSprite = null, bool flipBackground = false,
+        Color? textColor = null, float outlineWidth = 0.22f,
+        float logoScale = 1.25f, float logoOutwardTilt = 20f,
+        float nameOutwardShift = 0.10f, float nameScoreGapReduction = 0.04f)
     {
         this.reverseFill = reverseFill;
 
-        // Background art, if supplied — added FIRST so it sits behind logo/name/score/meter.
-        // Authored to exactly fill this panel's rect, so no preserveAspect stretching logic needed.
         if (backgroundSprite != null)
         {
-            var bgGO = new GameObject("PanelBackground", typeof(Image));
-            bgGO.transform.SetParent(transform, false);
-            var bgImage = bgGO.GetComponent<Image>();
-            bgImage.sprite = backgroundSprite;
-            bgImage.type = Image.Type.Simple;
-            bgImage.raycastTarget = false;
-            var backgroundRect = bgGO.GetComponent<RectTransform>();
-            AnchorStrip(backgroundRect, Vector2.zero, Vector2.one);
-            if (flipBackground) backgroundRect.localScale = new Vector3(-1f, 1f, 1f);
+            backgroundImage = CreateImage("PanelBackground", transform, Vector2.zero, Vector2.one);
+            backgroundImage.sprite = backgroundSprite;
+            // Neutral grunge art takes the team's primary color without changing source pixels.
+            if (flipBackground) backgroundImage.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
         }
 
-        var logoGO = new GameObject("Logo", typeof(Image));
-        logoGO.transform.SetParent(transform, false);
-        logoImage = logoGO.GetComponent<Image>();
+        accentRule = CreateImage("AccentRule", transform, new Vector2(0.08f, 0.08f), new Vector2(0.95f, 0.095f));
+        logoImage = CreateImage("Logo", transform, new Vector2(0f, 0.12f), new Vector2(0.175f, 0.90f));
+        // Leave space outside the name for the larger crest; tilt its top toward the screen edge.
+        logoImage.rectTransform.localScale = Vector3.one * logoScale;
+        logoImage.rectTransform.localRotation = Quaternion.Euler(0f, 0f, reverseFill ? -logoOutwardTilt : logoOutwardTilt);
         logoImage.preserveAspect = true;
-        logoImage.enabled = false; // hidden until ApplyIdentity finds a sprite
-        AnchorStrip(logoGO.GetComponent<RectTransform>(),
-            reverseFill ? new Vector2(0.82f, 0.6f) : new Vector2(0.02f, 0.6f),
-            reverseFill ? new Vector2(0.98f, 0.98f) : new Vector2(0.18f, 0.98f));
+        logoImage.enabled = false; // No white square when a future team has no crest yet.
 
-        var nameGO = new GameObject("TeamName", typeof(TextMeshProUGUI));
-        nameGO.transform.SetParent(transform, false);
-        teamNameText = ConfigureText(nameGO, displayFont, nameFontSize);
-        teamNameText.text = "TEAM";
+        // Interpret 10% as a fraction of the original name slot, mirrored for the other team.
+        float nameShift = (0.475f - 0.205f) * nameOutwardShift;
+        float scoreShift = nameShift + nameScoreGapReduction;
+        teamNameText = CreateText("TeamName", displayFont, nameFontSize,
+            new Vector2(0.205f - nameShift, 0.16f), new Vector2(0.475f - scoreShift, 0.90f));
+        teamNameText.text = "Team";
         teamNameText.alignment = reverseFill ? TextAlignmentOptions.Right : TextAlignmentOptions.Left;
-        AnchorStrip(nameGO.GetComponent<RectTransform>(),
-            reverseFill ? new Vector2(0.08f, 0.52f) : new Vector2(0.20f, 0.52f),
-            reverseFill ? new Vector2(0.80f, 0.94f) : new Vector2(0.92f, 0.94f));
+        scoreText = CreateText("Score", displayFont, scoreFontSize,
+            new Vector2(0.48f - scoreShift, 0.10f), new Vector2(0.635f - scoreShift, 0.94f));
+        // Apply TMP's heavier SDF weight to identity only; Outfit meter copy keeps its weight.
+        teamNameText.fontStyle = FontStyles.Bold;
+        scoreText.fontStyle = FontStyles.Bold;
 
-        var scoreGO = new GameObject("Score", typeof(TextMeshProUGUI));
-        scoreGO.transform.SetParent(transform, false);
-        scoreText = ConfigureText(scoreGO, displayFont, scoreFontSize);
-        scoreText.alignment = reverseFill ? TextAlignmentOptions.Left : TextAlignmentOptions.Right;
-        AnchorStrip(scoreGO.GetComponent<RectTransform>(),
-            reverseFill ? new Vector2(0.08f, 0.32f) : new Vector2(0.70f, 0.32f),
-            reverseFill ? new Vector2(0.30f, 0.68f) : new Vector2(0.92f, 0.68f));
+        // TMP's SDF outline stays crisp at different resolutions. Share one private
+        // material between these two labels and release it with the panel.
+        if (displayFont != null)
+        {
+            wordmarkMaterial = new Material(displayFont.material);
+            wordmarkMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
+            wordmarkMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, outlineWidth);
+            teamNameText.fontSharedMaterial = wordmarkMaterial;
+            scoreText.fontSharedMaterial = wordmarkMaterial;
+            teamNameText.UpdateMeshPadding();
+            scoreText.UpdateMeshPadding();
+        }
+        teamNameText.color = scoreText.color = textColor ?? new Color(0.94f, 0.93f, 0.89f);
 
-        var labelGO = new GameObject("GamebreakerLabel", typeof(TextMeshProUGUI));
-        labelGO.transform.SetParent(transform, false);
-        gamebreakerLabel = ConfigureText(labelGO, legibleFont, labelFontSize);
+        gamebreakerLabel = CreateText("GamebreakerLabel", legibleFont, labelFontSize,
+            new Vector2(0.65f, 0.57f), new Vector2(0.96f, 0.82f));
         gamebreakerLabel.text = "GAMEBREAKER";
         gamebreakerLabel.color = LabelColor;
-        AnchorStrip(labelGO.GetComponent<RectTransform>(), new Vector2(0.20f, 0.21f), new Vector2(0.80f, 0.34f));
-
-        BuildGamebreakerBar(transform);
+        BuildGamebreakerBar();
     }
 
-    // Safe to call any time after Build(). Falls back to a neutral placeholder if
-    // identity is null (no TeamIdentity asset assigned on PlayState yet).
+    // Pre-game branding is independent of roster selection and player GUIDs.
     public void ApplyIdentity(TeamIdentity identity)
     {
         accent = identity != null ? identity.accentColor : DefaultAccent;
+        Color secondary = identity != null ? identity.secondaryAccentColor : Color.white;
         readyColor = Color.Lerp(accent, Color.white, 0.6f);
-        teamNameText.text = identity != null ? identity.teamName : "TEAM";
-
-        if (identity != null && identity.logo != null)
-        {
-            logoImage.sprite = identity.logo;
-            logoImage.color = Color.white;
-            logoImage.enabled = true;
-        }
-        else
-        {
-            logoImage.enabled = false;
-        }
-
-        SetGamebreaker(lastGamebreakerValue); // repaint already-lit segments in the new color
+        teamNameText.text = identity != null && !string.IsNullOrWhiteSpace(identity.teamName) ? identity.teamName : "Team";
+        if (backgroundImage != null) backgroundImage.color = accent;
+        accentRule.color = secondary;
+        meterFrame.effectColor = secondary;
+        logoImage.sprite = identity != null ? identity.logo : null;
+        logoImage.enabled = logoImage.sprite != null;
+        // Preserve READY/ACTIVE if branding is reapplied during a preview.
+        SetGamebreaker(lastGamebreakerValue, lastActive);
     }
 
     public void SetScore(int score) => scoreText.text = score.ToString();
 
-    // value: 0-100. Lights whole chunks only — "62%" reads as 5 of 8 chunks lit, not
-    // one chunk sitting at a fractional fill. That's the "unified, one flow" chunky
-    // read the concept board is going for.
     public void SetGamebreaker(float value, bool active = false)
     {
         lastGamebreakerValue = value;
-        // Display state in the existing label; final UI artwork/layout is a separate task.
+        lastActive = active;
         gamebreakerLabel.text = active ? "GAMEBREAKER ACTIVE" : value >= 100f ? "GAMEBREAKER READY" : "GAMEBREAKER";
         int lit = Mathf.FloorToInt(Mathf.Clamp01(active ? 1f : value / 100f) * SegmentCount);
-        Color litColor = value >= 100f ? readyColor : accent;
-
+        Color litColor = active || value >= 100f ? readyColor : accent;
         for (int i = 0; i < SegmentCount; i++)
         {
             int slot = reverseFill ? SegmentCount - 1 - i : i;
@@ -127,54 +116,70 @@ public class TeamScorePanel : MonoBehaviour
         }
     }
 
-    void BuildGamebreakerBar(Transform parent)
+    void BuildGamebreakerBar()
     {
-        var barGO = new GameObject("Gamebreaker", typeof(RectTransform));
-        barGO.transform.SetParent(parent, false);
-        AnchorStrip(barGO.GetComponent<RectTransform>(), new Vector2(0.20f, 0.05f), new Vector2(0.80f, 0.19f));
-
+        var track = CreateImage("Gamebreaker", transform, new Vector2(0.65f, 0.30f), new Vector2(0.96f, 0.49f));
+        track.color = Color.black;
+        meterFrame = track.gameObject.AddComponent<Outline>();
+        meterFrame.effectDistance = new Vector2(1.5f, -1.5f);
         segments = new Image[SegmentCount];
-        const float gap = 0.02f; // fraction of the bar's own width, between chunks
-        float segmentWidth = (1f - gap * (SegmentCount - 1)) / SegmentCount;
-
+        const float gap = 0.018f;
+        const float inset = 0.025f;
+        float segmentWidth = (1f - 2f * inset - gap * (SegmentCount - 1)) / SegmentCount;
         for (int i = 0; i < SegmentCount; i++)
         {
-            var segGO = new GameObject($"Segment_{i}", typeof(Image));
-            segGO.transform.SetParent(barGO.transform, false);
-
-            float xMin = i * (segmentWidth + gap);
-            var rt = segGO.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(xMin, 0f);
-            rt.anchorMax = new Vector2(xMin + segmentWidth, 1f);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-
-            var img = segGO.GetComponent<Image>();
-            img.color = EmptyColor;
-            segments[i] = img;
+            float xMin = inset + i * (segmentWidth + gap);
+            // The small cant gives the chunky meter the reference's forward lean.
+            var segment = CreateImage($"Segment_{i}", track.transform,
+                new Vector2(xMin, 0.16f), new Vector2(xMin + segmentWidth, 0.84f), mirror: false);
+            segment.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -12f);
+            segment.color = EmptyColor;
+            segments[i] = segment;
         }
     }
 
-    // font left null is fine — TMP falls back to TMP_Settings.defaultFontAsset, same as
-    // ReceiverSelectionUI already relies on elsewhere in this project.
-    static TextMeshProUGUI ConfigureText(GameObject go, TMP_FontAsset font, int fontSize)
+    Image CreateImage(string objectName, Transform parent, Vector2 min, Vector2 max, bool mirror = true)
     {
+        var go = new GameObject(objectName, typeof(Image));
+        go.transform.SetParent(parent, false);
+        var image = go.GetComponent<Image>();
+        image.raycastTarget = false;
+        Place(image.rectTransform, min, max, mirror);
+        return image;
+    }
+
+    TextMeshProUGUI CreateText(string objectName, TMP_FontAsset font, int fontSize, Vector2 min, Vector2 max)
+    {
+        var go = new GameObject(objectName, typeof(TextMeshProUGUI));
+        go.transform.SetParent(transform, false);
         var text = go.GetComponent<TextMeshProUGUI>();
         if (font != null) text.font = font;
         text.fontSize = fontSize;
-        text.fontStyle = FontStyles.Bold;
+        text.fontStyle = FontStyles.Normal; // Supporting labels use their native font weight.
         text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
         text.enableWordWrapping = false;
-        text.overflowMode = TextOverflowModes.Overflow;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = fontSize * 0.55f;
+        text.fontSizeMax = fontSize;
+        text.overflowMode = TextOverflowModes.Ellipsis;
+        text.raycastTarget = false;
+        Place(text.rectTransform, min, max);
         return text;
     }
 
-    static void AnchorStrip(RectTransform rt, Vector2 anchorMin, Vector2 anchorMax)
+    void Place(RectTransform rt, Vector2 min, Vector2 max, bool mirror = true)
     {
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
+        // Reflect anchors rather than scaling content, so crests and text stay readable.
+        rt.anchorMin = reverseFill && mirror ? new Vector2(1f - max.x, min.y) : min;
+        rt.anchorMax = reverseFill && mirror ? new Vector2(1f - min.x, max.y) : max;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+    }
+
+    void OnDestroy()
+    {
+        // Never modify or destroy the font asset's shared material.
+        if (wordmarkMaterial != null) Destroy(wordmarkMaterial);
     }
 }

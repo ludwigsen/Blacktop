@@ -38,6 +38,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 
 ### UI and feedback
 - `ReceiverSelectionUI`, play-call UI, unified `GameHUD` scorebug and winner/rematch overlay (scene-wired).
+- Scorebug uses a horizontal crest/name/score/meter composition, bold Old London names/scores with soft-white faces, black SDF outlines and tighter spacing; crests are enlarged 25% and tilted 20 degrees outward, and Outfit supporting copy. Pre-game TeamIdentity assets supply names, matching Kings/Vipers crests, primary paint/meter colors and secondary rules/frame colors. All 16 logo imports are UI sprites. Visual validation is recorded in TESTING.md.
 - `CarrierHighlight`.
 - `FieldLines.cs`: procedural LOS, first-down, and goal lines.
 
@@ -55,7 +56,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Downs and first-down marker | Automated match cases verify first downs, incompletions, OOB gains and fourth-down possession changes; visual line placement still needs manual review. |
 | `carryOffset` untuned | On `BallController`. Ball position relative to the carrier. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
-| Gamebreaker balance/readability | Wiring and possession lifetime implemented; manual feel and final UI design remain. Existing scorebug shows READY / ACTIVE. |
+| Gamebreaker balance/readability | Wiring and possession lifetime implemented; redesigned scorebug shows READY / ACTIVE. Manual balance/readability playtest remains. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
 | Ball is a sphere primitive | Placeholder until the football mesh is imported. |
 
@@ -65,7 +66,8 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 2. **Loose-ball gameplay feel** — ownership is now exclusive; manually verify scrum readability and recovery/control transfer.
 3. **Handoff visuals + football mesh** — proximity transfer exists; visible exchange animation remains missing.
 4. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
-5. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
+5. **Roster data separation** — TeamIdentity branding is separate, but TeamRoster.PlayerRecord still embeds the 12 ratings. Move ratings into separate data keyed by the roster player GUID when implementing roster/attribute authoring; this HUD change does not migrate player data.
+6. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
 
 ## Design backlog (hard constraints when reached)
 

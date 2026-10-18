@@ -1930,16 +1930,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::GameHUD
   theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
   horizontalMargin: 0.05
-  heightPercent: 0.14
-  teamPanelWidth: 0.38
-  scorebugBase: {fileID: 21300000, guid: 1df3f1918c9094b7294ce86d246644ee, type: 3}
-  team1PanelBackground: {fileID: 21300000, guid: 424e0f112910e43318cda21c1d24e79c, type: 3}
+  heightPercent: 0.12
+  teamPanelWidth: 0.44
+  topInset: 24
+  scorebugBase: {fileID: 0}
+  team1PanelBackground: {fileID: 21300000, guid: 1df3f1918c9094b7294ce86d246644ee, type: 3}
   team2PanelBackground: {fileID: 0}
-  teamNameFontSize: 34
-  scoreFontSize: 48
-  gamebreakerLabelFontSize: 14
-  centerFontSize: 28
-  backgroundColor: {r: 0, g: 0, b: 0, a: 0.5}
+  teamNameFontSize: 64
+  scoreFontSize: 84
+  gamebreakerLabelFontSize: 20
+  centerFontSize: 30
+  backgroundColor: {r: 0.025, g: 0.028, b: 0.028, a: 0.96}
   restartInputDelay: 1.5
 --- !u!114 &1314477368
 MonoBehaviour:

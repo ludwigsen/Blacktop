@@ -6,8 +6,8 @@ using UnityEngine.UI;
 
 // Single unified HUD for everything that isn't play selection: team score + Gamebreaker
 // on each side, play clock + down/distance/field position in the center. Structure
-// matches the concept board's HUD breakdown, including a full-width grunge base,
-// mirrored team panels, and a compact down/distance center panel.
+// matches the concept board's HUD breakdown, with individually tinted grunge team
+// panels and a compact down/distance center panel.
 //
 // Typeface comes from a HUDTheme asset (assign one in the Inspector once you've built
 // TMP Font Assets from your real fonts); leave it unassigned and everything falls back
@@ -30,22 +30,24 @@ public class GameHUD : MonoBehaviour
 
     [Header("Scorebug")]
     [SerializeField, Range(0.02f, 0.10f)] float horizontalMargin = 0.05f;
-    [SerializeField, Range(0.05f, 0.20f)] float heightPercent = 0.10f;
-    [SerializeField, Range(0.2f, 0.45f)] float teamPanelWidth = 0.35f; // each side; center strip gets the rest
+    [SerializeField, Range(0.05f, 0.20f)] float heightPercent = 0.12f;
+    [SerializeField, Range(0.2f, 0.45f)] float teamPanelWidth = 0.44f; // each side; center strip gets the rest
+
+    [SerializeField, Min(0f)] float topInset = 24f; // Canvas reference pixels, below the screen edge.
 
     [Header("Panel Backgrounds")]
     [Tooltip("Full scorebug texture. Assign Assets/_Project/Art/scorebug_base.png.")]
     [SerializeField] Sprite scorebugBase;
-    [Tooltip("Background art behind Team 1's logo/name/score. Assign Assets/_Project/Art/ScorebugBG_Left.png.")]
+    [Tooltip("Neutral team-panel art, tinted by TeamIdentity. Assign Assets/_Project/Art/scorebug_base.png.")]
     [SerializeField] Sprite team1PanelBackground;
     [Tooltip("Optional alternate Team 2 background. When empty, Team 1's left-side sprite is mirrored automatically.")]
     [SerializeField] Sprite team2PanelBackground;
 
     [Header("Typography")]
-    [SerializeField] int teamNameFontSize = 22;
-    [SerializeField] int scoreFontSize = 40;
-    [SerializeField] int gamebreakerLabelFontSize = 14;
-    [SerializeField] int centerFontSize = 24;
+    [SerializeField] int teamNameFontSize = 64;
+    [SerializeField] int scoreFontSize = 84;
+    [SerializeField] int gamebreakerLabelFontSize = 20;
+    [SerializeField] int centerFontSize = 30;
 
     [SerializeField] Color backgroundColor = new Color(0f, 0f, 0f, 0.82f);
 
@@ -161,7 +163,7 @@ public class GameHUD : MonoBehaviour
 
         var textGO = new GameObject("Result", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(postPlayRoot.transform, false);
-        postPlayText = ConfigureText(textGO, theme != null ? theme.displayFont : null, 34);
+        postPlayText = ConfigureText(textGO, theme != null ? theme.legibleFont : null, 34);
         AnchorStrip(postPlayText.rectTransform, Vector2.zero, Vector2.one);
         postPlayRoot.SetActive(false);
     }
@@ -181,12 +183,11 @@ public class GameHUD : MonoBehaviour
         gameOverRoot.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
         AnchorStrip(gameOverRoot.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
 
-        var displayFont = theme != null ? theme.displayFont : null;
         var legibleFont = theme != null ? theme.legibleFont : null;
 
         var winnerGO = new GameObject("Winner", typeof(TextMeshProUGUI));
         winnerGO.transform.SetParent(gameOverRoot.transform, false);
-        winnerText = ConfigureText(winnerGO, displayFont, 110);
+        winnerText = ConfigureText(winnerGO, legibleFont, 110);
         AnchorStrip(winnerGO.GetComponent<RectTransform>(), new Vector2(0f, 0.55f), new Vector2(1f, 0.8f));
 
         var scoreGO = new GameObject("FinalScore", typeof(TextMeshProUGUI));
@@ -257,20 +258,22 @@ public class GameHUD : MonoBehaviour
     void BuildScorebug(Transform parent)
     {
         // Anchors keep the art at a consistent broadcast-safe position at every aspect
-        // ratio. The base is intentionally one continuous asset so the split panels
-        // read as a single scorebug, not three floating cards.
+        // ratio. Optional legacy full-width art sits behind the team-colored plates.
         var scorebugGO = new GameObject("Scorebug", typeof(Image));
         scorebugGO.transform.SetParent(parent, false);
 
         var scorebugRT = scorebugGO.GetComponent<RectTransform>();
         scorebugRT.anchorMin = new Vector2(horizontalMargin, 1f - heightPercent);
         scorebugRT.anchorMax = new Vector2(1f - horizontalMargin, 1f);
-        scorebugRT.offsetMin = Vector2.zero;
-        scorebugRT.offsetMax = Vector2.zero;
+        scorebugRT.offsetMin = new Vector2(0f, -topInset);
+        scorebugRT.offsetMax = new Vector2(0f, -topInset);
         var baseImage = scorebugGO.GetComponent<Image>();
         baseImage.sprite = scorebugBase;
         baseImage.type = Image.Type.Simple;
         baseImage.color = scorebugBase != null ? Color.white : backgroundColor;
+        // Individual tinted plates supply the silhouette when panel art is assigned.
+        baseImage.enabled = scorebugBase != null || team1PanelBackground == null;
+        baseImage.raycastTarget = false;
 
         BuildTeamPanel(scorebugGO.transform, isTeam1: true);
         BuildGameStatePanel(scorebugGO.transform);
@@ -297,7 +300,13 @@ public class GameHUD : MonoBehaviour
             labelFontSize: gamebreakerLabelFontSize,
             reverseFill: !isTeam1,
             backgroundSprite: isTeam1 ? team1PanelBackground : (team2PanelBackground != null ? team2PanelBackground : team1PanelBackground),
-            flipBackground: !isTeam1 && team2PanelBackground == null
+            flipBackground: !isTeam1 && team2PanelBackground == null,
+            textColor: theme != null ? theme.scorebugTextColor : Color.white,
+            outlineWidth: theme != null ? theme.scorebugOutlineWidth : 0.22f,
+            logoScale: theme != null ? theme.logoScale : 1.25f,
+            logoOutwardTilt: theme != null ? theme.logoOutwardTilt : 20f,
+            nameOutwardShift: theme != null ? theme.nameOutwardShift : 0.10f,
+            nameScoreGapReduction: theme != null ? theme.nameScoreGapReduction : 0.04f
         );
         panel.SetScore(0);
 
@@ -306,7 +315,7 @@ public class GameHUD : MonoBehaviour
 
     void BuildGameStatePanel(Transform parent)
     {
-        var centerGO = new GameObject("GameState", typeof(RectTransform));
+        var centerGO = new GameObject("GameState", typeof(Image), typeof(Outline));
         centerGO.transform.SetParent(parent, false);
         var rt = centerGO.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(teamPanelWidth, 0f);
@@ -314,6 +323,12 @@ public class GameHUD : MonoBehaviour
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
+        // An opaque center keeps field action from reducing down/distance readability.
+        centerGO.GetComponent<Image>().color = backgroundColor;
+        centerGO.GetComponent<Image>().raycastTarget = false;
+        var border = centerGO.GetComponent<Outline>();
+        border.effectColor = new Color(0.65f, 0.65f, 0.62f, 0.8f);
+        border.effectDistance = new Vector2(1f, -1f);
         var legibleFont = theme != null ? theme.legibleFont : null;
 
         var clockGO = new GameObject("PlayClock", typeof(TextMeshProUGUI));
@@ -339,7 +354,11 @@ public class GameHUD : MonoBehaviour
         text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
         text.enableWordWrapping = false;
-        text.overflowMode = TextOverflowModes.Overflow;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = fontSize * 0.65f;
+        text.fontSizeMax = fontSize;
+        text.overflowMode = TextOverflowModes.Ellipsis;
+        text.raycastTarget = false;
         return text;
     }
 
@@ -377,7 +396,7 @@ public class GameHUD : MonoBehaviour
         if (downText == null || DownsTracker.Instance == null) return;
         var downs = DownsTracker.Instance;
         string distance = downs.IsGoalToGo ? "GOAL" : Mathf.CeilToInt(downs.YardsToGo).ToString();
-        downText.text = $"{Ordinal(downs.CurrentDown)} & {distance}\nON {Mathf.RoundToInt(downs.YardLine)}";
+        downText.text = $"{Ordinal(downs.CurrentDown).ToUpperInvariant()} & {distance}\n<size=70%>ON {Mathf.RoundToInt(downs.YardLine)}</size>";
     }
 
     static string Ordinal(int down) => down switch
