@@ -1,6 +1,6 @@
 # AGENTS.md — Blacktop
 
-Guidance for AI coding agents (Claude Opus, Sonnet, Mythos, or anything else) working in this repo. Read this first, then `ARCHITECTURE.md`, `PROJECT_STATUS.md`, and `TESTING.md`.
+Guidance for AI coding agents working in this repo. Read this first, then `ARCHITECTURE.md`, `PROJECT_STATUS.md`, and `TESTING.md`.
 
 ## What Blacktop is
 
