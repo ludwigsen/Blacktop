@@ -94,7 +94,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - Detect with `OverlapBox` or a short raycast in the movement direction; trigger a `StumbleMove` (`IPlayerMove`) that zeroes velocity and applies knockback/stumble. No evasion window.
 
 ### Field modifiers
-- Per-field ScriptableObject (e.g. beach = speed nerf, parking lot = agility buff).
+- Conditions and severity are selected independently of venue. FieldDefinition contains art/identity only; do not derive a speed/agility effect from asphalt, grass or any surface.
 - Additive percentage modifiers with upper and lower bounds. Not multiplicative.
 
 ### Play count
@@ -152,3 +152,14 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 - Synthetic input devices explicitly route to gameplay in the headless Editor; test settings are restored. This does not substitute for a physical-controller playtest.
 - Full diff review and `git diff --check` passed. Final UI design, human gameplay balance/readability, visual running-direction review and Windows validation remain manual work.
 - Normal macOS development app rebuilt successfully: zero build errors, 408 reported warnings (including obsolete Unity API warnings). Headless startup loaded the match scene without logged exceptions; stopped after startup. Physical controller, graphics and gameplay feel were not checked by that smoke run.
+
+
+## Modular field surfaces — Phase 1 (2026-10-21)
+
+**Working:** reusable collider-free 30×60 surface; The Lot asphalt and Downtown grass definitions/material families/normal placeholders; improvised paint, parking stripes/repairs and grass wear; one scene FieldBounds/FieldLoader, safe default, pre-play Inspector switching, explicit overlay/scoring references. The original Plane collider remains. Assets are generated through Unity APIs, under Art/Fields/Generated, Data/Fields and Prefabs/Fields. No other venue environments were generated. Setup and audit: FIELD_SURFACES.md.
+
+**Authoring compatibility:** FieldBounds dimensions are now fixed by FieldConstants, so old per-instance custom dimension overrides are ignored/unsupported. Adding bounds to SampleScene intentionally enables the existing two-unit safety band, replacing its immediate-OOB fallback. Wall containment algorithms, touchdown legality and gameplay coordinates are unchanged.
+
+**Later:** production PBR art, scenery, physical boundary dressing, final venue UI/persistence, independent condition selection/application. ConditionData and FieldModifiers currently disagree on units/stat vocabulary and have no active adapter. Acceleration shares Agility in PlayerMovement and has no separate AttributeStat; decide single effect ownership before wiring Slick/Loose. FieldModifiers lacks explicit aggregate percentage bounds. See FIELD_SURFACES.md for canonical condition values and a single-pipeline recommendation. Neither shipped venue applies stat effects.
+
+**Verification:** see TESTING.md for the final recorded suite and visual checks. Physical-controller play and Windows remain manual; this feature does not claim those checks.

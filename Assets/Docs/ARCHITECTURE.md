@@ -100,7 +100,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 
 - `PlayerAttributes`: 12 stats (Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Coverage, D-Moves, Route Running, Swagger). Defense uses `DefenderAttributes`.
 - `AttributeCurves`: maps stat values to gameplay effect via `AnimationCurve`s so ranges feel meaningful rather than linear.
-- `FieldModifiers`: per-field adjustments. **Additive** percentage modifiers with bounds.
+- `FieldModifiers`: legacy optional additive percentage data; no active condition pipeline or explicit aggregate bounds yet. Venue visuals apply no stats. See FIELD_SURFACES.md for the independent condition authority proposal.
 - Gamebreaker: a temporary multiplier applied on top of attributes for the current possession.
 - **Effect stacking order (intended):** base attribute → curve → additive field modifier (clamped) → Gamebreaker multiplier. Keep it in one place so stacking can't run away.
 - **Single-owner rule:** every gameplay effect is driven by exactly one stat.
@@ -140,7 +140,7 @@ PossessionController ─► BallController
 
 - **New move:** implement `IPlayerMove`; read its tuning from attributes via `AttributeCurves`; expose tunables in the Inspector.
 - **New formation or play:** data-driven via `FormationData` / play definitions. Don't hardcode positions.
-- **New field behavior:** add geometry to `FieldConstants` only; add stat changes via a `FieldModifiers` ScriptableObject.
+- **New venue:** author a FieldDefinition and collider-free surface/detail prefabs. FieldConstants alone owns common geometry. Conditions/severity belong to independent match settings, with integration deferred.
 - **New possession-scoped effect:** clear on `PlayState.OnPlayEnded`.
 - **New contact check:** polled `Overlap*` or a short raycast. No triggers.
 - **New enum:** top-level, not nested.
@@ -197,3 +197,12 @@ Issue #2 supersedes the earlier front/back preview: gameplay showed both teams f
 `TeamScorePanel` builds mirrored horizontal layouts. Neutral `scorebug_base.png` is tinted independently per panel; only background geometry is flipped. Primary color drives paint and segmented meter fill; secondary color drives the accent rule and meter frame. Empty, charging, READY and ACTIVE retain existing PlayState meter semantics. It owns/destroys a private Old London SDF outline material shared by its name and score, leaving the source font material unchanged. HUDTheme exposes soft-white text color, outline thickness, logo scale/outward tilt, outward name shift and name/score spacing. Names and scores use TMP bold weight. Default logos scale to 125% with mirrored 20-degree outward tilts; names move outward by 10% of the original name-slot width, and scores follow inward slot edges with reduced spacing. Supporting HUD and play-call copy use Outfit. SampleScene serializes the new layout/font sizes; changing C# defaults alone does not update serialized scene values.
 
 Branding has no reference to roster or ratings. The intended roster/attribute relationship is the player GUID as the foreign key; the current TeamRoster still embeds ratings, tracked as deferred data-authoring work in PROJECT_STATUS.md.
+
+
+## Modular field surfaces — Phase 1 (2026-10-21)
+
+SampleScene retains its Plane transform/MeshCollider; its renderer is disabled after FieldLoader supplies the selected venue. One persistent identity FieldRoot owns FieldBounds and FieldLoader. All bounds dimensions now derive from FieldConstants. **BREAKING CHANGE (authoring only):** custom serialized FieldBounds sizes are no longer supported; every instance uses the common field. Existing canonical 30×60/10/2 geometry is unchanged.
+
+FieldDefinition is venue identity plus shared surface prefab, URP Lit material, optional tint/tiling, detail prefab and reserved future boundary/environment references. FieldSurface applies shared materials plus MaterialPropertyBlock overrides. FieldLoader swaps only art between plays, reuses the saved preview on Awake, rejects non-identity roots/duplicate bounds and refuses gameplay/collider components in visual prefabs. It does not own conditions or football managers. Boundary/environment references are intentionally not spawned yet.
+
+FieldLines/TouchdownZone receive explicit scene references to bounds. Adding the previously absent bounds activates the existing safety-band OOB path rather than the no-bounds fallback; no scoring/possession algorithm changed. FieldBoundaryWall registration and OutOfBoundsMonitor transitions remain intact. Runtime dynamic lines stay above decoration. See FIELD_SURFACES.md for audited coordinates, assets, Inspector workflow and the ConditionData/FieldModifiers integration gaps.

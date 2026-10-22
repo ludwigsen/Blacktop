@@ -75,7 +75,8 @@ public class PlayResolutionTests
     [TestCase(true)]
     public void GoalLineOutsideSidelineIsOutOfBounds(bool useFieldBounds)
     {
-        if (useFieldBounds) new GameObject("Test field").AddComponent<FieldBounds>();
+        // The shipped scene now owns bounds; retain coverage of the legacy fallback too.
+        if (!useFieldBounds) Object.FindAnyObjectByType<FieldBounds>().gameObject.SetActive(false);
         GoLive();
         HoldAt(Player(0, TeamMember.RosterSlot.QB), FieldConstants.HalfWidth + 1f,
             FieldConstants.FarGoalLineZ + 1f);
@@ -216,7 +217,7 @@ public class PlayResolutionTests
         GoLive();
         Set(play, "snapTimestamp", Time.time - 1f); // outside the normal tackle grace
         var holder = Player(0, TeamMember.RosterSlot.QB);
-        HoldAt(holder, outsideSideline ? FieldConstants.HalfWidth + 1f : 0f,
+        HoldAt(holder, outsideSideline ? FieldConstants.HalfWidth + FieldConstants.OutOfBoundsMargin + 1f : 0f,
             FieldConstants.FarGoalLineZ + 1f);
         Player(1, TeamMember.RosterSlot.RB).transform.position = holder.transform.position;
         var contact = holder.GetComponent<TackleContact>();
