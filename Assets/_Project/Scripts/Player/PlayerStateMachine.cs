@@ -32,6 +32,8 @@ public class PlayerStateMachine : MonoBehaviour
     // Exposed for visual feedback (and any other read-only observer) — currentState
     // itself stays private so only this class can set it.
     public PlayerState CurrentState => currentState;
+    // Read-only timing for the shared animation presenter, including move cancellation.
+    public float HurdleDuration => hurdleMove.Duration;
     public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
     // Exposed so BallController can read a receiver's Catching (and any future stat)
     // without every consumer needing its own duplicate serialized attributes reference.

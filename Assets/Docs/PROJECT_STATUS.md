@@ -15,6 +15,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 ### Movement and moves
 - Transform-based player movement (no Rigidbody).
 - Juke, Hurdle, and StiffArm, attribute-driven, implemented through the `IPlayerMove` pattern and orchestrated by `PlayerStateMachine`.
+- All fourteen players inherit speed/direction-driven standard run, fast run and backward run through PlayerAnimationPresenter and the shared Animator Controller. Jump presents the existing hurdle, timed to its duration; no root motion or movement/attribute tuning changes.
 
 ### Ball and possession
 - Passing and pitching with a parabolic arc; `BallState` enum.
@@ -22,6 +23,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - `PossessionController` with `ActivelyControlled` as the user-control authority.
 - `PlayState.PossessionTeamId` owns drive direction; live carrier ownership drives return control/direction before the whistle.
 - QB starts with the ball in hand (no snap).
+- Street-inspired football replaces the visible sphere: Blender source, Unity FBX, raised laces, leather maps, Blacktop stamp, and reusable FootballVisual prefab. Two FootballStyle presets (Street Classic / Backlot Leather) are selectable through FootballAppearance; a player-facing picker/persistence is deferred.
 
 ### Offense and defense
 - `BlockingCoordinator` / `AllyBlocker` for blocking. **Marked "untested" in observed play.**
@@ -54,20 +56,21 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 |---|---|
 | OOB / goal-line rulings need Editor validation | Automatic OOB polling exists. Held-ball goal-line and sideline checks now share live ruling position and contact precedence; test both directions and corners. |
 | Downs and first-down marker | Automated match cases verify first downs, incompletions, OOB gains and fourth-down possession changes; visual line placement still needs manual review. |
-| `carryOffset` untuned | On `BallController`. Ball position relative to the carrier. |
+| Ball carry pose provisional | Scene carryOffset is fitted to the smaller football; hand-bone grip and a carry animation remain to align it precisely with the fingers. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
 | Gamebreaker balance/readability | Wiring and possession lifetime implemented; redesigned scorebug shows READY / ACTIVE. Manual balance/readability playtest remains. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
-| Ball is a sphere primitive | Placeholder until the football mesh is imported. |
+| Football style picker | Style assets and selection API exist; player-facing pre-game UI and saved selection are not built. |
 
 ## Incomplete (next up, in order)
 
 1. **Normal standalone gameplay pass** — owner verified the prior four-fix Editor gameplay. The expanded 39-case suite passes in both Editor and a macOS standalone player, including matches to 21 and rematches. Manual controller/graphics checks of the normal app remain.
 2. **Loose-ball gameplay feel** — ownership is now exclusive; manually verify scrum readability and recovery/control transfer.
-3. **Handoff visuals + football mesh** — proximity transfer exists; visible exchange animation remains missing.
-4. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
-5. **Roster data separation** — TeamIdentity branding is separate, but TeamRoster.PlayerRecord still embeds the 12 ratings. Move ratings into separate data keyed by the roster player GUID when implementing roster/attribute authoring; this HUD change does not migrate player data.
-6. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
+3. **Visible handoff** — football mesh is integrated; proximity transfer still needs an observable QB-to-back exchange.
+4. **Football animation readability** — running/backpedaling/fast-run and hurdle clips are wired. Carry grip, throwing, catching and tackle reactions remain unfinished; controller feel, foot sliding and transition tuning still need manual playtesting.
+5. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
+6. **Roster data separation** — TeamIdentity branding is separate, but TeamRoster.PlayerRecord still embeds the 12 ratings. Move ratings into separate data keyed by the roster player GUID when implementing roster/attribute authoring; this HUD change does not migrate player data.
+7. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
 
 ## Design backlog (hard constraints when reached)
 
@@ -154,12 +157,10 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 - Normal macOS development app rebuilt successfully: zero build errors, 408 reported warnings (including obsolete Unity API warnings). Headless startup loaded the match scene without logged exceptions; stopped after startup. Physical controller, graphics and gameplay feel were not checked by that smoke run.
 
 
-## Modular field surfaces — Phase 1 (2026-10-21)
+## Shared locomotion/hurdle animation validation (2026-10-18)
 
-**Working:** reusable collider-free 30×60 surface; The Lot asphalt and Downtown grass definitions/material families/normal placeholders; improvised paint, parking stripes/repairs and grass wear; one scene FieldBounds/FieldLoader, safe default, pre-play Inspector switching, explicit overlay/scoring references. The original Plane collider remains. Assets are generated through Unity APIs, under Art/Fields/Generated, Data/Fields and Prefabs/Fields. No other venue environments were generated. Setup and audit: FIELD_SURFACES.md.
-
-**Authoring compatibility:** FieldBounds dimensions are now fixed by FieldConstants, so old per-instance custom dimension overrides are ignored/unsupported. Adding bounds to SampleScene intentionally enables the existing two-unit safety band, replacing its immediate-OOB fallback. Wall containment algorithms, touchdown legality and gameplay coordinates are unchanged.
-
-**Later:** production PBR art, scenery, physical boundary dressing, final venue UI/persistence, independent condition selection/application. ConditionData and FieldModifiers currently disagree on units/stat vocabulary and have no active adapter. Acceleration shares Agility in PlayerMovement and has no separate AttributeStat; decide single effect ownership before wiring Slick/Loose. FieldModifiers lacks explicit aggregate percentage bounds. See FIELD_SURFACES.md for canonical condition values and a single-pipeline recommendation. Neither shipped venue applies stat effects.
-
-**Verification:** see TESTING.md for the final recorded suite and visual checks. Physical-controller play and Windows remain manual; this feature does not claim those checks.
+- Jump, Running Backward, Standard Run and Fast Run FBXs import as valid Humanoid clips; the original PlayerBody skeleton/avatar is retained across all fourteen players.
+- Shared PlayerAnimationPresenter observes actual root motion from every movement owner. The shared controller blends backward/idle/standard/fast poses and fits Jump into the existing hurdle duration, with normal cancellation on whistle/control loss.
+- Corrected the new clips' Original Y reference to match the fitted model/idle and extracted Jump's trajectory to avoid adding a second vertical arc.
+- Final isolated Editor suite: **44/44 passed**, zero failures/skips, including all prior 40 match/Gamebreaker/football cases and four new animation cases. Rendered poses inspected. Physical controller/foot-sliding tuning, Windows and a refreshed standalone build remain manual work.
+- Football lettering controls (LETTERING, LETTERING_WIDTH, LETTERING_FONT) are exposed near the top of SourceAssets/Football/build_football.py; SourceAssets/Football/README.md documents running the builder in Blender and exporting Unity's FBX.

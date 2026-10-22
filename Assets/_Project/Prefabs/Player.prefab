@@ -58,6 +58,7 @@ GameObject:
   - component: {fileID: 5906274877810500750}
   - component: {fileID: 6791215661319204177}
   - component: {fileID: 7364829102648102351}
+  - component: {fileID: 2897408963123198412}
   m_Layer: 0
   m_Name: Player
   m_TagString: Teammate
@@ -573,3 +574,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::GamebreakerController
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
   basePointsPerSecond: 2.5
+
+--- !u!114 &2897408963123198412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6555219639277062554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c04f4dff02543fa897783547e514a82, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::PlayerAnimationPresenter
+  animator: {fileID: 4719877451874111220}
+  hurdleClip: {fileID: -203655887218126122, guid: fd432b59172b4458b9d5671e43bf78ce, type: 3}
+  standardRunSpeed: 6
+  fastRunSpeed: 10
+  backwardRunSpeed: 4.5
+  idleSpeed: 0.08
+  backwardDotThreshold: -0.25
+  blendDamping: 0.08
+  teleportDistance: 3
+--- !u!95 &4719877451874111220 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3408617690538116899, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+  m_PrefabInstance: {fileID: 7984187470477920727}
+  m_PrefabAsset: {fileID: 0}
