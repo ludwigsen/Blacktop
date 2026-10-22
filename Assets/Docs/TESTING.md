@@ -23,7 +23,7 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 ### T-02: QB starts with the ball
 **Steps:** Reach the line of scrimmage on any play.
 **Expected:** QB already holds the ball in Pistol or Shotgun. No snap animation or delay.
-**Watch for:** Ball at the QB's feet, ball offset wrong (`carryOffset` is untuned, so mild offset is a known limitation).
+**Watch for:** Ball at the QB's feet or floating above the hands; the football has a fitted waist-level carry offset, but a hand-aligned carry pose remains unfinished.
 
 ### T-03: Control authority
 **Steps:** Start a play; pass to a receiver; let the receiver catch it.
@@ -155,11 +155,11 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 
 ## Known limitations (not bugs to fix as side effects)
 
-- Ball is a sphere placeholder; the football mesh isn't imported.
+- Football visuals are imported; hand-aligned carrying and action animations remain unfinished.
 - No visible handoff; run plays are not fully designed.
 - Downs and distance are implemented; regression-test fourth-down turnovers and goal-to-go.
 - No game clock.
-- `carryOffset` on `BallController` is untuned.
+- Football carryOffset is fitted at waist level; fingers/hand-bone alignment remains pending carry/handoff animation.
 - Blocking is untested; expect rough behavior.
 - Recovery uses nearest distance plus entity-ID tie-break; exercise overlapping players.
 - Loose-ball pursuit now has exclusive movement ownership; controller feel still requires manual scrum testing.
@@ -276,3 +276,25 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 **Steps:** At 1920x1080 and 1280x720, compare both teams: crests scale to 125%, with the left crest tilted +20 degrees and the right crest -20 degrees (tops lean outward). Names and scores use bold Old London, retaining soft-white faces and black outlines. Names move outward by 10% of their original name-slot width; name slots and score placement tighten together to prevent overlapping text. Check Kings and Vipers for logo/name overlap, score separation and screen-edge clipping. Center down/distance, field position and clock layout remain unchanged. HUDTheme exposes the four layout adjustments for later tuning.
 
 **Validation:** Refreshed isolated Unity 6000.5.6f1 compilation succeeded. Inspected the rendered 1920x1080 and 1280x720 previews: mirrored outward crests, bold names/scores, tighter spacing and unchanged center panel. Both configured teams fit without obscuring the lettering. Font/logo/outline/ACTIVE-preservation QA checks still pass. Saved scorebug-revision-1920.png, scorebug-revision-1280.png, scorebug-revision-ready-active.png and scorebug-revision-preview.log under ignored Builds/Validation. The earlier 39-test gameplay result above predates this visual-only follow-up; gameplay tests were not rerun.
+
+
+## T-99: Football model, scale and style isolation (2026-10-18)
+
+**Steps:** Open SampleScene and inspect Ball > FootballVisual. Confirm the sphere renderer is disabled, root scale is one, the football has a pointed silhouette/raised laces/Blacktop stamp, and its approximate dimensions are 0.32 long by 0.19 wide plus the laces. Inspect the QB carry position, then run, pass, pitch, fumble/recover and score in both directions. Confirm the smaller football remains readable at the gameplay camera and that the ball anchor is not above the player's head. A true gripping pose is deferred with the animations.
+
+**Styles:** On FootballAppearance, choose StreetClassic or BacklotLeather before play; in code, SelectStyle(index) chooses from Available Styles. Confirm palette changes, six shared materials remain intact, and mesh, collider bounds, carrier, ball state and ruling position do not change when selecting a style. Invalid indices must return false and retain the current style. The shipped scene defaults to Street Classic; this does not add selection UI or saved player preferences.
+
+**Automated coverage:** FootballStylesLeavePossessionAndGameplayGeometryUntouched checks the shipped prefab/mesh dimensions, hidden sphere, no added Rigidbody, alternate style property blocks, shared-material preservation, unchanged possession/rulings/collider/mesh, invalid indices, and selection restoration.
+
+**Validation:** Blender 5.2.1 generated the mesh, packed editable source, procedural maps and studio render. Unity 6000.5.6f1 imported the final asset and compiled both new runtime components. Final isolated Editor Play Mode suite: **40/40 passed**, zero failures/skips, including the new style-isolation case and all prior 39 gameplay cases. Visually inspected Unity renders at gameplay distance, a close carry-fit view, and both style presets. Unity material inspection exposed a side-panel slot reorder; the final prefab/FootballStyle mapping uses the verified imported order, and the stamped panel faces outward. Modified runtime/scene/art files match the tested copy byte for byte; new asset GUIDs are unique; git diff --check passed. Evidence is saved in ignored Builds/Validation/Football-hero.png, Football-unity-styles.png, Football-carry-fit.png, Football-gameplay.png, football-playmode-final.xml and football-unity-preview-final.log. The copied Editor search cache again emitted an internal QuickSearch indexing exception during preview startup; no gameplay failure occurred. Physical controller play, Windows and a new standalone build remain unverified. Carry grip and the full animation/handoff readability list remain follow-up work.
+
+
+## T-100: Shared locomotion and hurdle animations (2026-10-18)
+
+**Steps:** Enter SampleScene and inspect both teams during huddle/formation movement, live routes/blocking/pursuit, controlled offense/defense, and CPU QB dropback. Verify idle, Standard Run, Fast Run at higher actual speed and Running Backward when root displacement opposes facing. The same rig/controller must animate all fourteen players even when PlayerStateMachine is disabled for AI. Changing possession must retain animation updates. Movement/turning rates remain unchanged; fast run does not introduce a sprint input. Check both attacking directions against the previous backwards-facing issue.
+
+**Hurdle:** Activate hurdle, then repeat with a whistle or control loss mid-arc. Jump should fit the existing 0.5-second move duration, use the gameplay root's existing arc, and return to locomotion after completion/cancellation. No second imported jump trajectory, added Rigidbody, root-motion movement, lingering jump pose or immunity. Resets/teleports should not briefly trigger a full-speed run.
+
+**Automated scenarios:** PlayerAnimationTests covers all fourteen shared Humanoid stacks; standard/fast/backward animation selection on every actor; root-motion isolation; teleports, vertical-motion filtering and reenable; hurdle rate, imported upward-body-motion isolation and whistle cancellation. Existing match/Gamebreaker/football-style cases remain in the same run.
+
+**Validation:** Unity 6000.5.6f1 isolated Editor Play Mode: **44/44 passed**, zero failures/skips (the prior 40 plus four animation cases). All fourteen actors were exercised at standard/fast/backward speeds with root-position and pelvis-grounding assertions. The imported clips retain Original Y to match the existing fitted body/idle; Jump extracts its trajectory using Original, keeping its body center stable while legs articulate. Root motion remains off. Rendered current-bone poses were inspected for backward, idle, standard/fast run and five jump phases; temporary QA bakes avoid reusing a GPU skinning cache between captures in the same Editor frame. Final runtime/controller/prefab/import files match the tested copy byte for byte; git diff --check is clean. Evidence: ignored Builds/Validation/player-animation-playmode.xml, Player-locomotion-poses.png, Player-hurdle-poses.png and player-animation-preview.log. The copied Editor search cache emitted its existing QuickSearch indexing exception during preview startup; no gameplay test failed. Physical controller feel, Windows and a new standalone build remain unverified.

@@ -27,7 +27,8 @@ public class HurdleMove : IPlayerMove
 
     float PeakHeight => basePeakHeight * attr.Agility();
 
-    float Duration => baseDuration;
+    // Presentation reads this same duration; animation never changes gameplay timing.
+    public float Duration => baseDuration;
 
     public bool CanTrigger(PlayerContext ctx, PlayerState currentState)
         => currentState == PlayerState.Idle || currentState == PlayerState.Walk || currentState == PlayerState.Run;

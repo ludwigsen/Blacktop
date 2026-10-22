@@ -624,4 +624,43 @@ public class PlayResolutionTests
             Assert.That(member.GetComponent<MeshRenderer>().enabled, Is.False);
         }
     }
+
+    [UnityTest]
+    public IEnumerator FootballStylesLeavePossessionAndGameplayGeometryUntouched()
+    {
+        var appearance = ball.GetComponentInChildren<FootballAppearance>();
+        Assert.That(appearance, Is.Not.Null);
+        Assert.That(appearance.StyleCount, Is.GreaterThanOrEqualTo(2));
+        Assert.That(ball.GetComponent<MeshRenderer>().enabled, Is.False, "Legacy sphere must stay hidden");
+        Assert.That(ball.GetComponentInChildren<Rigidbody>(), Is.Null);
+        var renderer = appearance.GetComponentInChildren<MeshRenderer>();
+        var mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+        Assert.That(mesh.subMeshCount, Is.EqualTo(6));
+        Assert.That(renderer.bounds.size.z, Is.InRange(0.30f, 0.34f));
+        Assert.That(renderer.bounds.size.x, Is.InRange(0.18f, 0.21f));
+
+        // A cosmetic selection must not alter ownership, ruling position, mesh or collision volume.
+        Transform holder = ball.Carrier;
+        var state = ball.State;
+        Vector3 spot = ball.RulingPosition;
+        Bounds contactBounds = ball.GetComponent<SphereCollider>().bounds;
+        Color sharedColor = renderer.sharedMaterials[2].GetColor("_BaseColor");
+        Assert.That(appearance.SelectStyle(1), Is.True);
+        var block = new MaterialPropertyBlock();
+        renderer.GetPropertyBlock(block, 2);
+        // Property blocks round-trip through native floats; allow color conversion precision.
+        Assert.That(Vector4.Distance(block.GetColor("_BaseColor"), appearance.StyleAt(1).accentColor), Is.LessThan(0.00001f));
+        Assert.That(renderer.sharedMaterials[2].GetColor("_BaseColor"), Is.EqualTo(sharedColor));
+        Assert.That(ball.Carrier, Is.EqualTo(holder));
+        Assert.That(ball.State, Is.EqualTo(state));
+        Assert.That(ball.RulingPosition, Is.EqualTo(spot));
+        Assert.That(ball.GetComponent<SphereCollider>().bounds, Is.EqualTo(contactBounds));
+        Assert.That(renderer.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(mesh));
+        Assert.That(appearance.SelectStyle(-1), Is.False);
+        Assert.That(appearance.SelectStyle(appearance.StyleCount), Is.False);
+        Assert.That(appearance.SelectedStyle, Is.EqualTo(appearance.StyleAt(1)));
+        Assert.That(appearance.SelectStyle(0), Is.True);
+        yield return null;
+    }
+
 }
