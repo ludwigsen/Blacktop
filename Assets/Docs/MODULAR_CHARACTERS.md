@@ -1,5 +1,9 @@
 # Modular player characters — foundation
 
+## Current front-end extension
+
+The foundation audit/results below describe the original prototype catalog. The implemented MainMenu/runtime creator now uses a separate FrontEndCatalog with five distinct temporary regional bodies and fifteen team-tinted garment shells on this same rig. FRONT_END.md documents the live preview, derived weights, versioned runtime saves, independent active lineups, explicit Editor source commit and replacement-art workflow. Production faces/hair/beards/garments and LODs remain outstanding. Vipers now has an explicit balanced development source roster; the current-master front-end audit found no roster asset or metadata, so both were authored once with stable new IDs. Kings identity/ratings remain intact.
+
 ## Audit and decisions
 
 Audited current `origin/master` at `109633a` (including merged modular field surfaces), starting from a clean checkout. Implementation branch: `codex/modular-player-characters`. Unity is **6000.5.6f1**, URP **17.5.0**, Input System **1.20.0**, Test Framework **1.7.0**. No package or assembly-reference changes are required.
@@ -10,7 +14,7 @@ Audited current `origin/master` at `109633a` (including merged modular field sur
 | `Assets/_Project/Scripts/Player/PlayerAttributes.cs` | Runtime factory copies ratings from a roster row; team-bound private copies supply Gamebreaker. Appearance has no rating dependency. This is usable gameplay infrastructure, not an appearance model. |
 | `Assets/_Project/Scripts/Player/CharacterApplier.cs` | Runs at execution order -100, resolves the row, applies ratings before movement Awake and builds a nameplate. Preserve that order. The assembler reads its resolved row in Start, after PlayState branding is available. |
 | `Assets/_Project/Data/Teams/Kings/Roster_Kings.asset` | Seven existing GUIDs and ratings remain unchanged. Optional per-row appearance can be selected in the roster Inspector. |
-| Vipers | No roster asset exists; its meta remains. Rosterless players use the assembler's explicit default. This pre-existing content gap is not repaired here. |
+| Vipers | Rosterless in the original foundation. The front-end extension supplies a development source roster and independent GUID lineups; direct legacy scene players still use the explicit default without a Quick Play snapshot. |
 | `Assets/_Project/Prefabs/Player.prefab` | Fourteen scene instances are already placed, rather than created by a dedicated spawner. Root owns CapsuleCollider (height 2, radius .5), movement, AI, tackles, possession and input. No Rigidbody. Instantiating this prefab also gets appearance assembly. |
 | `Assets/_Project/Prefabs/PlayerModel.prefab` | Visual wrapper under `PlayerVisuals`; receives the replaceable PlayerVisualRig adapter. Existing imported body offsets/facing remain intact. |
 | `Assets/_Project/Prefabs/PlayerBody.fbx` | Formerly `Biped_Humanoid.fbx`, renamed earlier with its GUID preserved. Valid Humanoid Avatar, 57 skinned body bones, 18,277 body vertices and four 227-vertex eye skins. Two shared URP Lit materials. Integrated face, no authored modular garments, no LODs. Useful stand-in, **not a production-ready modular body**. |
@@ -23,7 +27,7 @@ Audited current `origin/master` at `109633a` (including merged modular field sur
 
 `TeamRoster.PlayerRecord.appearance` optionally references a `PlayerAppearanceDefinition`. Existing rows need no migration. `PlayerVisualAssembler.Start` resolves that selection or its prefab default, reads current TeamMember/PlayState identity and the roster jersey number, then assembles under the child `PlayerVisualRig`. Invalid saved selections log diagnostics and try the default; a failed direct `TryApply` keeps the last valid visual intact. An invalid default leaves the original imported model visible.
 
-Appearance stores stable part/palette IDs, body archetype, a discrete height profile, clothing/accessory IDs, head-size adjustment and optional seed metadata. IDs use ordinal, case-sensitive matching. The seed never overrides explicit choices. Reordering the catalog does not change reconstruction. Keep IDs after renaming assets; never reuse a retired ID for a different face. A save system should persist these IDs, the height-profile ID/cm, and the existing roster player GUID; no new save-game system is included.
+Appearance stores stable part/palette IDs, body archetype, a discrete height profile, clothing/accessory IDs, head-size adjustment and optional seed metadata. IDs use ordinal, case-sensitive matching. The seed never overrides explicit choices. Reordering the catalog does not change reconstruction. Keep IDs after renaming assets; never reuse a retired ID for a different face. The front-end save layer persists these selections, height centimetres and the existing player GUID without Unity asset references; see FRONT_END.md.
 
 ScriptableObjects are shared Unity assets: editing one changes every player referencing it. Duplicate a definition when a character needs different selections. Runtime assembly never writes those shared data assets. Team identity stays outside appearance. Call `ApplyTeam(identity, jerseyNumber)` after reassignment to refresh apparel property blocks/number labels without rebuilding attachments. The existing roster nameplate still supplies the visible number until numbered garments are authored; `PlayerVisualRig.jerseyLabels` is the optional TMP garment-label hook, empty on the prototype.
 
@@ -31,7 +35,7 @@ ScriptableObjects are shared Unity assets: editing one changes every player refe
 
 Per-material `CharacterTint` roles select Skin, Hair, TeamPrimary, TeamSecondary or None. URP `_BaseColor` is written through a MaterialPropertyBlock; shared materials are never cloned. Use one role per material slot. Slot overrides take priority over renderer-wide tint in Unity. The prototype has no isolated skin/apparel regions, so its tint array is deliberately empty and the existing debug state colors remain visible. Palette selection is functional for properly authored parts; it does not falsely recolor an absent hairstyle or garment.
 
-Rigid prefabs allow Transform, MeshFilter, MeshRenderer and LODGroup only. They must not contain gameplay scripts, Animator, colliders or Rigidbody. Use separate part records for left/right wristbands or sleeves with different sockets. Skinned garments use the appropriate Top, Shorts or Footwear slot; other equipment uses Wristband, Gloves, ArmSleeve, Headband or Accessory. Author variant meshes with supported-body lists as necessary. No in-game creator or heavyweight preview system is created.
+Rigid prefabs allow Transform, MeshFilter, MeshRenderer and LODGroup only. They must not contain gameplay scripts, Animator, colliders or Rigidbody. Use separate part records for left/right wristbands or sleeves with different sockets. Skinned garments use the appropriate Top, Shorts or Footwear slot; other equipment uses Wristband, Gloves, ArmSleeve, Headband or Accessory. Author variant meshes with supported-body lists and a shared variantFamilyId as necessary. The front-end creator/preview uses these same contracts; temporaryVisual distinguishes functional stand-ins from missing-art placeholders.
 
 ## Heights and authored physiques
 

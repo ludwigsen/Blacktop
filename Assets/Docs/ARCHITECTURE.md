@@ -129,12 +129,13 @@ PossessionController ─► BallController
 
 ## Scenes
 
-- **Game scene** — gameplay.
-- **MainMenu scene** — requested 2026-10-06: a basic menu with a button that loads the game scene. **(verify built.)** Both scenes must be in Build Settings.
+- **MainMenu** (`Assets/Scenes/MainMenu.unity`) — enabled build index 0. Runtime uGUI navigation, roster authoring and visual-only character preview.
+- **SampleScene** (`Assets/Scenes/SampleScene.unity`) — enabled build index 1. Quick Play binds a validated match snapshot to the existing fourteen player roots before gameplay initialization. Escape / gamepad Start or the MENU button returns to MainMenu. Direct scene launch retains the legacy development roster bindings.
 
 ## Assemblies
 
 - `Blacktop.Scripts.asmdef` covers gameplay scripts. New scripts must live under it. Input System package is a dependency.
+- Front-end runtime scripts live under that same assembly and use the existing uGUI/TMP/Input System references. `Blacktop.Editor` additionally references the installed `Unity.Collections` assembly for read-only mesh authoring. PlayMode tests reference the installed TMP/uGUI assemblies for real UI interaction. No package was added.
 
 ## Conventions for extending
 
@@ -149,8 +150,8 @@ PossessionController ─► BallController
 
 - **StumbleMove:** an `IPlayerMove` triggered by wall/fence contact; zero velocity, apply knockback, no evasion window.
 - **Downs/yardage tracker:** already implemented as `DownsTracker` and scene-wired; listed here previously as planned.
-- **Roster/character assignment:** per-slot character binding (`T1Player02`, `T2Player07`, ...) with GUID identity; each slot carries its own attributes and likeness. Create-a-Team is in; trades and free agency are not.
-- **Appearance system:** 5 body meshes on a shared skeleton, height bands as uniform scale, pooled faces / hair / facial hair.
+- **Create-a-Team / progression:** new-team creation, trading rules, free agency and career systems remain deferred. Development roster transfers between installed teams are implemented.
+- **Production appearance art:** five authored bodies, pooled distinct faces / hair / facial hair and fitted garments. Shared-rig assembly, height profiles and temporary body/garment variants are implemented.
 - **Handoff animation and designed run plays.**
 
 ## Play-resolution and live-turnover ownership (2026-10-17)
@@ -196,7 +197,7 @@ Issue #2 supersedes the earlier front/back preview: gameplay showed both teams f
 
 `TeamScorePanel` builds mirrored horizontal layouts. Neutral `scorebug_base.png` is tinted independently per panel; only background geometry is flipped. Primary color drives paint and segmented meter fill; secondary color drives the accent rule and meter frame. Empty, charging, READY and ACTIVE retain existing PlayState meter semantics. It owns/destroys a private Old London SDF outline material shared by its name and score, leaving the source font material unchanged. HUDTheme exposes soft-white text color, outline thickness, logo scale/outward tilt, outward name shift and name/score spacing. Names and scores use TMP bold weight. Default logos scale to 125% with mirrored 20-degree outward tilts; names move outward by 10% of the original name-slot width, and scores follow inward slot edges with reduced spacing. Supporting HUD and play-call copy use Outfit. SampleScene serializes the new layout/font sizes; changing C# defaults alone does not update serialized scene values.
 
-Branding has no reference to roster or ratings. The intended roster/attribute relationship is the player GUID as the foreign key; the current TeamRoster still embeds ratings, tracked as deferred data-authoring work in PROJECT_STATUS.md.
+Branding has no reference to roster or ratings. TeamRoster.PlayerRecord remains the authoritative identity/12-rating record keyed by GUID. The front end reuses that record in its portable DTO rather than introducing a second attribute database.
 
 
 ## Football visuals and cosmetic styles (2026-10-18)
@@ -224,4 +225,18 @@ PlayerModel owns a `PlayerVisualRig` adapter referencing the existing Animator, 
 
 Height affects the visual adapter around a foot pivot, with explicit nameplate/camera metadata. It never affects attributes, gameplay root scale, colliders, contact checks, ball grip or field rules. Team refresh is explicit through ApplyTeam, using per-slot MaterialPropertyBlocks and optional garment TMP number labels. The prototype lacks skin/apparel material separation; its tint roles remain None so existing state feedback is preserved.
 
-The reference rig is the existing PlayerBody FBX behind a replaceable contract. Full audit, actual asset limitations, canonical hierarchy, import/Blender rules and content workflow: `MODULAR_CHARACTERS.md`. Existing monolithic Athletic-like geometry remains a stand-in; other build/face/hair slots do not imply completed artwork.
+The reference rig is the existing PlayerBody FBX behind a replaceable contract. Full audit, actual asset limitations, canonical hierarchy, import/Blender rules and content workflow: `MODULAR_CHARACTERS.md`. The original catalog remains unchanged. FrontEndCatalog adds five temporary regional body meshes and fifteen fitted garment shells; integrated-head face IDs and missing hair/beard presets do not imply completed artwork.
+
+## Main menu, roster authoring and Quick Play (2026-10-23)
+
+`FrontEndSettings` references installed `TeamDefinition` assets (branding, existing roster and GUID-based independent lineups), fields, appearance catalog, weight tuning and presentation assets. `RosterService` imports detached defaults or validated schema-1 JSON. Every membership/lineup/record edit uses clone → validate → atomic save → swap; global GUID uniqueness, per-team numbers, 0–20 ratings, appearance compatibility and independent offense/defense assignments share one validator. Seven active players are required for Quick Play, while partial lineups and unlimited reserves may be saved.
+
+`PlayerEditorSession` owns the working copy/dirty baseline. `RosterData` wraps the existing PlayerRecord and portable appearance IDs rather than duplicating its authoritative fields. `BodyWeightProfile` derives appearance-only pounds from centimetres/build; physique never changes attributes or collision. `RosterSaveStore` writes under persistentDataPath with a sibling temporary file and backup replacement. `FrontEndSourceCommit` in the Editor assembly is the separate confirmed/undoable canonical asset writer. Runtime assemblies have no UnityEditor imports.
+
+`FrontEndController` owns navigation and dialogs. MainMenuView, QuickPlayView, RosterBrowserView and PlayerEditorView own screen presentation using FrontEndUI/FrontEndFocus and the existing InputSystemUIInputModule. `RuntimePlayerPreview` owns only a PlayerModel clone, private appearance, camera/lights and render texture; no gameplay player components are instantiated. Art selection triggers assembly on changes. Preview resources are disposed on screen teardown.
+
+`FrontEndRuntime` is a data-only cross-scene context, reset at subsystem registration; it never owns toggled per-player behavior. `QuickPlayMatch` holds a detached validated snapshot, selected team IDs, human side and field. `MatchBootstrap` runs at -2000 before CharacterApplier (-100): it creates owned runtime roster/appearance objects, configures the fourteen existing scene actors by offensive slot, installs TeamMember.defensiveLineupSlot, and configures PlayState branding/user team and FieldLoader selection. PlayState uses explicit defensive assignments when present and its original order for legacy actors. Existing movement, contact, control authority, ball rules and field dimensions remain unchanged. Rematch reuses the snapshot; returning to the menu clears it and keeps runtime saved rosters. Direct SampleScene launch without a snapshot retains the legacy development bindings.
+
+`CharacterPartDefinition.skinnedMeshOverride` permits compatible body/garment meshes using existing source bones/materials; skeleton validation checks the supplied mesh bind poses/submeshes. `temporaryVisual` is distinct from missing-art `placeholder`; `variantFamilyId` selects body-compatible garment variants. Catalog validation supports independently installed catalogs, while individual selections still validate against their chosen catalog. FrontEndTemporaryArt authoring never changes model importer readability or the canonical rig.
+
+Detailed setup, save recovery, source commit, source-data migration, preset extension and measured limitations: `FRONT_END.md`.

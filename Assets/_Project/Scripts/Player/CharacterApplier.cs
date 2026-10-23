@@ -30,6 +30,9 @@ public class CharacterApplier : MonoBehaviour
 
     public TeamRoster.PlayerRecord? Record { get; private set; }
 
+    // MatchBootstrap calls this before Awake; all existing attribute wiring stays in one place.
+    public void Configure(TeamRoster source, string guid) { roster = source; playerId = guid; }
+
     void Awake()
     {
         if (roster == null)

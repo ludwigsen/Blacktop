@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c07a649ac824e92adaf57c8660e835, type: 3}
+  m_Name: Kings
+  m_EditorClassIdentifier: Blacktop::TeamDefinition
+  id: kings
+  identity: {fileID: 11400000, guid: 19a3b9c5ae226466ab5ba14090db2abe, type: 2}
+  roster: {fileID: 11400000, guid: 43e613d2cdfe9441ca277d34cb504f34, type: 2}
+  activeLineup:
+  - playerId: 4a35f6b3-a871-477e-a512-639b3cc9e40e
+    offense: 0
+    defense: 2
+  - playerId: 7a7a2f07-319f-4507-9b48-8d40a50e079f
+    offense: 1
+    defense: 3
+  - playerId: bb44b754-0cda-43db-b161-e9b9facf9ef8
+    offense: 2
+    defense: 4
+  - playerId: 05c35e3b-1ee5-4e22-aedc-e4ea8110b2e3
+    offense: 3
+    defense: 5
+  - playerId: 6fa2b391-dd99-49ab-88f1-7f42396188e0
+    offense: 4
+    defense: 6
+  - playerId: 5918034b-ec24-4afd-a1d6-30168e74ebaa
+    offense: 5
+    defense: 0
+  - playerId: efc16a80-61bb-4884-8c47-8526031333b5
+    offense: 6
+    defense: 1

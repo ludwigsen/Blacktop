@@ -304,15 +304,21 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &142036784 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 142036783}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &172831028 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
   m_PrefabInstance: {fileID: 1382229152}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &211972444 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6555219639277062554, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
-  m_PrefabInstance: {fileID: 1571123066}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &231673404 stripped
 Transform:
@@ -490,6 +496,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &294411624 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 294411623}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &325364142 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
@@ -656,23 +673,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
   m_PrefabInstance: {fileID: 1571123066}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &370223036
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 211972444}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28a8202570e124c3694eae6de69b7089, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Blacktop::CharacterApplier
-  roster: {fileID: 11400000, guid: 43e613d2cdfe9441ca277d34cb504f34, type: 2}
-  playerId: 4a35f6b3-a871-477e-a512-639b3cc9e40e
-  showNameplate: 1
-  nameplateHeight: 2.6
-  nameplateFontSize: 28
 --- !u!1 &401856898
 GameObject:
   m_ObjectHideFlags: 0
@@ -838,6 +838,68 @@ MonoBehaviour:
 Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
   m_PrefabInstance: {fileID: 1921861412}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &512390244
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 801123495}
+    m_Modifications:
+    - target: {fileID: 2783636561824736518, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_Name
+      value: FootballVisual
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+--- !u!4 &512390245 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
+  m_PrefabInstance: {fileID: 512390244}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &670707746 stripped
 Transform:
@@ -1265,6 +1327,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1004196104 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1004196103}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &1038486232
 GameObject:
   m_ObjectHideFlags: 0
@@ -1414,6 +1487,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1077463907 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1077463906}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1087445713
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1483,6 +1567,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1087445714 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1087445713}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &1099329970 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
@@ -1754,6 +1849,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1129514224 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1129514223}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1140467156
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1823,6 +1929,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1140467157 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1140467156}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1249996160
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1892,6 +2009,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1249996161 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1249996160}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &1314477354
 GameObject:
   m_ObjectHideFlags: 0
@@ -1914,6 +2042,7 @@ GameObject:
   - component: {fileID: 1314477368}
   - component: {fileID: 1314477369}
   - component: {fileID: 1314477370}
+  - component: {fileID: 1314477371}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1946,7 +2075,6 @@ MonoBehaviour:
   defaultOffensiveFormation: {fileID: 11400000, guid: 59fd00977477b498fbc262dadeae11cd, type: 2}
   defensivePlay: {fileID: 0}
   gamebreakerBuffs: {fileID: 11400000, guid: 76e927b1011834942a4cf33a3b538f95, type: 2}
-  gamebreakerPossessionLimit: 3
   playCall: {fileID: 0}
   postSnapTackleGrace: 0.25
   huddleRadius: 1.5
@@ -2186,6 +2314,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::TouchdownZone
   fieldBounds: {fileID: 1113649416}
+--- !u!114 &1314477371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf2af85c58d7140efb3851e82c8df24d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::MatchBootstrap
+  settings: {fileID: 11400000, guid: f454f03e2ba074a4fb13842706ee89e0, type: 2}
+  players:
+  - {fileID: 1382229153}
+  - {fileID: 1129514224}
+  - {fileID: 1978966655}
+  - {fileID: 1571123067}
+  - {fileID: 1087445714}
+  - {fileID: 1731406316029656971}
+  - {fileID: 1928572279}
+  - {fileID: 1140467157}
+  - {fileID: 1077463907}
+  - {fileID: 1249996161}
+  - {fileID: 142036784}
+  - {fileID: 1921861413}
+  - {fileID: 1004196104}
+  - {fileID: 294411624}
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2255,6 +2411,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1382229153 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1382229152}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &1429029024
 GameObject:
   m_ObjectHideFlags: 0
@@ -2624,14 +2791,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: T1Player01
       objectReference: {fileID: 0}
+    - target: {fileID: 6791215661319204177, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+      propertyPath: roster
+      value:
+      objectReference: {fileID: 11400000, guid: 43e613d2cdfe9441ca277d34cb504f34, type: 2}
+    - target: {fileID: 6791215661319204177, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+      propertyPath: playerId
+      value: 4a35f6b3-a871-477e-a512-639b3cc9e40e
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6555219639277062554, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 370223036}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1571123067 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1571123066}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &1626384844 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
@@ -2787,6 +2970,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1921861413 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1921861412}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1928572278
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2868,6 +3062,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1928572279 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1928572278}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1978966654
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2941,6 +3146,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+--- !u!114 &1978966655 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1978966654}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &2133066429
 GameObject:
   m_ObjectHideFlags: 0
@@ -3104,68 +3320,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
---- !u!1001 &512390244
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 801123495}
-    m_Modifications:
-    - target: {fileID: 2783636561824736518, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_Name
-      value: FootballVisual
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
---- !u!4 &512390245 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5524749251119187580, guid: 466e01dc28fba43e6abb52c245ac1876, type: 3}
-  m_PrefabInstance: {fileID: 512390244}
+--- !u!114 &1731406316029656971 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4883675479690406824, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
+  m_PrefabInstance: {fileID: 1731406316029656970}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

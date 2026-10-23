@@ -144,15 +144,17 @@ public static class CharacterAppearanceSetup
     public static void ValidateAll()
     {
         int errors = 0;
-        foreach (string guid in AssetDatabase.FindAssets("t:PlayerAppearanceCatalog"))
+        var catalogs = AssetDatabase.FindAssets("t:PlayerAppearanceCatalog")
+            .Select(guid => AssetDatabase.LoadAssetAtPath<PlayerAppearanceCatalog>(AssetDatabase.GUIDToAssetPath(guid))).ToArray();
+        foreach (var catalog in catalogs)
+            foreach (string error in catalog.ValidateCatalog())
+            { Debug.LogError($"{catalog.name}: {error}", catalog); errors++; }
+        foreach (string guid in AssetDatabase.FindAssets("t:PlayerAppearanceDefinition"))
         {
-            var catalog = AssetDatabase.LoadAssetAtPath<PlayerAppearanceCatalog>(AssetDatabase.GUIDToAssetPath(guid));
-            foreach (string appearanceGuid in AssetDatabase.FindAssets("t:PlayerAppearanceDefinition"))
-            {
-                var appearance = AssetDatabase.LoadAssetAtPath<PlayerAppearanceDefinition>(AssetDatabase.GUIDToAssetPath(appearanceGuid));
-                foreach (string error in catalog.Validate(appearance, out _))
-                { Debug.LogError($"{catalog.name}/{appearance.name}: {error}", appearance); errors++; }
-            }
+            var appearance = AssetDatabase.LoadAssetAtPath<PlayerAppearanceDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+            // Separate catalogs may own different art families. A definition must resolve in at least one.
+            if (catalogs.Any(catalog => catalog.Validate(appearance, out _, false).Count == 0)) continue;
+            Debug.LogError($"{appearance.name}: no installed catalog can resolve this complete selection.", appearance); errors++;
         }
         Debug.Log($"Appearance validation finished: {errors} errors. Placeholder art still requires authoring.");
         if (errors > 0) throw new InvalidOperationException("Appearance asset validation failed; see the diagnostics above.");

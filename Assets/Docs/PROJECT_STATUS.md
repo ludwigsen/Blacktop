@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-10-22
+Last updated: 2026-10-23
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -39,6 +39,9 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Win condition: first to 21 via ScoreBoard/GameRules; a winning defensive-return test passes with a runtime test target of six. Full manual match/rematch remains required.
 
 ### UI and feedback
+- MainMenu is the initial build scene: New Game, Players, Quit. Quick Play explicitly selects human team, distinct opponent, home/away side and venue, validates seven active players per side, and binds the existing match actors. Escape / gamepad Start returns from gameplay; rematch retains the selected configuration.
+- Players supports create/edit/duplicate/transfer/delete, seven active players plus unlimited reserves, and independent offense/defense assignment. A working-copy editor covers identity, twelve heights, five builds, derived weight, appearance/gear selections and all twelve existing 0–20 ratings, with visual-only live preview and save/cancel/reset.
+- Runtime rosters use atomic versioned JSON with backup recovery. Canonical source commit is a separate confirmed Editor-only operation. See FRONT_END.md for setup, persistence and art replacement.
 - `ReceiverSelectionUI`, play-call UI, unified `GameHUD` scorebug and winner/rematch overlay (scene-wired).
 - Scorebug uses a horizontal crest/name/score/meter composition, bold Old London names/scores with soft-white faces, black SDF outlines and tighter spacing; crests are enlarged 25% and tilted 20 degrees outward, and Outfit supporting copy. Pre-game TeamIdentity assets supply names, matching Kings/Vipers crests, primary paint/meter colors and secondary rules/frame colors. All 16 logo imports are UI sprites. Visual validation is recorded in TESTING.md.
 - `CarrierHighlight`.
@@ -53,7 +56,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 ### Character appearance foundation
 - Optional roster appearance references preserve GUIDs/ratings; rosterless players use the prefab default. PlayerVisualAssembler/PlayerVisualRig assemble below PlayerVisuals without resizing the gameplay root/collider.
 - Stable preset/palette IDs, five body archetypes, twelve discrete heights/five derived bands, safe fallback, shared-bone attachment slots, authored skinned LOD support, property-block tinting and optional garment number labels.
-- The existing Athletic-like monolithic model is the usable stand-in. Three face slots, cropped hair/beard and four additional body builds are **explicit missing-art placeholders**. Three saved 170/183/201cm examples and an isolated Editor preview are supplied.
+- The original catalog remains compatible. The front-end catalog supplies five distinct temporary regional body meshes and fitted temporary top/shorts/footwear shells on the same skeleton. Heavy emphasizes waist mass; Massive emphasizes chest/shoulders/limbs. These are provisional silhouettes, not production anatomy/clothing. Three face IDs share the same integrated head; cropped hair/beard and additional gear are explicitly missing art.
 - See `MODULAR_CHARACTERS.md` for the audit, canonical rig, art/import contract and workflow. Editor Play Mode suite: **62/62 passed**, including field checks and seven character tests.
 
 ## Known issues
@@ -67,7 +70,9 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Gamebreaker balance/readability | Wiring and possession lifetime implemented; redesigned scorebug shows READY / ACTIVE. Manual balance/readability playtest remains. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
 | Football style picker | Style assets and selection API exist; player-facing pre-game UI and saved selection are not built. |
-| Modular character art | Prototype has an integrated head, four eye skins, no neck seam, real hair/beard/garments or LOD meshes. Distinct faces and four body meshes are absent. Production deformation, fit, distinctiveness and prototype model provenance/licence require art review. |
+| Modular character art | Five temporary bodies and fifteen temporary garment shells work. Integrated prototype head/eye skins remain; no distinct face geometry, hairstyle/beard art, authored production garments or LOD meshes. Additional gear slots are labelled missing. Garment numbers have no renderer; match nameplates show the saved number. Production anatomy, deformation, fit and prototype model provenance/licence require art review. |
+| Front-end platform/performance follow-up | Editor UI and normal macOS startup are validated; physical controller feel and Windows remain manual. Temporary garments raise the selected fourteen-player sample from 70 to 112 skinned renderers. No frame-rate budget is claimed. |
+| Direct SampleScene development entry | Quick Play is the supported entry for edited active lineups. Direct SampleScene retains original fixed GUID bindings; deleting/transferring those canonical players can invalidate that legacy fixture after an explicit source commit. Use MainMenu to play custom rosters. |
 
 ## Incomplete (next up, in order)
 
@@ -75,9 +80,9 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 2. **Loose-ball gameplay feel** — ownership is now exclusive; manually verify scrum readability and recovery/control transfer.
 3. **Visible handoff** — football mesh is integrated; proximity transfer still needs an observable QB-to-back exchange.
 4. **Football animation readability** — running/backpedaling/fast-run and hurdle clips are wired. Carry grip, throwing, catching and tackle reactions remain unfinished; controller feel, foot sliding and transition tuning still need manual playtesting.
-5. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
-6. **Roster data separation** — TeamIdentity branding is separate, but TeamRoster.PlayerRecord still embeds the 12 ratings. Move ratings into separate data keyed by the roster player GUID when implementing roster/attribute authoring; this HUD change does not migrate player data.
-7. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
+5. **Front-end manual acceptance** — finish a physical-controller match with an edited roster, confirm all gameplay actions and restart persistence on Windows. MainMenu, roster editing and Quick Play are implemented; automated integration includes both human sides, rematch and return to menu.
+6. **Roster authoring** — identity/ratings deliberately remain in the existing GUID-keyed PlayerRecord. Runtime appearance DTOs omit Unity asset references; explicit source commit creates per-GUID appearance assets. New-team creation is deferred.
+7. **Environment conditions** — Kings GUIDs/ratings are preserved. Vipers now has an explicit balanced development source roster and new metadata. Field modifier/condition data still has no active application pipeline.
 
 8. **Character vertical slice art** — author a headless Athletic body, three distinct faces, one cropped hairstyle and one beard on the documented rig. Measure height/profile anatomy and validate missing football-action clips before growing the catalog.
 
@@ -92,7 +97,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 ### Per-slot characters
 - Each roster slot (e.g. `T1Player02`, `T2Player07`) takes on a character's attributes and likeness, NFL Street style.
 - Player identity via GUID/UUID generated at character creation.
-- No trades or free agency. "Create a Team" is a feature.
+- Development roster transfers are supported; no trading economy or free agency. "Create a Team" remains a future feature.
 
 ### Gamebreaker
 - Merge NFL Street 1's flat all-stat boost for the whole possession with NFL Street 3's player-triggered activation (no cutscene).
@@ -123,7 +128,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 
 - No automated match-loop blocker remains in the 39-case Editor/macOS player suite. Finish a manual controller-played match/rematch in the normal app before treating game feel and visuals as verified.
 - Wrong-team return scoring, unheld-ball touchdowns, competing carrier/defender claims, and interrupted-hurdle immunity have code fixes; runtime validation is recorded separately in `TESTING.md`.
-- Match progression already includes downs, possession changes, first-to-21 scoring, winner UI, and scene-reload rematch. No conversions or main menu yet.
+- Match progression includes downs, possession changes, first-to-21 scoring, winner UI, scene-reload rematch and a return to MainMenu. Conversions remain deferred.
 
 ## Tooling
 

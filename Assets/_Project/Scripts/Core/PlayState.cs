@@ -180,6 +180,12 @@ public class PlayState : MonoBehaviour
 
     public FieldDirection AttackDirection => DirectionFor(PossessionTeamId);
 
+    // Startup-only presentation/control bindings, supplied before this component's Awake.
+    public void ConfigureMatch(TeamIdentity side0, TeamIdentity side1, int humanSide)
+    {
+        team1Identity = side0; team2Identity = side1; userTeamId = humanSide;
+    }
+
     public TeamIdentity IdentityFor(int teamId) => teamId == 0 ? team1Identity : team2Identity;
 
     // Which way the CAMERA (and therefore screen-relative stick input) should face: behind
@@ -235,8 +241,14 @@ public class PlayState : MonoBehaviour
             offensePlayers.Add(ResolveSlot(members, PossessionTeamId, slot));
 
         defensePlayers.Clear();
-        foreach (var slot in defenseSlotOrder)
-            defensePlayers.Add(ResolveSlot(members, DefendingTeamId, slot));
+        for (int index = 0; index < defenseSlotOrder.Length; index++)
+        {
+            // Selected lineups assign defense independently; direct scene launches retain old defaults.
+            Transform assigned = null;
+            foreach (var member in members)
+                if (member.teamId == DefendingTeamId && member.defensiveLineupSlot == index) assigned = member.transform;
+            defensePlayers.Add(assigned != null ? assigned : ResolveSlot(members, DefendingTeamId, defenseSlotOrder[index]));
+        }
     }
 
     static Transform ResolveSlot(TeamMember[] members, int teamId, TeamMember.RosterSlot slot)

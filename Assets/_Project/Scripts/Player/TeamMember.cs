@@ -12,6 +12,8 @@ public class TeamMember : MonoBehaviour
     public int teamId;
 
     public RosterSlot slot;
+    // Optional independent defensive formation index. -1 preserves legacy scene ordering.
+    public int defensiveLineupSlot = -1;
 
     // The one "is that guy on the other team?" check. Replaces every "Defender"/"Teammate"
     // tag comparison — tags encoded a permanent offense/defense split that stopped being

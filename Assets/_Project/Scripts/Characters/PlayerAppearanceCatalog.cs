@@ -51,9 +51,9 @@ public class PlayerAppearanceCatalog : ScriptableObject
         return errors;
     }
 
-    public List<string> Validate(PlayerAppearanceDefinition appearance, out CharacterPartDefinition[] selected)
+    public List<string> Validate(PlayerAppearanceDefinition appearance, out CharacterPartDefinition[] selected, bool validateCatalog = true)
     {
-        var errors = ValidateCatalog();
+        var errors = validateCatalog ? ValidateCatalog() : new List<string>();
         var resolved = new List<CharacterPartDefinition>();
         selected = Array.Empty<CharacterPartDefinition>();
         if (appearance == null) { errors.Add("Appearance is missing."); return errors; }
@@ -121,7 +121,7 @@ public class PlayerAppearanceCatalog : ScriptableObject
         if (part.skinnedSource != null)
         {
             if (part.skeleton == null) errors.Add($"{part.id}: missing skeleton contract.");
-            else if (!part.skeleton.ValidateSkin(part.skinnedSource, out string error)) errors.Add($"{part.id}: {error}");
+            else if (!part.skeleton.ValidateSkin(part.skinnedSource, out string error, part.skinnedMeshOverride)) errors.Add($"{part.id}: {error}");
             if (part.materialTints.Length > part.skinnedSource.sharedMaterials.Length) errors.Add($"{part.id}: tint slot exceeds material slots.");
             float previous = part.lod0ScreenHeight;
             foreach (var lod in part.lowerDetailLevels)
