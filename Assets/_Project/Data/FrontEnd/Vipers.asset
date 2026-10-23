@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c07a649ac824e92adaf57c8660e835, type: 3}
+  m_Name: Vipers
+  m_EditorClassIdentifier: Blacktop::TeamDefinition
+  id: vipers
+  identity: {fileID: 11400000, guid: 9bccb93aaef7c4f8b984232e1e48202e, type: 2}
+  roster: {fileID: 11400000, guid: 53c334e016cca42a1bfac8812e64dc92, type: 2}
+  activeLineup:
+  - playerId: 0456f958-9ee8-4512-a7ac-5e985056cb49
+    offense: 0
+    defense: 2
+  - playerId: 1298724e-0132-4cf9-9c46-2f61da2d2142
+    offense: 1
+    defense: 3
+  - playerId: ab354517-1bb7-4590-97d5-d468e263535a
+    offense: 2
+    defense: 4
+  - playerId: 36988f22-c216-4261-9760-a272c4e53478
+    offense: 3
+    defense: 5
+  - playerId: e0e2299e-aea9-451c-9739-4e9dc7624d09
+    offense: 4
+    defense: 6
+  - playerId: bc5f4f7a-1e86-49c5-868b-1cc31018a4d0
+    offense: 5
+    defense: 0
+  - playerId: d9590a53-cabe-4f1e-9e66-4dc7250724c5
+    offense: 6
+    defense: 1

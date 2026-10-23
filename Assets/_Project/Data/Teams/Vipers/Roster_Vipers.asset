@@ -1,0 +1,143 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d31dd28571bc041798794c51d1ee8a28, type: 3}
+  m_Name: Roster_Vipers
+  m_EditorClassIdentifier: Blacktop::TeamRoster
+  teamName: Vipers
+  curves: {fileID: 11400000, guid: 583b794dd87ba405f8b69615de46cd60, type: 2}
+  players:
+  - id: 0456f958-9ee8-4512-a7ac-5e985056cb49
+    displayName: Vipers QB
+    jerseyNumber: 0
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10
+  - id: 1298724e-0132-4cf9-9c46-2f61da2d2142
+    displayName: Vipers RB
+    jerseyNumber: 1
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10
+  - id: ab354517-1bb7-4590-97d5-d468e263535a
+    displayName: Vipers WR1
+    jerseyNumber: 2
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10
+  - id: 36988f22-c216-4261-9760-a272c4e53478
+    displayName: Vipers WR2
+    jerseyNumber: 3
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10
+  - id: e0e2299e-aea9-451c-9739-4e9dc7624d09
+    displayName: Vipers WR3
+    jerseyNumber: 4
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10
+  - id: bc5f4f7a-1e86-49c5-868b-1cc31018a4d0
+    displayName: Vipers OL1
+    jerseyNumber: 5
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10
+  - id: d9590a53-cabe-4f1e-9e66-4dc7250724c5
+    displayName: Vipers OL2
+    jerseyNumber: 6
+    archetypeLabel:
+    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    appearance: {fileID: 0}
+    passing: 10
+    speed: 10
+    blocking: 10
+    agility: 10
+    catching: 10
+    runPower: 10
+    carrying: 10
+    tackling: 10
+    coverage: 10
+    dMoves: 10
+    swagger: 10
+    routeRunning: 10

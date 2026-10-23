@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // One team's full player pool as DATA. GUIDs are generated automatically the moment a
-// row is added (OnValidate, editor-only) — you never type or see one. Uniqueness only
-// has to hold WITHIN a roster (no trades/free agency in Blacktop — "Create a Team" is
-// the only roster-authoring feature), so there's no cross-team ID registry to maintain.
+// row is added (OnValidate, editor-only). This Inspector check is local; the runtime
+// RosterService additionally validates global GUID uniqueness and transactional transfers.
+// Gameplay ratings stay in this record rather than a second serialized stat array.
 [CreateAssetMenu(menuName = "Blacktop/Team Roster")]
 public class TeamRoster : ScriptableObject
 {

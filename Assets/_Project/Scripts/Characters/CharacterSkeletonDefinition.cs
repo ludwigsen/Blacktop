@@ -22,14 +22,15 @@ public class CharacterSkeletonDefinition : ScriptableObject
         return bone.parent == root ? path : null;
     }
 
-    public bool ValidateSkin(SkinnedMeshRenderer source, out string error)
+    public bool ValidateSkin(SkinnedMeshRenderer source, out string error, Mesh meshOverride = null)
     {
         error = null;
+        var sourceMesh = meshOverride != null ? meshOverride : source != null ? source.sharedMesh : null;
         var canonical = referenceModel != null ? referenceModel.GetComponentInChildren<Animator>(true) : null;
         var sourceAnimator = source != null ? source.GetComponentInParent<Animator>(true) : null;
         if (canonical == null || canonical.avatar == null || !canonical.avatar.isHuman || !canonical.avatar.isValid ||
             referenceSkin == null || referenceSkin.sharedMesh == null || sourceAnimator == null || sourceAnimator.avatar == null ||
-            !sourceAnimator.avatar.isHuman || !sourceAnimator.avatar.isValid || source.sharedMesh == null)
+            !sourceAnimator.avatar.isHuman || !sourceAnimator.avatar.isValid || sourceMesh == null)
         { error = "Missing valid Humanoid reference model, skin or source Avatar."; return false; }
 
         var referenceSpace = canonical.transform.worldToLocalMatrix * referenceSkin.transform.localToWorldMatrix;
@@ -51,7 +52,7 @@ public class CharacterSkeletonDefinition : ScriptableObject
             { error = "Canonical skin contains ambiguous bone paths."; return false; }
         }
         var bones = source.bones;
-        var poses = source.sharedMesh.bindposes;
+        var poses = sourceMesh.bindposes;
         if (bones.Length == 0 || bones.Length != poses.Length)
         { error = "Skin must contain one bind pose per bone."; return false; }
         for (int i = 0; i < bones.Length; i++)
@@ -72,7 +73,7 @@ public class CharacterSkeletonDefinition : ScriptableObject
                 { error = $"Incompatible rest hierarchy at {bonePath}."; return false; }
             }
         }
-        if (source.sharedMaterials.Length != source.sharedMesh.subMeshCount)
+        if (source.sharedMaterials.Length != sourceMesh.subMeshCount)
         { error = "Material slots must match mesh submeshes."; return false; }
         foreach (var material in source.sharedMaterials)
             if (material == null) { error = "Skin contains a missing material."; return false; }

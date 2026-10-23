@@ -73,7 +73,7 @@ public class PlayerVisualAssembler : MonoBehaviour
             ClearParts();
             rig.RestoreBody();
             tinted.Clear();
-            if (!body.placeholder && !body.useExistingBody) CopySkin(body.skinnedSource, rig.bodyRenderer);
+            if (!body.placeholder && !body.useExistingBody) CopySkin(body.skinnedSource, rig.bodyRenderer, body.skinnedMeshOverride);
             tinted.Add((rig.bodyRenderer, body));
             if (!body.placeholder && !body.useExistingBody) ConfigureLods(body, rig.bodyRenderer);
             foreach (var renderer in rig.integratedHeadRenderers) if (renderer != null) renderer.enabled = body.integratedHead;
@@ -105,7 +105,7 @@ public class PlayerVisualAssembler : MonoBehaviour
             go.transform.SetLocalPositionAndRotation(rig.bodyRenderer.transform.localPosition, rig.bodyRenderer.transform.localRotation);
             go.transform.localScale = rig.bodyRenderer.transform.localScale;
             var skin = go.GetComponent<SkinnedMeshRenderer>();
-            CopySkin(part.skinnedSource, skin);
+            CopySkin(part.skinnedSource, skin, part.skinnedMeshOverride);
             generatedSkins.Add(go);
             tinted.Add((skin, part));
             ConfigureLods(part, skin);
@@ -121,14 +121,16 @@ public class PlayerVisualAssembler : MonoBehaviour
         }
     }
 
-    void CopySkin(SkinnedMeshRenderer source, SkinnedMeshRenderer destination)
+    void CopySkin(SkinnedMeshRenderer source, SkinnedMeshRenderer destination, Mesh meshOverride = null)
     {
-        destination.sharedMesh = source.sharedMesh;
+        destination.sharedMesh = meshOverride != null ? meshOverride : source.sharedMesh;
         destination.sharedMaterials = source.sharedMaterials;
         destination.bones = rig.Remap(source);
         var sourceRoot = source.GetComponentInParent<Animator>(true).transform;
         destination.rootBone = source.rootBone != null ? rig.Bone(CharacterSkeletonDefinition.Path(source.rootBone, sourceRoot)) : rig.animator.transform;
-        destination.localBounds = source.localBounds;
+        var visualBounds = source.localBounds;
+        if (meshOverride != null) visualBounds.Encapsulate(meshOverride.bounds);
+        destination.localBounds = visualBounds;
         destination.quality = source.quality;
         destination.shadowCastingMode = source.shadowCastingMode;
         destination.receiveShadows = source.receiveShadows;

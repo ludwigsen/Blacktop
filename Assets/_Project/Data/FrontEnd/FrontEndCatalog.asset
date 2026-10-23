@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d67625218cf4c03bc0cabde374ec29, type: 3}
+  m_Name: FrontEndCatalog
+  m_EditorClassIdentifier: Blacktop::PlayerAppearanceCatalog
+  parts:
+  - {fileID: 11400000, guid: 76d7beac8ac304e939803c2eb67392ac, type: 2}
+  - {fileID: 11400000, guid: df15256cb269341f9a5ba47462a30298, type: 2}
+  - {fileID: 11400000, guid: 8efa957ccf62443e39e191d404b53d03, type: 2}
+  - {fileID: 11400000, guid: 53eb0c1a6df0a407b93723497243ddda, type: 2}
+  - {fileID: 11400000, guid: 957324f119c8c4fed826b17d145b5776, type: 2}
+  - {fileID: 11400000, guid: eb7f7c93877df44d088f3683de958534, type: 2}
+  - {fileID: 11400000, guid: 4773468aa419a4b6788d6d94c82a3541, type: 2}
+  - {fileID: 11400000, guid: 7fa66d2cb29e34411b4f6b179ae30d66, type: 2}
+  - {fileID: 11400000, guid: ca2b08b152d204ee38b811d887721a2e, type: 2}
+  - {fileID: 11400000, guid: f7b3fb0bac07e4b83a0fa851d9414de6, type: 2}
+  - {fileID: 11400000, guid: c26877c8f5b2d43a5b09c1fc0ae817a8, type: 2}
+  - {fileID: 11400000, guid: 358fc5aab98674891856d41b22205b20, type: 2}
+  - {fileID: 11400000, guid: c260cd6ec21e74f1b92b0a0c6fdf766a, type: 2}
+  - {fileID: 11400000, guid: 09e1e5ce1ea8b46af9e9b439534c601f, type: 2}
+  - {fileID: 11400000, guid: 6b14a74ec958c4d618cf5a6b805f573f, type: 2}
+  - {fileID: 11400000, guid: d1ea028d322cf48e3beb3efc6c35f783, type: 2}
+  - {fileID: 11400000, guid: e0f1f455a8a834f53b565a682d8a9b26, type: 2}
+  - {fileID: 11400000, guid: bcf9c34d95c0c4e93b5e5f9d3467e5d4, type: 2}
+  - {fileID: 11400000, guid: 1312ad401eb434b2389abe03f84f54cc, type: 2}
+  - {fileID: 11400000, guid: 7ea7c3a31a71a46a98a66389814b13a7, type: 2}
+  - {fileID: 11400000, guid: 3c433de2fb4e4470cbcc5f95423a1f12, type: 2}
+  - {fileID: 11400000, guid: 95479387bbff24b3d9c8c6042da2ce12, type: 2}
+  - {fileID: 11400000, guid: 945becef0e4514897b8ca7b218a97bee, type: 2}
+  - {fileID: 11400000, guid: fe6da55f6fc6d40899e598d04e25bc46, type: 2}
+  - {fileID: 11400000, guid: fa5c8daeb12f3498d9a39274c62ab22c, type: 2}
+  - {fileID: 11400000, guid: 53c909829ca7348d3a6e0e4e5b2efbe1, type: 2}
+  - {fileID: 11400000, guid: ee4c5eb95df5248469a852a52823e92f, type: 2}
+  - {fileID: 11400000, guid: 4dcc8474ed5174f7694772218961a0cc, type: 2}
+  - {fileID: 11400000, guid: 3a38494158f2844048dd7c04a3c6747f, type: 2}
+  - {fileID: 11400000, guid: 30d00ca9108ce47278dbeb3363fea995, type: 2}
+  - {fileID: 11400000, guid: bde8b917db932404da61840c55a6a92a, type: 2}
+  - {fileID: 11400000, guid: 9ba240275e36a44d78c190ce3bfca5ac, type: 2}
+  - {fileID: 11400000, guid: 2b49cc189db89482db1b7059d85a385d, type: 2}
+  - {fileID: 11400000, guid: 69c4fde2c0db44183a47f9e81dfbf2fd, type: 2}
+  - {fileID: 11400000, guid: 34fd444761f5748d19b85f97b11d2d57, type: 2}
+  - {fileID: 11400000, guid: a78b2b61cb2514db590c0fc19ac424c8, type: 2}
+  - {fileID: 11400000, guid: 5d061f40b3816453ea030c4cd059c3cb, type: 2}
+  heightProfiles:
+  - {fileID: 11400000, guid: 25f077acc59094e9dad9447ca949251c, type: 2}
+  - {fileID: 11400000, guid: 3d6b7e9a5ec6045d192946573f1fe9a5, type: 2}
+  - {fileID: 11400000, guid: 57a25b1d1ba8d4a6d887fa66f12599db, type: 2}
+  - {fileID: 11400000, guid: 91992757fe35346659892bc1162deca7, type: 2}
+  - {fileID: 11400000, guid: a5accc997fbb0497db619e34a55b46af, type: 2}
+  - {fileID: 11400000, guid: 4fc2bbfb3d37442f592915c406879a31, type: 2}
+  - {fileID: 11400000, guid: 71b9e2e17c9ea474fa16fdf0c3757eef, type: 2}
+  - {fileID: 11400000, guid: 39309c955351e473c90b424f80b186b7, type: 2}
+  - {fileID: 11400000, guid: 566ec0c6985c84cd5a6986bb616730d5, type: 2}
+  - {fileID: 11400000, guid: 45310b6d657f14aa4bb9838acc722f74, type: 2}
+  - {fileID: 11400000, guid: 2fac33eca6eb545668e6bd64b8fa2d95, type: 2}
+  - {fileID: 11400000, guid: ce87ba0f7c5014b329a2c7f26b4e381a, type: 2}
+  sampleAppearances: []
+  skinTones:
+  - id: skin.light
+    color: {r: 0.76, g: 0.52, b: 0.37, a: 1}
+  - id: skin.medium
+    color: {r: 0.48, g: 0.28, b: 0.17, a: 1}
+  - id: skin.dark
+    color: {r: 0.2, g: 0.1, b: 0.065, a: 1}
+  hairColors:
+  - id: hair.black
+    color: {r: 0.025, g: 0.018, b: 0.015, a: 1}
+  - id: hair.brown
+    color: {r: 0.16, g: 0.07, b: 0.025, a: 1}

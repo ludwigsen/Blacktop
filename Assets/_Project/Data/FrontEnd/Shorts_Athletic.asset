@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc1a4e377f9644fc6a5ab628ea929ab8, type: 3}
+  m_Name: Shorts_Athletic
+  m_EditorClassIdentifier: Blacktop::CharacterPartDefinition
+  id: gear.shorts.athletic.temporary
+  displayName: Shorts Athletic
+  variantFamilyId: temporary.Shorts
+  temporaryVisual: 1
+  slot: 5
+  bodyArchetype: 1
+  skeleton: {fileID: 11400000, guid: 985357a217d524e44927dc1c70ba514b, type: 2}
+  placeholder: 0
+  authoringNote: TEMPORARY region-deformed prototype geometry. Shared rig/binds retained;
+    production topology, seams and animation fit require artist review.
+  emptyOption: 0
+  useExistingBody: 0
+  integratedHead: 0
+  skinnedSource: {fileID: -3103262157978312569, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
+  skinnedMeshOverride: {fileID: 4300000, guid: 59219f2cfa9bb4fefac9b4091902a258, type: 2}
+  lod0ScreenHeight: 0.6
+  lowerDetailLevels: []
+  attachmentPrefab: {fileID: 0}
+  socket: 10
+  localPosition: {x: 0, y: 0, z: 0}
+  localEulerAngles: {x: 0, y: 0, z: 0}
+  localScale: {x: 1, y: 1, z: 1}
+  materialTints: 04000000
+  supportedBodies: 01000000
+  compatibleFaceIds: []
+  proportionCalibrationId:
+  scalpProfileId:
+  supportedScalpProfiles: []

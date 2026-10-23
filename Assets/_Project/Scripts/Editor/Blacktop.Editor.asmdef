@@ -2,7 +2,8 @@
     "name": "Blacktop.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:65c5df9b515f84a68a706d742456e948"
+        "GUID:65c5df9b515f84a68a706d742456e948",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"

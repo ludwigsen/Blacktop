@@ -4,6 +4,9 @@ using UnityEngine;
 public class CharacterPartDefinition : ScriptableObject
 {
     public string id;
+    public string displayName;
+    public string variantFamilyId; // Optional family shared by authored body-specific garments.
+    public bool temporaryVisual; // Distinct functional stand-in, separate from missing-art placeholders.
     public CharacterPartSlot slot;
     public BodyArchetype bodyArchetype = BodyArchetype.Athletic;
     public CharacterSkeletonDefinition skeleton;
@@ -15,6 +18,7 @@ public class CharacterPartDefinition : ScriptableObject
     public bool integratedHead;
     [Header("Choose a skinned source OR a rigid attachment")]
     public SkinnedMeshRenderer skinnedSource;
+    public Mesh skinnedMeshOverride; // Optional compatible mesh using the source renderer's bones/materials.
     [Range(0.001f, 1f)] public float lod0ScreenHeight = 0.6f;
     public CharacterSkinLod[] lowerDetailLevels = System.Array.Empty<CharacterSkinLod>();
     public GameObject attachmentPrefab;
