@@ -1,24 +1,9 @@
-# Field bounds setup
+# Shared field geometry and venue art
 
-Every Blacktop venue uses the same transform-relative field: a 30-unit local-X playable width, a 60-unit local-Z playable length, two 10-unit end zones, and a 2-unit non-playable safety band. Do not resize these values for a venue; vary only the surface, safety-band presentation, lighting, props, and scenery beyond the outer boundary.
+`FieldConstants` owns the 30×60 legal rectangle, two internal 10-unit end zones and two-unit safety band. `FieldBounds` exposes its local-space queries and boundary Gizmos. All venues use those same dimensions.
 
-Recommended scene hierarchy:
+SampleScene has one persistent identity `FieldRoot` with `FieldBounds` and `FieldLoader`; `FieldLines`, `TouchdownZone` and the existing `SidelineCheck` use those bounds. Keep the root at world origin with identity rotation/scale: football LOS/spawn/scoring still assume world X/Z. Mathematical transform-relative bounds queries do not make the whole match rotation-safe.
 
-```text
-FieldRoot
-├── FieldBounds                 (FieldBounds component)
-├── PlaySurface
-├── SafetyBandVisuals
-├── Environment
-└── OutOfBoundsMonitors
-    ├── BallMonitor             (OutOfBoundsMonitor)
-    └── PlayerMonitor           (OutOfBoundsMonitor, as needed)
-```
+The original Plane's collider is retained, while FieldLoader swaps collider-free surface/detail prefabs. Add future physical wall objects under the persistent bounds root so `FieldBoundaryWall` registers there. `OutOfBoundsMonitor` only reports state transitions; the existing SidelineCheck/PlayState own match OOB rulings, so do not add duplicate end-play subscribers. No trigger callbacks or Rigidbody are required.
 
-1. Create `FieldRoot` at the centre of the field. Rotate or move this root freely; do not rotate individual bounds children to compensate.
-2. Add `FieldBounds` to `FieldRoot`, leaving its defaults at width **30**, length **60**, end-zone depth **10**, and safety band **2**. End zones occupy local Z **-30 to -20** and **+20 to +30**; cyan goal lines are at Z **-20** and **+20**. Gizmos show green legal play, blue end zones, amber safety space, the red outer OOB edge, and a white centre line.
-3. Put play surface and visual-only safety-band meshes under the root. The outer safety edge is local X ±17 and Z ±32; visual treatment can vary by location, but the gameplay boundary must not.
-4. Add `OutOfBoundsMonitor` to an object beneath `OutOfBoundsMonitors`, assign `FieldRoot`'s `FieldBounds`, then assign the ball or player transform to track. It emits `EnteredSafetyBand`, `ExitedSafetyBand`, and `CrossedOuterBoundary` once per transition.
-5. Subscribe in the owning gameplay system. `FieldBoundsExample` demonstrates resetting a tracked object with `GetClosestPlayablePoint`; production code can instead end a play, respawn, or update UI.
-
-Assign `FieldRoot`'s `FieldBounds` to the existing `TouchdownZone` component. It then scores when the ball enters either blue end zone and remains correct after moving or rotating the field. `SidelineCheck` is older world-axis scene logic; do not add it to new field scenes—use `OutOfBoundsMonitor` subscribers instead.
+Select TheLot or Downtown on FieldLoader and press Apply Selected Field before playing (or between plays). For asset paths, material/tint/tiling/decorative setup, generation utility, reserved boundary/environment references and condition integration gaps, see [FIELD_SURFACES.md](../../../Docs/FIELD_SURFACES.md).

@@ -100,7 +100,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 
 - `PlayerAttributes`: 12 stats (Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Coverage, D-Moves, Route Running, Swagger). Defense uses `DefenderAttributes`.
 - `AttributeCurves`: maps stat values to gameplay effect via `AnimationCurve`s so ranges feel meaningful rather than linear.
-- `FieldModifiers`: per-field adjustments. **Additive** percentage modifiers with bounds.
+- `FieldModifiers`: legacy optional additive percentage data; no active condition pipeline or explicit aggregate bounds yet. Venue visuals apply no stats. See FIELD_SURFACES.md for the independent condition authority proposal.
 - Gamebreaker: a temporary multiplier applied on top of attributes for the current possession.
 - **Effect stacking order (intended):** base attribute → curve → additive field modifier (clamped) → Gamebreaker multiplier. Keep it in one place so stacking can't run away.
 - **Single-owner rule:** every gameplay effect is driven by exactly one stat.
@@ -140,7 +140,7 @@ PossessionController ─► BallController
 
 - **New move:** implement `IPlayerMove`; read its tuning from attributes via `AttributeCurves`; expose tunables in the Inspector.
 - **New formation or play:** data-driven via `FormationData` / play definitions. Don't hardcode positions.
-- **New field behavior:** add geometry to `FieldConstants` only; add stat changes via a `FieldModifiers` ScriptableObject.
+- **New venue:** author a FieldDefinition and collider-free surface/detail prefabs. FieldConstants alone owns common geometry. Conditions/severity belong to independent match settings, with integration deferred.
 - **New possession-scoped effect:** clear on `PlayState.OnPlayEnded`.
 - **New contact check:** polled `Overlap*` or a short raycast. No triggers.
 - **New enum:** top-level, not nested.

@@ -1,4 +1,4 @@
-// Fixed field dimensions, shared by every field variant. Per the design call: all 10
+// Fixed field dimensions, shared by every field variant. Per the design call: all 11
 // fields are the same size, no per-field narrowing or shortening — visual dressing only.
 // This is why there's no FieldLayout ScriptableObject; there's nothing to vary per field,
 // so a static class is the right call (promote to a tunable asset only if that ever changes).

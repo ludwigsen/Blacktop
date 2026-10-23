@@ -35,21 +35,17 @@ public enum FieldEndZone
 
 /// <summary>
 /// Shared 30 x 60 playable field definition. Attach this to each FieldRoot.
-/// All checks use this transform's local X/Z plane, allowing a complete field to be
-/// translated or rotated without changing gameplay code.
+/// Queries use this transform's local X/Z plane. The Phase 1 match loader still
+/// requires world identity because football LOS/spawning use world coordinates.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class FieldBounds : MonoBehaviour
 {
-    [Header("Shared Field Dimensions")]
-    [Tooltip("Legal-play width on local X. Blacktop fields should use 30.")]
-    [SerializeField, Min(0.01f)] float playableWidth = 30f;
-    [Tooltip("Legal-play length on local Z. Blacktop fields should use 60.")]
-    [SerializeField, Min(0.01f)] float playableLength = 60f;
-    [Tooltip("Non-playable space outside each line. Blacktop fields should use 2.")]
-    [SerializeField, Min(0f)] float safetyBandWidth = 2f;
-    [Tooltip("Playable depth overlaid at each end of the 60-unit field. Blacktop fields should use 10.")]
-    [SerializeField, Min(0f)] float endZoneDepth = 10f;
+    // Gameplay dimensions cannot drift per venue or serialized scene override.
+    const float playableWidth = FieldConstants.HalfWidth * 2f;
+    const float playableLength = FieldConstants.PlayLength;
+    const float safetyBandWidth = FieldConstants.OutOfBoundsMargin;
+    const float endZoneDepth = FieldConstants.EndZoneDepth;
 
     [Header("Gizmos")]
     [SerializeField] bool drawGizmos = true;
@@ -173,10 +169,6 @@ public sealed class FieldBounds : MonoBehaviour
 
     void OnValidate()
     {
-        playableWidth = Mathf.Max(0.01f, playableWidth);
-        playableLength = Mathf.Max(0.01f, playableLength);
-        safetyBandWidth = Mathf.Max(0f, safetyBandWidth);
-        endZoneDepth = Mathf.Clamp(endZoneDepth, 0f, playableLength * 0.5f);
         gizmoHeight = Mathf.Max(0.01f, gizmoHeight);
     }
 

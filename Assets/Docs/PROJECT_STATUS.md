@@ -97,7 +97,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - Detect with `OverlapBox` or a short raycast in the movement direction; trigger a `StumbleMove` (`IPlayerMove`) that zeroes velocity and applies knockback/stumble. No evasion window.
 
 ### Field modifiers
-- Per-field ScriptableObject (e.g. beach = speed nerf, parking lot = agility buff).
+- Conditions and severity are selected independently of venue. FieldDefinition contains art/identity only; do not derive a speed/agility effect from asphalt, grass or any surface.
 - Additive percentage modifiers with upper and lower bounds. Not multiplicative.
 
 ### Play count
