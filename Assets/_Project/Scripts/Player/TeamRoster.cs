@@ -20,6 +20,9 @@ public class TeamRoster : ScriptableObject
         public string archetypeLabel;
         public Color accentColor;
 
+        // Optional cosmetic data. Existing GUIDs, ratings and roster serialization stay authoritative.
+        public PlayerAppearanceDefinition appearance;
+
         [Header("Attributes (0-20, 10 = neutral)")]
         [Range(0, 20)] public int passing;
         [Range(0, 20)] public int speed;

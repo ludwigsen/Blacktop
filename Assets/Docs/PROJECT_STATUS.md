@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-10-18
+Last updated: 2026-10-22
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -50,6 +50,12 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Both sides use the same flat all-attribute boost (Inspector-tunable 1.2 multiplier, existing attribute hard caps still apply), lasting until the possession ends. Team-owned runtime attributes cover AI and controlled players.
 - Issue #2: PlayerModel visual body rotated 180 degrees from its committed backwards orientation; gameplay roots, skeleton and collider stay intact. Manual running-direction review remains required.
 
+### Character appearance foundation
+- Optional roster appearance references preserve GUIDs/ratings; rosterless players use the prefab default. PlayerVisualAssembler/PlayerVisualRig assemble below PlayerVisuals without resizing the gameplay root/collider.
+- Stable preset/palette IDs, five body archetypes, twelve discrete heights/five derived bands, safe fallback, shared-bone attachment slots, authored skinned LOD support, property-block tinting and optional garment number labels.
+- The existing Athletic-like monolithic model is the usable stand-in. Three face slots, cropped hair/beard and four additional body builds are **explicit missing-art placeholders**. Three saved 170/183/201cm examples and an isolated Editor preview are supplied.
+- See `MODULAR_CHARACTERS.md` for the audit, canonical rig, art/import contract and workflow. Editor Play Mode suite: **62/62 passed**, including field checks and seven character tests.
+
 ## Known issues
 
 | Issue | Notes |
@@ -61,6 +67,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Gamebreaker balance/readability | Wiring and possession lifetime implemented; redesigned scorebug shows READY / ACTIVE. Manual balance/readability playtest remains. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
 | Football style picker | Style assets and selection API exist; player-facing pre-game UI and saved selection are not built. |
+| Modular character art | Prototype has an integrated head, four eye skins, no neck seam, real hair/beard/garments or LOD meshes. Distinct faces and four body meshes are absent. Production deformation, fit, distinctiveness and prototype model provenance/licence require art review. |
 
 ## Incomplete (next up, in order)
 
@@ -71,6 +78,8 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 5. **Main menu** — no MainMenu scene; only SampleScene is enabled for builds. Winner/rematch UI exists.
 6. **Roster data separation** — TeamIdentity branding is separate, but TeamRoster.PlayerRecord still embeds the 12 ratings. Move ratings into separate data keyed by the roster player GUID when implementing roster/attribute authoring; this HUD change does not migrate player data.
 7. **Customization/environment** — Kings roster is wired; Vipers roster asset is missing (meta remains). Field modifier/condition data has no active application pipeline.
+
+8. **Character vertical slice art** — author a headless Athletic body, three distinct faces, one cropped hairstyle and one beard on the documented rig. Measure height/profile anatomy and validate missing football-action clips before growing the catalog.
 
 ## Design backlog (hard constraints when reached)
 
@@ -105,7 +114,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 
 ### Character appearance
 - 5 body archetypes (lean / athletic / thick / heavy / massive) as 5 unique meshes on a shared skeleton.
-- 4 to 5 height bands as uniform scale multipliers.
+- Five derived height bands containing twelve explicit centimetre selections. Calibrated visual scaling around the feet; no arbitrary limb-bone scaling or rating changes.
 - 30 faces, 20 hairstyles, 8 facial hair styles.
 - NFL Street 1 aesthetic: grounded proportions, not cartoon-exaggerated.
 - Shared bone hierarchy is non-negotiable.
@@ -164,3 +173,9 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 - Corrected the new clips' Original Y reference to match the fitted model/idle and extracted Jump's trajectory to avoid adding a second vertical arc.
 - Final isolated Editor suite: **44/44 passed**, zero failures/skips, including all prior 40 match/Gamebreaker/football cases and four new animation cases. Rendered poses inspected. Physical controller/foot-sliding tuning, Windows and a refreshed standalone build remain manual work.
 - Football lettering controls (LETTERING, LETTERING_WIDTH, LETTERING_FONT) are exposed near the top of SourceAssets/Football/build_football.py; SourceAssets/Football/README.md documents running the builder in Blender and exporting Unity's FBX.
+
+## Modular character foundation validation (2026-10-22)
+
+- Started from verified current master `109633a`, including the merged field system. Scene, field assets, existing player GUIDs/ratings, gameplay scripts, controller and FBX imports remain unchanged.
+- Unity 6000.5.6f1 isolated Editor Play Mode: **62 passed, 0 failed, 0 skipped**. Includes prior gameplay/animation, field checks and seven character tests covering sixty data combinations, deterministic IDs, roster spawn integration, attachment/LOD binding, team colors, invalid data and bind poses.
+- This does not claim real physique/face variation, missing action-animation deformation, Windows, physical controller play or production frame-rate validation. Those require outstanding art/platform checks.

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2c2c1cf30a7a46558ed0197277bdb06, type: 3}
+  m_Name: Height_193
+  m_EditorClassIdentifier: Blacktop::PlayerHeightProfile
+  id: height.193
+  height: 193
+  legLength: 0
+  torsoLength: 0
+  armLength: 0
+  shoulderHeight: 0
+  headPlacement: {x: 0, y: 0, z: 0}
+  cameraOffset: {x: 0, y: 0.054644823, z: 0}
+  nameplateOffset: {x: 0, y: 0.109289646, z: 0}
+  proportionCalibrationId:
