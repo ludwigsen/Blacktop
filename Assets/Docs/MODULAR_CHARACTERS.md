@@ -2,6 +2,8 @@
 
 ## Current front-end extension
 
+**Editable source:** all current body, integrated-face, clothing and eye geometry is available under `SourceAssets/Characters/` as `.blend` files with the shared rig/weights. Use the combined BlacktopCharacters.blend as the main authoring file, then export through export_meshes.py and apply with Blacktop > Characters > Blender > Apply Blender Mesh Export. Individual source files are independent snapshots targeting the same meshes, not synchronized libraries. All new character art must retain editable `.blend` source; see that folder's README for the source/export rules and the distinction between an integrated prototype face and future modular heads.
+
 The foundation audit/results below describe the original prototype catalog. The implemented MainMenu/runtime creator now uses a separate FrontEndCatalog with five distinct temporary regional bodies and fifteen team-tinted garment shells on this same rig. FRONT_END.md documents the live preview, derived weights, versioned runtime saves, independent active lineups, explicit Editor source commit and replacement-art workflow. Production faces/hair/beards/garments and LODs remain outstanding. Vipers now has an explicit balanced development source roster; the current-master front-end audit found no roster asset or metadata, so both were authored once with stable new IDs. Kings identity/ratings remain intact.
 
 ## Audit and decisions
