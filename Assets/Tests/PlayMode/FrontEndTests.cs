@@ -140,12 +140,12 @@ public class FrontEndTests
         Click("SAVE PLAYER");Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.Roster));
         var player=service.Team("kings").players.Single(p=>p.record.displayName=="Created InMenu");
         Assert.That(service.SetActive("kings",player.record.id,(int)TeamMember.RosterSlot.RB,0,out var error),Is.True,error);
-        menu.ShowMain();Click("NEW GAME");
+        menu.ShowMain();Click("NEW GAME");Click("HEAD 2 HEAD");
         var human=Object.FindObjectsByType<Button>().First(b=>b.name.StartsWith("KINGS"));human.onClick.Invoke();
         Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.Opponent));
         Assert.That(Object.FindObjectsByType<Button>().First(b=>b.name.StartsWith("KINGS")).interactable,Is.False);
         Object.FindObjectsByType<Button>().First(b=>b.name.StartsWith("VIPERS")).onClick.Invoke();
-        Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.Confirmation));Click("START MATCH");yield return null;yield return null;
+        Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.Confirmation));Click("REVIEW MATCH");Click("START MATCH");yield return null;yield return null;
         Assert.That(SceneManager.GetActiveScene().name,Is.EqualTo("SampleScene"));
         var actor=Object.FindObjectsByType<CharacterApplier>().Single(a=>a.Record.HasValue&&a.Record.Value.id==player.record.id);
         Assert.That(actor.GetComponent<TeamMember>().slot,Is.EqualTo(TeamMember.RosterSlot.RB));
@@ -168,7 +168,7 @@ public class FrontEndTests
     {
         Assert.That(QuickPlayMatch.TryCreate(service,"kings","vipers",1,settings.fields[1],out var match,out var error),Is.True,error);
         FrontEndRuntime.Match=match;yield return SceneManager.LoadSceneAsync("SampleScene");yield return null;
-        Assert.That(PlayState.Instance.UserTeamId,Is.EqualTo(1));Assert.That(PlayState.Instance.IdentityFor(1),Is.SameAs(settings.Team("kings").identity));
+        Assert.That(PlayState.Instance.UserTeamId,Is.EqualTo(1));Assert.That(PlayState.Instance.IdentityFor(1).teamName,Is.EqualTo(settings.Team("kings").identity.teamName));
         Assert.That(Object.FindAnyObjectByType<FieldLoader>().LoadedField,Is.SameAs(settings.fields[1]));
         Assert.That(PlayState.Instance.DirectionFor(0).Forward.z,Is.GreaterThan(0));Assert.That(PlayState.Instance.DirectionFor(1).Forward.z,Is.LessThan(0));
         yield return SceneManager.LoadSceneAsync("SampleScene");yield return null;
@@ -248,7 +248,21 @@ public class FrontEndTests
         {
             EventSystem.current.SetSelectedGameObject(ButtonNamed("NEW GAME").gameObject);
             InputSystem.QueueStateEvent(gamepad,new GamepadState().WithButton(GamepadButton.South));yield return null;yield return null;
+            Assert.That(Object.FindAnyObjectByType<FrontEndController>().Screen,Is.EqualTo(FrontEndScreen.Modes));
+            InputSystem.QueueStateEvent(gamepad,new GamepadState());yield return null;
+            EventSystem.current.SetSelectedGameObject(ButtonNamed("HEAD 2 HEAD").gameObject);
+            InputSystem.QueueStateEvent(gamepad,new GamepadState().WithButton(GamepadButton.South));yield return null;yield return null;
             Assert.That(Object.FindAnyObjectByType<FrontEndController>().Screen,Is.EqualTo(FrontEndScreen.HumanTeam));
+            InputSystem.QueueStateEvent(gamepad,new GamepadState());yield return null;
+            InputSystem.QueueStateEvent(gamepad,new GamepadState().WithButton(GamepadButton.East));yield return null;
+            Assert.That(Object.FindAnyObjectByType<FrontEndController>().Screen,Is.EqualTo(FrontEndScreen.Modes));
+            InputSystem.QueueStateEvent(gamepad,new GamepadState());yield return null;
+            EventSystem.current.SetSelectedGameObject(ButtonNamed("PICKUP GAME").gameObject);
+            InputSystem.QueueStateEvent(gamepad,new GamepadState().WithButton(GamepadButton.South));yield return null;yield return null;
+            Assert.That(Object.FindAnyObjectByType<FrontEndController>().Screen,Is.EqualTo(FrontEndScreen.Draft));
+            InputSystem.QueueStateEvent(gamepad,new GamepadState());yield return null;
+            InputSystem.QueueStateEvent(gamepad,new GamepadState().WithButton(GamepadButton.East));yield return null;
+            Assert.That(Object.FindAnyObjectByType<FrontEndController>().Screen,Is.EqualTo(FrontEndScreen.Modes));
             InputSystem.QueueStateEvent(gamepad,new GamepadState());yield return null;
             InputSystem.QueueStateEvent(gamepad,new GamepadState().WithButton(GamepadButton.East));yield return null;
             Assert.That(Object.FindAnyObjectByType<FrontEndController>().Screen,Is.EqualTo(FrontEndScreen.Main));

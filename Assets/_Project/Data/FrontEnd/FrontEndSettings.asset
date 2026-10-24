@@ -18,6 +18,19 @@ MonoBehaviour:
   fields:
   - {fileID: 11400000, guid: 860ba7b5c82894438b7e42498ea7d6c4, type: 2}
   - {fileID: 11400000, guid: a28b8f237706747daa96f4b49768be6b, type: 2}
+  conditions:
+  - {fileID: 11400000, guid: 14cc7d7cfdf8470b85d68bb390619ea9, type: 2}
+  - {fileID: 11400000, guid: 4a6c6afbe86b46e7a5ac61495f0c5724, type: 2}
+  - {fileID: 11400000, guid: a893b07dbad548908b3bce2fa28ff8dd, type: 2}
+  - {fileID: 11400000, guid: 9750f0fa39da4f11ada469d436a4df12, type: 2}
+  - {fileID: 11400000, guid: 477395a1a66d40f58215d2b703e8dd1f, type: 2}
+  difficulties:
+  - {fileID: 11400000, guid: db5accafbf684a428e9472e36169959c, type: 2}
+  - {fileID: 11400000, guid: 1b5af61cd75146d39ad487f4c85bf802, type: 2}
+  - {fileID: 11400000, guid: b30dd9316405413aba3e65df5ed512ba, type: 2}
+  - {fileID: 11400000, guid: 8b797026af8747f2905713336402f0cf, type: 2}
+  pickupHomeStyle: {fileID: 11400000, guid: 19a3b9c5ae226466ab5ba14090db2abe, type: 2}
+  pickupAwayStyle: {fileID: 11400000, guid: 9bccb93aaef7c4f8b984232e1e48202e, type: 2}
   appearances: {fileID: 11400000, guid: 080e2e62a24084ef5afa1f38995c1b45, type: 2}
   defaultAppearance: {fileID: 11400000, guid: ce0cec7ed09f642b284ba6280a3a8e1c, type: 2}
   visualPrefab: {fileID: 132864934065619634, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}

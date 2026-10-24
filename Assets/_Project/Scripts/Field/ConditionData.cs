@@ -1,11 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Which base stat a condition's modifier targets. Deliberately small and hand-picked
-// rather than tied to the full 12-stat system (see nfl_street_player_attribute_abstraction.md)
-// — only Speed/Agility/Accel/Power exist as real multipliers today (PlayerAttributes.cs).
-// Carrying is a placeholder for the future fumble-resistance stat; nothing consumes it yet.
-// Extend this enum as real stats land instead of wiring conditions to the full future set now.
+// Authoring vocabulary adapted once by MatchModifiers to the existing twelve attributes.
+// Accel is an Agility-owned movement effect, not a thirteenth gameplay attribute.
 public enum ConditionStat
 {
     Speed,

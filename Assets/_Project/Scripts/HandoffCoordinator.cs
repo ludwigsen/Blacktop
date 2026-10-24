@@ -76,7 +76,9 @@ public class HandoffCoordinator : MonoBehaviour
         if (toQB.sqrMagnitude > 0.01f)
             receiver.rotation = Quaternion.LookRotation(toQB.normalized);
 
-        receiver.position = Vector3.MoveTowards(receiver.position, carrier.position, autoPathSpeed * Time.deltaTime);
+        // The designed exchange uses the receiver's same effective speed as routes/blocking.
+        var attributes = receiver.GetComponent<PlayerStateMachine>()?.Attributes;
+        receiver.position = Vector3.MoveTowards(receiver.position, carrier.position, autoPathSpeed * (attributes != null ? attributes.Speed() : 1f) * Time.deltaTime);
 
         if (Vector3.Distance(carrier.position, receiver.position) <= handoffRadius)
         {

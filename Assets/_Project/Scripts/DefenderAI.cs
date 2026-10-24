@@ -53,11 +53,16 @@ public class DefenderAI : MonoBehaviour
     Transform coverTarget;
     Vector3 zoneAnchor;
     float ballInFlightTimer;
+    float liveTimer, decisionTimer;
+    Vector3 heldVelocity, lastObservedPosition, observedVelocity;
+    bool hasObservation;
 
     float MoveSpeed => baseMoveSpeed * SpeedMult;
     public float SpeedMult => attributes != null ? attributes.Speed() : 1f;
     public float ResistMult => attributes != null ? attributes.Tackling() : 1f;
     public float CoverageMult => attributes != null ? attributes.Coverage() : 1f;
+    public float AccelerationMult => attributes != null ? attributes.Acceleration() : 1f;
+    DifficultyTuning Difficulty => teamMember != null ? DifficultyTuning.ForTeam(teamMember.teamId) : DifficultyTuning.Normal;
 
     public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
 
@@ -81,7 +86,8 @@ public class DefenderAI : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (PlayState.Instance != null && !PlayState.Instance.IsLive)
+        { liveTimer=decisionTimer=0f; hasObservation=false; heldVelocity=Vector3.zero; return; }
 
         // A loose ball has no carrier to infer roles from. Check the drive team BEFORE
         // shove/stun movement too, or offense could still be moved by both AI stacks.
@@ -112,6 +118,8 @@ public class DefenderAI : MonoBehaviour
         // walked every teammate toward their own ball carrier while ReceiverAI/AllyBlocker
         // moved the same transform — the route-vs-block "conflict".
         if (!IsDefendingBall(ball)) return;
+        liveTimer += Time.deltaTime;
+        if (liveTimer < Difficulty.PursuitReaction) return;
 
         switch (ball.State)
         {
@@ -160,15 +168,18 @@ public class DefenderAI : MonoBehaviour
     {
         if (carrier == null) return;
 
-        Vector3 roleMove = CurrentRole switch
+        // Only observed displacement informs pursuit lead; no future route or input reads.
+        observedVelocity=hasObservation && Time.deltaTime>0f ? Vector3.ClampMagnitude((carrier.position-lastObservedPosition)/Time.deltaTime,12f) : Vector3.zero;
+        lastObservedPosition=carrier.position;hasObservation=true;
+        decisionTimer-=Time.deltaTime;
+        if (Difficulty.DecisionInterval <= .01f || decisionTimer <= 0f)
         {
-            Role.Cover => CalculateCoverMove(),
-            Role.Zone => CalculateZoneMove(carrier),
-            Role.Contain => CalculateContainMove(carrier),
-            _ => CalculateEngageMove(carrier)
-        };
-
-        transform.position += (roleMove + CalculateSeparation()) * Time.deltaTime;
+            heldVelocity = CurrentRole switch {
+                Role.Cover => CalculateCoverMove(), Role.Zone => CalculateZoneMove(carrier),
+                Role.Contain => CalculateContainMove(carrier), _ => CalculateEngageMove(carrier) };
+            decisionTimer=Difficulty.DecisionInterval;
+        }
+        transform.position += (heldVelocity + CalculateSeparation()) * Time.deltaTime;
     }
 
     // A man defender on the ACTUAL intended receiver breaks on the ball, and so does a zone
@@ -180,8 +191,8 @@ public class DefenderAI : MonoBehaviour
         Vector3 landing = ball.FlightTarget;
 
         bool manBreak = coverTarget != null && ball.IntendedReceiver == coverTarget;
-        bool zoneBreak = CurrentRole == Role.Zone && Vector3.Distance(transform.position, landing) <= zoneBreakRadius;
-        if (!(manBreak || zoneBreak) || ballInFlightTimer < breakReactionDelay) return;
+        bool zoneBreak = CurrentRole == Role.Zone && Vector3.Distance(transform.position, landing) <= zoneBreakRadius * Difficulty.ZoneAwarenessScale;
+        if (!(manBreak || zoneBreak) || ballInFlightTimer < breakReactionDelay * Difficulty.PassReactionScale) return;
 
         if (Vector3.Distance(transform.position, landing) <= stopDistance) return;
 
@@ -225,7 +236,7 @@ public class DefenderAI : MonoBehaviour
     Transform FindReceiverInZone()
     {
         Transform best = null;
-        float bestDist = zoneReactRadius;
+        float bestDist = zoneReactRadius * Difficulty.ZoneAwarenessScale;
 
         foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
@@ -246,7 +257,7 @@ public class DefenderAI : MonoBehaviour
             ? PlayState.Instance.DirectionFor(targetTeam.teamId)
             : FieldDirection.TowardPositiveZ;
 
-        Vector3 shadowPoint = target.position - targetAttack.Forward * coverCushion;
+        Vector3 shadowPoint = target.position - targetAttack.Forward * (coverCushion * Difficulty.CoverageCushionScale);
         transform.rotation = Quaternion.LookRotation((target.position - transform.position).normalized);
 
         if (Vector3.Distance(transform.position, shadowPoint) <= stopDistance) return Vector3.zero;
@@ -258,7 +269,7 @@ public class DefenderAI : MonoBehaviour
         float distance = Vector3.Distance(transform.position, target.position);
         if (distance <= stopDistance) return Vector3.zero;
 
-        Vector3 direction = (target.position - transform.position).normalized;
+        Vector3 direction = (target.position + observedVelocity * Difficulty.PursuitLead - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
         return direction * MoveSpeed;
     }

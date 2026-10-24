@@ -7,6 +7,10 @@ public class FrontEndSettings : ScriptableObject
 {
     public TeamDefinition[] teams = Array.Empty<TeamDefinition>();
     public FieldDefinition[] fields = Array.Empty<FieldDefinition>();
+    public ConditionData[] conditions = Array.Empty<ConditionData>();
+    public DifficultyProfile[] difficulties = Array.Empty<DifficultyProfile>();
+    public TeamIdentity pickupHomeStyle;
+    public TeamIdentity pickupAwayStyle;
     public PlayerAppearanceCatalog appearances;
     public PlayerAppearanceDefinition defaultAppearance;
     public GameObject visualPrefab;
@@ -17,4 +21,6 @@ public class FrontEndSettings : ScriptableObject
     public string menuScene = "MainMenu";
 
     public TeamDefinition Team(string id) => Array.Find(teams, team => team != null && team.id == id);
+    public ConditionData Condition(MatchCondition choice) => Array.Find(conditions,
+        value => value != null && string.Equals(value.conditionName, choice.ToString(), StringComparison.OrdinalIgnoreCase));
 }

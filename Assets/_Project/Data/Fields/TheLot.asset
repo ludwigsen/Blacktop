@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::FieldDefinition
   venueId: the-lot
   displayName: The Lot
+  playable: 1
   surfacePrefab: {fileID: 57261640946793452, guid: 141de699e17f3419cac5736d3f00e975, type: 3}
   baseMaterial: {fileID: 2100000, guid: 33b9ea946e81841658637afb945fcb68, type: 2}
   useTint: 0

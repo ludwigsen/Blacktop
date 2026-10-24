@@ -34,24 +34,24 @@ The scene is already wired; no setup action is required after pulling the featur
 
 Missing optional detail/material references are supported. Missing required surface prefab or invalid art leaves the current venue intact and returns false. If neither selected nor default definition exists, the legacy Plane remains the initial fallback. The loader rejects duplicate active bounds; it does not silently delete another system's root.
 
-## Conditions: independent, deferred integration
+## Conditions: independent match integration
 
-Venue identity never chooses a condition. Both current venues leave all player stats unchanged.
+FieldDefinition remains venue art/identity only. Head 2 Head and Pickup independently select conditions through FrontEndSettings' committed ConditionData catalog. See FRONT_END.md for the complete calculation, acceleration ownership, profiles and lifecycle.
 
 | Condition | Regular severity |
 |---|---|
 | Clear | No modifiers |
-| Cold | Agility -10%, Power +10% |
+| Cold | Agility -10%, Run Power +10% |
 | Slick | Agility -10%, Acceleration -10%, Speed +10% |
 | Loose | Speed -10%, Acceleration -10%, Carrying +10% |
-| Raw | Carrying -10%, Power +10% |
+| Raw | Carrying -10%, Run Power +10% |
 
-Clean ×0.5, Regular ×1.0, Hard ×1.8. `ConditionData.GetEffectiveModifiers` already implements these severity scales, but no match selection/application pipeline consumes its output. Its comments claiming Carrying is unimplemented are stale: PlayerAttributes has Carrying. ConditionStat uses percentage points (-10); FieldModifiers uses fractions (-0.1) and AttributeStat. Neither data model automatically feeds the other; gameplay accessors generally omit the optional FieldModifiers argument. FieldModifiers caches one entry per stat (duplicates overwrite) and has no explicit modifier bounds; final PlayerAttributes output is hard-clamped by AttributeCurves.
+Clean ×0.5, Regular ×1, Hard ×1.8. At match review, MatchModifiers converts ConditionData percentage points to fractions once, sums like targets, bounds environmental additions to [-0.30,+0.30], and freezes the result. CharacterApplier binds it to both sides' runtime PlayerAttributes. Effective applies `(base curve + condition) × Gamebreaker`, then existing hard caps; no additional consumer multiplier or FieldLoader effect exists. Clear always supplies zero additions and ignores severity. Legacy standalone FieldModifiers remains a compatibility authoring type; a bound match takes precedence rather than stacking it twice.
 
-**Recommended authority for the later feature:** ConditionData owns authored condition/severity values in match settings, separate from FieldDefinition. Build one match-scoped additive snapshot consumed once through the existing PlayerAttributes.Effective path. Adapt/retire separately authored FieldModifiers assets rather than maintaining two independently editable sets; convert percentage points to fractions once, sum same-target contributions and clamp the aggregate before Gamebreaker/final attribute caps. Clear supplies an empty snapshot. Do not apply modifiers directly in FieldLoader or once per movement consumer.
+Power maps to RunPower and Carrying to Carrying. Acceleration keeps the Agility-owned base curve but uses only the independent Accel condition addition at PlayerAttributes.Acceleration. Agility's condition effect is reserved for its own moves, so Slick never charges both penalties to one effect. Controlled carrier and defender movement consume acceleration. Constant-velocity AI uses its effective Speed once and does not invent an acceleration stat or double its speed penalty. AI routes, blockers, CPU carriers/passing and handoff movement now use the existing PlayerAttributes path, including one Gamebreaker boost.
 
-Map ConditionStat.Power explicitly to AttributeStat.RunPower and Carrying to Carrying. Acceleration currently has no AttributeStat: PlayerMovement derives acceleration from Agility, which also controls jukes/hurdles. Slick asks for distinct agility and acceleration effects; blindly mapping both to Agility would double-penalize every agility effect. Before integration, decide the single owner of acceleration within the 12-attribute design and represent its condition effect once at that owned effect boundary. AI movement also contains paths that bypass PlayerAttributes; audit parity then. Those decisions/application are deferred, not implemented in this PR.
+Field selection filters invalid/missing art and definitions explicitly marked unplayable. Both shipped functional venues remain playable despite provisional visual art. Random cannot choose unimplemented venues. Match rematch retains resolved choices; return to menu discards match-scoped modifiers. Direct scene entry retains the zero-condition baseline.
 
 ## Validation
 
-See TESTING.md for the recorded automated result and remaining manual checks. Placeholder visual quality, physical-controller feel and Windows validation are separate from bounds/material/overlay assertions. No detailed scenery, final venue UI, saved preferences or complete condition integration ships here.
+See TESTING.md for the recorded automated result and remaining manual checks. Placeholder visual quality, physical-controller feel and Windows validation are separate from bounds/material/overlay assertions. Detailed scenery and saved menu preferences remain deferred. Exhibition venue/condition selection and runtime condition integration are now implemented.

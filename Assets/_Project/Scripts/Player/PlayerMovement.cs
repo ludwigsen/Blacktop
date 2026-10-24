@@ -25,7 +25,7 @@ public class PlayerMovement : MonoBehaviour
     // Multipliers applied here rather than baked into serialized fields, so PlayerAttributes
     // can be swapped at runtime/per-prefab without touching these base tuning values.
     float MaxSpeed => baseMaxSpeed * attributes.Speed();
-    float Acceleration => baseAcceleration * attributes.Agility();
+    float Acceleration => baseAcceleration * attributes.Acceleration();
 
 
     // Exposed for PlayerStateMachine to read — drives Idle/Walk/Run thresholds without

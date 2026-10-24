@@ -74,7 +74,7 @@ public class DefenderControl : MonoBehaviour
 
         var tuning = DefenderControlManager.Instance;
         float maxSpeed = (tuning != null ? tuning.MaxSpeed : 7f) * ai.SpeedMult;
-        float accel = tuning != null ? tuning.Acceleration : 40f;
+        float accel = (tuning != null ? tuning.Acceleration : 40f) * ai.AccelerationMult;
         float decel = tuning != null ? tuning.Deceleration : 60f;
         float turnRate = tuning != null ? tuning.RotationSpeed : 720f;
 

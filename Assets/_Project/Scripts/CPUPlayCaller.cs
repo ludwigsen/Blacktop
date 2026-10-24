@@ -36,6 +36,8 @@ public class CPUPlayCaller : MonoBehaviour
     [Header("Thresholds")]
     [SerializeField] float shortYardageThreshold = 3f;
     [SerializeField] float longYardageThreshold = 7f;
+    float cpuLiveTimer;
+    DifficultyTuning Difficulty => PlayState.Instance != null ? DifficultyTuning.ForTeam(1 - PlayState.Instance.UserTeamId) : DifficultyTuning.Normal;
 
     // Start(), not OnEnable(): PlayState.Instance only guaranteed after every Awake().
     void Start()
@@ -63,7 +65,11 @@ public class CPUPlayCaller : MonoBehaviour
         var ps = PlayState.Instance;
         // CPU spends a full meter on its next live opportunity on either side of the ball.
         if (ps != null && ps.IsLive && !ps.IsGameOver)
-            ps.TryActivateGamebreaker(1 - ps.UserTeamId);
+        {
+            cpuLiveTimer += Time.deltaTime;
+            if (cpuLiveTimer >= Difficulty.GamebreakerDelay) ps.TryActivateGamebreaker(1 - ps.UserTeamId);
+        }
+        else cpuLiveTimer = 0f;
     }
 
     bool CpuHasBall => PlayState.Instance != null && !PlayState.Instance.IsUserTeam(PlayState.Instance.PossessionTeamId);
@@ -118,12 +124,14 @@ public class CPUPlayCaller : MonoBehaviour
     float RunChanceForSituation()
     {
         var downs = DownsTracker.Instance;
-        if (downs == null) return runChanceStandard;
-
-        if (downs.IsGoalToGo) return runChanceGoalToGo;
-        if (downs.YardsToGo <= shortYardageThreshold) return runChanceShortYardage;
-        if (downs.CurrentDown >= 3 && downs.YardsToGo >= longYardageThreshold) return runChanceLongYardage;
-        return runChanceStandard;
+        float situational = runChanceStandard;
+        if (downs != null)
+        {
+            if (downs.IsGoalToGo) situational = runChanceGoalToGo;
+            else if (downs.YardsToGo <= shortYardageThreshold) situational = runChanceShortYardage;
+            else if (downs.CurrentDown >= 3 && downs.YardsToGo >= longYardageThreshold) situational = runChanceLongYardage;
+        }
+        return Difficulty.RunChance(runChanceStandard, situational);
     }
 
     static List<PlayCallData> FilterByType(IReadOnlyList<PlayCallData> source, PlayType type)
@@ -152,8 +160,8 @@ public class CPUPlayCaller : MonoBehaviour
         {
             if (all[i] == null) continue;
             float w = 1f;
-            if (shortYardage) w += all[i].RushCount * blitzBonusShortYardage;
-            if (longYardage) w += all[i].ZoneCount * zoneBonusLongYardage;
+            if (shortYardage) w += all[i].RushCount * blitzBonusShortYardage * Difficulty.SituationalWeight;
+            if (longYardage) w += all[i].ZoneCount * zoneBonusLongYardage * Difficulty.SituationalWeight;
             weights[i] = w;
             total += w;
         }
