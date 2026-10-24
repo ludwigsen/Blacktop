@@ -72,6 +72,12 @@ public static class FrontEndSetup
             asset.visualPrefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/PlayerModel.prefab");
             asset.theme=AssetDatabase.LoadAssetAtPath<HUDTheme>("Assets/_Project/Scripts/UI/BlacktopHUDTheme.asset");
             asset.paint=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/scorebug_base.png");});
+        // Register committed exhibition catalogs without regenerating rosters or venue assets.
+        if(settings.conditions.Length==0)settings.conditions=new[]{"Clear","Cold","Slick","Loose","Raw"}.Select(name=>AssetDatabase.LoadAssetAtPath<ConditionData>($"{Data}/Conditions/{name}.asset")).ToArray();
+        if(settings.difficulties.Length==0)settings.difficulties=new[]{"Easy","Normal","Hard","StreetLegend"}.Select(name=>AssetDatabase.LoadAssetAtPath<DifficultyProfile>($"{Data}/Difficulty/{name}.asset")).ToArray();
+        if(settings.pickupHomeStyle==null)settings.pickupHomeStyle=teams[0].identity;
+        if(settings.pickupAwayStyle==null)settings.pickupAwayStyle=teams[1].identity;
+        EditorUtility.SetDirty(settings);
         var bootstrap=play.GetComponent<MatchBootstrap>();if(bootstrap==null)bootstrap=play.gameObject.AddComponent<MatchBootstrap>();
         bootstrap.settings=settings;bootstrap.players=actors;
         EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);

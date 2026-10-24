@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public enum FrontEndScreen { Main,HumanTeam,Opponent,Confirmation,Teams,Roster,Editor }
+public enum FrontEndScreen { Main,HumanTeam,Opponent,Confirmation,Teams,Roster,Editor,Modes,Draft,Lineup,Review }
 
 // Navigation owns screens only. Roster transactions and preview construction have independent owners.
 public class FrontEndController : MonoBehaviour
@@ -18,7 +18,16 @@ public class FrontEndController : MonoBehaviour
     public GameObject PreferredFocus;
     public string HumanTeam,OpponentTeam;
     public int HumanSide;
-    public FieldDefinition Field;
+    public ExhibitionMode Mode { get; private set; }
+    public MatchOptions HeadOptions { get; } = new MatchOptions();
+    public MatchOptions PickupOptions { get; } = new MatchOptions();
+    public MatchOptions Options => Mode == ExhibitionMode.Pickup ? PickupOptions : HeadOptions;
+    public int PickupSide;
+    public int MatchSide { get => Mode == ExhibitionMode.Pickup ? PickupSide : HumanSide; set { if(Mode==ExhibitionMode.Pickup)PickupSide=value;else HumanSide=value; } }
+    public PickupDraft Draft { get; private set; }
+    public System.Collections.Generic.List<LineupAssignment> PickupLineup { get; private set; }
+    public QuickPlayMatch PreparedMatch { get; private set; }
+    public int? TestSeed { get; set; }
     public PlayerEditorSession Session { get; private set; }
     public string Message { get; set; }
     Canvas canvas;
@@ -30,7 +39,8 @@ public class FrontEndController : MonoBehaviour
     void Awake()
     {
         FrontEndUI.EnsureInput();Service=FrontEndRuntime.Open(settings);
-        Field=settings.fields.Length>0?settings.fields[0]:null;Message=Service.LoadMessage;
+        FrontEndRuntime.Match=null; // Entering the menu always ends the prior match's transient context.
+        Message=Service.LoadMessage;
         canvas=FrontEndUI.CreateCanvas("Blacktop front end");canvas.transform.SetParent(transform,false);
         var background=FrontEndUI.Panel(canvas.transform,"Ink",Vector2.zero,Vector2.one,FrontEndUI.Ink);
         for(int i=0;i<3;i++)
@@ -55,6 +65,18 @@ public class FrontEndController : MonoBehaviour
         view=FrontEndUI.Panel(content,screen.ToString(),Vector2.zero,Vector2.one,Color.clear);
     }
     public void ShowMain() {Clear(FrontEndScreen.Main);MainMenuView.Build(this,view);Focus();}
+    public void ShowModes() { PreparedMatch=null;Clear(FrontEndScreen.Modes);MainMenuView.Modes(this,view);Focus(); }
+    public void BeginHeadToHead() {Mode=ExhibitionMode.HeadToHead;PreparedMatch=null;ShowQuickPlay(FrontEndScreen.HumanTeam);}
+    public void BeginPickup() {Mode=ExhibitionMode.Pickup;PreparedMatch=null;Draft=new PickupDraft(Service);PickupLineup=null;ShowDraft();}
+    public void ShowDraft() {Clear(FrontEndScreen.Draft);view.gameObject.AddComponent<PickupDraftView>().Initialize(this,view);Focus();}
+    public void ShowLineup()
+    {
+        if(Draft.Selected.Count!=7){Message="Draft exactly seven players.";ShowDraft();return;}
+        PickupLineup??=Draft.SuggestHuman();Clear(FrontEndScreen.Lineup);MatchSettingsView.HumanLineup(this,view);Focus();
+    }
+    public void DraftChanged() {PickupLineup=null;PreparedMatch=null;}
+    public void ShowSettings() {Clear(FrontEndScreen.Confirmation);MatchSettingsView.Build(this,view);Focus();}
+    public void ShowReview() {Clear(FrontEndScreen.Review);MatchSettingsView.Review(this,view);Focus();}
     public void ShowQuickPlay(FrontEndScreen stage) {Clear(stage);QuickPlayView.Build(this,view,stage);Focus();}
     public void ShowTeams() {Clear(FrontEndScreen.Teams);RosterBrowserView.Teams(this,view);Focus();}
     public void ShowRoster(string team,string selectedPlayer=null)
@@ -80,16 +102,34 @@ public class FrontEndController : MonoBehaviour
                 if(Session.Dirty)Confirm("DISCARD UNSAVED CHANGES?","Your saved roster will stay unchanged.",()=>ShowRoster(SelectedTeam),"DISCARD");
                 else ShowRoster(SelectedTeam);break;
             case FrontEndScreen.Roster:ShowTeams();break;
+            case FrontEndScreen.HumanTeam:ShowModes();break;
             case FrontEndScreen.Opponent:ShowQuickPlay(FrontEndScreen.HumanTeam);break;
-            case FrontEndScreen.Confirmation:ShowQuickPlay(FrontEndScreen.Opponent);break;
+            case FrontEndScreen.Draft:ShowModes();break;
+            case FrontEndScreen.Lineup:ShowDraft();break;
+            case FrontEndScreen.Confirmation:if(Mode==ExhibitionMode.Pickup)ShowLineup();else ShowQuickPlay(FrontEndScreen.Opponent);break;
+            case FrontEndScreen.Review:ShowSettings();break;
             default:ShowMain();break;
         }
     }
     public void StartMatch()
     {
-        if(!QuickPlayMatch.TryCreate(Service,HumanTeam,OpponentTeam,HumanSide,Field,out var match,out var error))
-        {Message=error;ShowQuickPlay(FrontEndScreen.Confirmation);return;}
-        FrontEndRuntime.Match=match;SceneManager.LoadScene(settings.gameplayScene);
+        if(PreparedMatch==null){PrepareMatch();return;}
+        FrontEndRuntime.Match=PreparedMatch;SceneManager.LoadScene(settings.gameplayScene);
+    }
+    public void PrepareMatch()
+    {
+        var random=new SeededMatchRandom(TestSeed??Environment.TickCount);
+        QuickPlayMatch match;string error;
+        bool success=Mode==ExhibitionMode.Pickup
+            ? QuickPlayMatch.TryPickup(Service,Draft.Selected,PickupLineup,PickupSide,Options,random,out match,out error)
+            : QuickPlayMatch.TryHeadToHead(Service,HumanTeam,OpponentTeam,HumanSide,Options,random,out match,out error);
+        if(!success){Message=error;ShowSettings();return;}
+        PreparedMatch=match;Message="";ShowReview();
+    }
+    public void UpdatePreparedLineups(System.Collections.Generic.List<LineupAssignment> home,System.Collections.Generic.List<LineupAssignment> away)
+    {
+        if(PreparedMatch.TryWithLineups(home,away,Service,out var match,out var error))PreparedMatch=match;
+        else Message=error;
     }
     public void Confirm(string title,string text,Action confirmed,string affirmative="CONFIRM")
     {

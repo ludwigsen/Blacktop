@@ -1,4 +1,4 @@
-# Main menu, Quick Play and runtime player editor
+# Main menu, exhibition modes and runtime player editor
 
 ## Pre-implementation audit (master ef8ca18)
 
@@ -17,7 +17,7 @@
 2. RosterService holds detached records plus portable appearance IDs, validates global GUID membership, jersey numbers, ratings and partial/full lineups, and commits clone/validate/write/swap transactions. No source ScriptableObject is edited during preview or ordinary runtime Save.
 3. PlayerEditorSession owns a working copy. Existing GUIDs survive edits/transfers; new/duplicate GUIDs are assigned only when saving. Seven active assignments are separate from unlimited reserves and independent of roster list order.
 4. A versioned JSON file under persistentDataPath is replaced atomically with backup recovery. Restore Defaults reimports canonical data explicitly. Editor source commit is a separate confirmed operation in the Editor assembly, with validation and Undo/rollback.
-5. Quick Play creates an immutable detached snapshot of two explicitly chosen eligible lineups, human side and venue. MatchBootstrap binds existing player roots before CharacterApplier/PlayState initialize. Legacy direct SampleScene launch remains supported when no snapshot exists.
+5. Head 2 Head creates an immutable detached snapshot of two explicitly chosen eligible lineups, human side and venue. MatchBootstrap binds existing player roots before CharacterApplier/PlayState initialize. Legacy direct SampleScene launch remains supported when no snapshot exists.
 6. Navigation, reusable uGUI controls, roster views, editor categories and preview rendering have separate owners. InputSystemUIInputModule handles pointer/keyboard/gamepad focus. Preview uses a dedicated render target/camera/lights and no gameplay components.
 
 ## Launch and scene setup
@@ -31,7 +31,8 @@ MainMenu builds its reusable uGUI presentation at runtime. No new gameplay prefa
 ## Navigation and controls
 
 - Main menu: NEW GAME, PLAYERS, QUIT. Quit stops Play Mode through the Editor assembly or exits a standalone application.
-- Quick Play: select your team, select a distinct opponent, choose HOME / FIRST POSSESSION or AWAY / DEFEND FIRST and venue, then START MATCH. Cards show actual player/active counts and readiness errors. A short lineup has a MANAGE ROSTER route; no permanent players are invented to make it eligible.
+- New Game: HEAD 2 HEAD, PICKUP GAME, BACK. Both use MATCH SETTINGS, then REVIEW MATCH, then START MATCH.
+- Head 2 Head: select your team and a distinct CPU opponent (each offers Random), choose Random / HOME / FIRST POSSESSION / AWAY / DEFEND FIRST, then field, condition, severity and difficulty. Cards show actual player/active counts and readiness errors. A short lineup has a MANAGE ROSTER route; no permanent players are invented to make it eligible.
 - Players: choose a team and any row. Actions include create, edit, duplicate, transfer, delete, assignment/replacement, reserve, save, restore defaults and Editor-only source commit. Both the roster and action lists scroll. The selected row has a shape marker; focused controls auto-scroll into view.
 - Mouse: click, wheel-scroll lists; drag the model to rotate and wheel over it to zoom. Keyboard: arrows/Tab navigate, Enter submits, Escape goes back. Gamepad: stick/D-pad navigation, south button submits, east button goes back. Preview also exposes focusable rotate/zoom/full-body/head/reset buttons. Physique contains idle/run/backward/fast-run preview choices.
 - Gameplay: Escape, gamepad Start, or MENU returns to MainMenu. Winner rematch reloads the selected match configuration. Returning to the menu clears that match snapshot and keeps the saved roster service.
@@ -45,7 +46,7 @@ Existing Kings GUIDs/ratings and source appearance references are unchanged. The
 
 Create and duplicate drafts have no GUID until a successful Save. Edits/transfers preserve the original GUID. Duplicate names are allowed. Jersey numbers must be non-negative whole numbers and unique within a team; there is no two-digit cap that would impose an artificial reserve limit. Transfers move the single record between teams, remove old active references and start in reserves unless explicitly assigned through the editor. Delete and transfer have confirmation dialogs.
 
-Seven active players plus unlimited reserves are supported. Each active assignment stores player GUID, offense slot and defense slot separately. Assigning an occupied offense slot moves its occupant to reserves; an occupied defense slot swaps with the freed defense slot. There are no fixed offensive/defensive position pairings. Partial lineups may be saved; Quick Play requires all seven unique players, seven offensive slots and seven defensive slots. Roster array order has no gameplay position meaning.
+Seven active players plus unlimited reserves are supported. Each active assignment stores player GUID, offense slot and defense slot separately. Assigning an occupied offense slot moves its occupant to reserves; an occupied defense slot swaps with the freed defense slot. There are no fixed offensive/defensive position pairings. Partial lineups may be saved; Head 2 Head requires all seven unique players, seven offensive slots and seven defensive slots. Roster array order has no gameplay position meaning.
 
 Every operation clones the current state, validates all installed teams/memberships/IDs/ratings/selections/slots, writes the complete save and only then swaps in-memory state. Validation or I/O failure leaves the current state intact. The editor session is a detached working copy; preview and Cancel cannot write source assets or roster saves.
 
@@ -55,7 +56,7 @@ The save is `Path.Combine(Application.persistentDataPath, "rosters.v1.json")`; U
 
 Writes go to a sibling `.tmp`, then `File.Replace` atomically replaces an existing file and retains `.bak`; the first write uses a same-directory move. Temporary files are cleaned up. Startup first validates the primary save, then a previous backup; otherwise it retains canonical defaults with a visible message. Unsupported versions/catalog mismatches are rejected rather than guessed at. Save after backup recovery to repair the primary. RESTORE DEFAULT ROSTERS deliberately replaces all local rosters with the current source defaults, including removing local-only players. Existing source records migrate through the default importer; no earlier runtime roster file format existed.
 
-Runtime saving never modifies packaged/source ScriptableObjects. Match start takes a detached validated snapshot, so further menu changes cannot mutate an active match. Rematch retains that snapshot; a new Quick Play uses the current saved state.
+Runtime saving never modifies packaged/source ScriptableObjects. Match start takes a detached validated snapshot, so further menu changes cannot mutate an active match. Rematch retains that snapshot; a new Head 2 Head uses the current saved state.
 
 ## Commit canonical development rosters
 
@@ -63,7 +64,7 @@ In Editor Play Mode, save player changes first, then use COMMIT TO SOURCE (EDITO
 
 Source commit does not erase/replace the separate local runtime save. Restore defaults deliberately when testing newly committed defaults. Ordinary Player Save, roster Save, preview and Cancel have no AssetDatabase dependency. `FrontEndSourceCommit` alone lives in Blacktop.Editor and installs runtime delegates; standalone code imports no UnityEditor namespace.
 
-Quick Play is the supported entry for edited lineups. Direct SampleScene launch keeps the original fixed GUID development bindings when no snapshot exists. After deleting/transferring those original players in canonical source, those legacy scene bindings may no longer resolve; launch via MainMenu for custom rosters. This PR does not add a second scene spawner or silently replace those GUIDs.
+Head 2 Head is the supported entry for edited lineups. Direct SampleScene launch keeps the original fixed GUID development bindings when no snapshot exists. After deleting/transferring those original players in canonical source, those legacy scene bindings may no longer resolve; launch via MainMenu for custom rosters. This PR does not add a second scene spawner or silently replace those GUIDs.
 
 ## Physique, weight and ratings
 
@@ -91,7 +92,7 @@ Preview owns one visual clone, camera/lights and 1024-square render target on an
 
 MatchBootstrap runs at -2000, ahead of CharacterApplier's -100 and all normal Awakes. It maps each validated offensive assignment to the corresponding existing actor on each side, configures runtime roster/appearance data, installs independent defensive slots, team branding, user team and selected FieldDefinition, then the existing lifecycle takes over. FieldConstants, boundaries, contact, movement, huddles, play calls, Gamebreaker and ball ruling code are preserved. No Rigidbody or trigger callbacks were introduced.
 
-Final graphics-enabled Unity 6000.5.6f1 Editor Play Mode suite: **71 passed, 0 failed, 0 skipped**. The nine new tests cover transactional CRUD/IDs/ratings/lineups/reserves, file restart/backup/default recovery, invalid data and failed I/O, weights/body meshes, actual create/save/activate/Quick Play controls, runtime appearance/stats/nameplate and possession/control, both human sides/directions, field selection/rematch/menu return, draft cancel/preview cleanup, isolated canonical-source commit, and synthetic gamepad Submit/Back. The existing 62 gameplay/animation/field/appearance tests also pass. Source commit tests use temporary copied assets, not developer roster files.
+Final graphics-enabled Unity 6000.5.6f1 Editor Play Mode suite: **71 passed, 0 failed, 0 skipped**. The nine new tests cover transactional CRUD/IDs/ratings/lineups/reserves, file restart/backup/default recovery, invalid data and failed I/O, weights/body meshes, actual create/save/activate/Head 2 Head controls, runtime appearance/stats/nameplate and possession/control, both human sides/directions, field selection/rematch/menu return, draft cancel/preview cleanup, isolated canonical-source commit, and synthetic gamepad Submit/Back. The existing 62 gameplay/animation/field/appearance tests also pass. Source commit tests use temporary copied assets, not developer roster files.
 
 Rendered main menu/roster/physique/face/gear/attributes/confirmation/match and five-body comparison were inspected; main/editor were checked at 1920x1080 and 1280x720. Final selected fourteen-player sample: **112 skinned renderers, 400,176 vertices, 12 unique shared meshes, 2 shared materials**. The direct legacy baseline was 70 renderers / 268,590 vertices; the extra garment shells account for the increase. One final full-roster SaveCurrent Editor sample took **27.147 ms** (14 default players; initial pre-optimization sample 339.035 ms). Shared catalog validation is done once per transaction rather than per player. These samples do not establish frame rate, skinning cost, allocations, load time or a production performance budget. Profile representative builds on both platforms before production art expansion.
 
@@ -100,3 +101,50 @@ The preview UI needs a graphics device; `-nographics` cannot create its render t
 ## Recommended next PR
 
 Author the canonical headless Athletic body, three genuinely distinct heads, one cropped hairstyle, one beard and properly fitted top/shorts/shoes. Match the Street 1 direction, keep the shared rig and stable-ID contract, add low-detail meshes, and profile fourteen characters on macOS/Windows. Replace temporary presets through data/import configuration while retaining this editor and roster workflow.
+
+## Exhibition match configuration (2026-10-24)
+
+MainMenu and SampleScene remain the two committed scenes. Their existing controller/bootstrap references automatically build the new flows; do not rerun the scene generator to install this feature. No scene, source roster, GUID, skeleton, playbook, rule or field-boundary replacement is required. `QuickPlayView` and `QuickPlayMatch` retain their existing contract names for compatibility, but implement Head 2 Head and the shared exhibition snapshot; there is no separate Quick Play mode.
+
+**Head 2 Head:** Main → New Game → Head 2 Head → human team → opponent → Match Settings → Review → Start Match. Only seven-player valid saved lineups can launch. Disabled invalid-team cards expose Manage Roster; settings also links to roster management. Saved offense/defense mappings, records and branding are copied unchanged. Random teams choose distinct eligible teams. Choosing an explicit invalid team never silently substitutes players.
+
+**Pickup:** Main → New Game → Pickup Game → Draft → Human Lineup → Match Settings → Review → Start Match. The read-only pool contains active players and reserves from every installed saved roster. Search matches name or jersey number; team filtering and name/rating/role sorting help browsing. Details show all twelve ratings and the existing visual-only 3D preview. Seven slots expose remove/replace; an eighth or duplicate pick fails. Fewer than fourteen unique eligible saved players blocks the draft with a Manage Players route.
+
+CPU selection happens when REVIEW MATCH freezes the final requested difficulty and settings. This deliberately defers CPU selection until the difficulty is known: the CPU cannot reserve or take a human pick. It fills complementary offensive needs, ranks the offensive vacancy 65% / the player's best independent defensive contribution 35%, and selects within the best 1–4 remaining candidates according to the profile's draft quality. Remaining players are removed after each pick. The display-only Overall is the equal-weight mean of the existing twelve ratings, times five; it is never serialized or used as a gameplay attribute. The per-slot draft ranking uses Passing for QB; Speed/Agility/Run Power/Carrying for backs; Blocking/Run Power/Tackling for linemen; Catching/Speed/Route Running/Agility for receivers, plus complementary defensive ratings. No temporary fake players or source writes occur.
+
+Lineup suggestions preserve available source offense and defense assignments independently, resolve collisions in stable pool order and fill gaps by role rating. Human Lineup allows all fourteen human assignments to be changed; changing an occupied slot swaps its occupant. The final Review shows both completed squads and lets the user independently override all seven offensive and all seven defensive slots on either pickup side. Those changes create a new detached snapshot with the same resolved settings and draft. Head 2 Head review preserves the saved assignments.
+
+Pickup has match-only IDs `pickup.home` / `pickup.away` and names PICKUP HOME / PICKUP AWAY. It uses configurable `pickupHomeStyle` / `pickupAwayStyle` references in settings, committed to the existing Kings amber and Vipers green styles/crests. Branding is copied as values into the snapshot; Bootstrap owns disposable TeamIdentity/roster/appearance objects. Scorebug team labels autosize within their existing slots so HOME/AWAY remains visible. Individual GUIDs, names, numbers, appearances and ratings survive mixed source teams. Source-team membership remains available for debugging and curve binding, while HUD, tints, possession and field markers use match-side identities.
+
+`MatchSettingsView` is shared, with independent `HeadOptions` / `PickupOptions`. Fields offer Random plus only registered playable definitions with a valid collider-free surface and optional detail art. Incomplete definitions or `playable=false` cannot enter Random. Both shipped functional venues remain selectable; their visual art is still provisional. Conditions offer Random, Clear, Cold, Slick, Loose, Raw. Severity offers Clean ×0.5, Regular ×1, Hard ×1.8; Clear disables/ignores severity. Difficulty offers Random, Easy, Normal (default), Hard, Street Legend. Side selection also offers Random.
+
+A local `IMatchRandom` / `SeededMatchRandom` resolves requests once at REVIEW MATCH immediately before constructing the snapshot. It never consumes Unity's gameplay random stream. Tests inject seeds. Requested field/condition/difficulty/team/side choices and their resolved values remain in the snapshot; Random difficulty is uniform over the four profiles. Review exposes the actual field, condition, severity, difficulty and teams. Back to settings and a fresh review explicitly creates a new match proposal; Start and Rematch never reroll an accepted proposal.
+
+## Conditions and acceleration
+
+`Assets/_Project/Data/FrontEnd/Conditions/` holds the five authoritative ConditionData assets. `GetEffectiveModifiers` scales authored percentage points by severity. `MatchModifiers` sums matching targets, converts points to fractions once and bounds each aggregate to [-0.30, +0.30]. Clear is always zero. Power maps to RunPower, Carrying to Carrying. MatchBootstrap binds the same immutable modifiers to all fourteen private runtime PlayerAttributes. Effective output is `(curve(rating) + field addition) × Gamebreaker`, clamped by the existing AttributeCurves hard caps. A bound match replaces the legacy optional FieldModifiers argument, preventing duplicate environmental addition. AI routes, blocking, CPU running/passing and designed-handoff movement now consume the same effective attribute path rather than separately applying Gamebreaker.
+
+Acceleration remains owned by Agility's base rating/curve and hard caps. `PlayerAttributes.Acceleration` uses that curve plus only ConditionStat.Accel, then the one Agility Gamebreaker boost. Agility's separate condition penalty affects jukes/hurdles and is not charged again to acceleration. Both controlled-carrier and controlled-defender acceleration use this boundary. Existing constant-velocity AI has no acceleration integration, so an Accel penalty is not incorrectly converted into a second AI speed penalty. Huddle/formation presentation speed is intentionally independent of gameplay conditions. No thirteenth attribute was added.
+
+## Difficulty authoring and actual consumers
+
+`Assets/_Project/Data/FrontEnd/Difficulty/` holds four Inspector-editable DifficultyProfile assets; settings references them explicitly. Values are copied into immutable DifficultyTuning on review. Profiles affect only the CPU team's decision/execution paths; human input and human-team AI assistants retain Normal decision tuning. All players still use their own roster ratings and the shared selected condition.
+
+| Consumer | Easy | Normal baseline | Hard | Street Legend |
+|---|---|---|---|---|
+| Initial defensive reaction | 0.28s | 0s | 0.02s | 0s |
+| Pursuit decision interval / observed lead | 0.18s / 0s | every frame / 0s | every frame / 0.12s | every frame / 0.22s |
+| Released-pass reaction multiplier | 1.8 | 1 | 0.75 | 0.55 |
+| Coverage cushion / zone awareness | 1.3 / 0.75 | 1 / 1 | 0.9 / 1.15 | 0.8 / 1.3 |
+| QB read-time multiplier | 1.4 | 1 | 0.85 | 0.7 |
+| Runner avoidance / visible threats | 0.65 / 1 | 1 / 2 | 1.15 / 3 | 1.3 / 4 |
+| Situational offense/defense weight | 0.5 | 1 | 1.3 | 1.6 |
+| Additional standard run bias | +0.08 | 0 | 0 | 0 |
+| Gamebreaker live activation delay | 0.7s | 0s | 0s | 0s |
+| CPU draft quality | 0.30 | 0.65 | 0.85 | 1 |
+
+DefenderAI uses only observed displacement for pursuit lead, keeps the existing intended-receiver/nearby-zone gate on released-pass reactions, and never gains a difficulty speed bonus. CPUCarrierAI uses read timing and avoidance; CPUPlayCaller adjusts situation-based run/pass probabilities, defensive playbook weights and the existing Gamebreaker activation policy. Normal's multipliers retain prior decision tuning. Moving AI onto the existing attribute path also fixes its previously bypassed roster/condition speed and passing effects; that correction applies at every difficulty.
+
+Returning to MainMenu clears the match and destroys match-owned Unity objects; the saved RosterService remains. Rematch reloads SampleScene using the exact same snapshot, GUIDs, CPU draft, lineups, branding and resolved settings. Direct SampleScene without a snapshot retains legacy bindings, Clear/no match modifiers and Normal CPU tuning. Save format/version remains unchanged.
+
+To author additional playable fields, register validated FieldDefinitions in settings and leave unfinished venues unplayable. Edit condition percentages only in the ConditionData assets. Edit CPU behavior only in the shared DifficultyProfile assets. All five named conditions and four concrete profiles are required for a valid catalog; missing catalogs block launch visibly. The existing explicit FrontEndSetup repair utility registers committed catalogs when missing, without replacing existing authored catalog choices. It still opens/saves scenes by design; it is unnecessary for ordinary installation.

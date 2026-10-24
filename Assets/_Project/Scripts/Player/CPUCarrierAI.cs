@@ -24,7 +24,7 @@ public class CPUCarrierAI : MonoBehaviour
     [SerializeField] float maxReceiverSearchRadius = 45f;
     [SerializeField] float receiverSearchConeAngle = 90f; // wider than PassMove's human cone — no human read to defer to
 
-    [Header("Throw Physics (flat/neutral — not attribute-scaled yet)")]
+    [Header("Throw Physics (effective Passing scales flight speed)")]
     [SerializeField] float baseThrowSpeed = 30f;
     [SerializeField] float minFlightDuration = 0.15f;
     [SerializeField] float baseArcHeight = 0.5f;
@@ -37,8 +37,12 @@ public class CPUCarrierAI : MonoBehaviour
     [SerializeField] float avoidanceWeight = 1.2f;
     [SerializeField] int threatsConsidered = 2;
 
-    float SpeedBoost => PlayState.Instance.GetGamebreakerMult(teamMember.teamId, AttributeStat.Speed);
-    float PassingBoost => PlayState.Instance.GetGamebreakerMult(teamMember.teamId, AttributeStat.Passing);
+    PlayerAttributes attributes;
+    public void SetAttributes(PlayerAttributes value) => attributes = value;
+    // Attribute multipliers already contain the team boost; never multiply Gamebreaker again.
+    float SpeedBoost => attributes != null ? attributes.Speed() : 1f;
+    float PassingBoost => attributes != null ? attributes.Passing() : 1f;
+    DifficultyTuning Difficulty => DifficultyTuning.ForTeam(teamMember.teamId);
     TeamMember teamMember;
     float readTimer;
 
@@ -79,11 +83,12 @@ public class CPUCarrierAI : MonoBehaviour
         readTimer += Time.deltaTime;
         bool flushed = NearestOpponentDistance() < scrambleTriggerDistance;
 
-        if (flushed || readTimer >= maxReadTime)
+        float readTime = maxReadTime * Difficulty.QbReadTimeScale;
+        if (flushed || readTimer >= readTime)
         {
             var target = PassTargeting.FindBestReceiver(transform, PlayState.Instance.OffensivePlayers, maxReceiverSearchRadius, receiverSearchConeAngle);
             if (target != null) { ThrowTo(target); return; }
-            if (flushed || readTimer >= maxReadTime * 1.5f) { UpdateRunner(); return; } // nobody's open — tuck it and go
+            if (flushed || readTimer >= readTime * 1.5f) { UpdateRunner(); return; } // nobody's open — tuck it and go
         }
 
         transform.position += -PlayState.Instance.AttackDirection.Forward * (dropbackSpeed * SpeedBoost * Time.deltaTime);
@@ -103,13 +108,13 @@ public class CPUCarrierAI : MonoBehaviour
         // PossessionTeamId changes at the whistle; return direction changes immediately.
         Vector3 desired = PlayState.Instance.DirectionFor(teamMember.teamId).Forward;
 
-        foreach (var threatPos in NearestThreatPositions(threatsConsidered))
+        foreach (var threatPos in NearestThreatPositions(Mathf.Max(1, threatsConsidered + Difficulty.ThreatsConsidered - 2)))
         {
             Vector3 away = transform.position - threatPos;
             away.y = 0f;
             float dist = away.magnitude;
             if (dist < 0.01f || dist > avoidanceRadius) continue;
-            desired += away.normalized * ((avoidanceRadius - dist) / avoidanceRadius) * avoidanceWeight;
+            desired += away.normalized * ((avoidanceRadius - dist) / avoidanceRadius) * avoidanceWeight * Difficulty.AvoidanceScale;
         }
 
         desired.y = 0f;

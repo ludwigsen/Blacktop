@@ -57,6 +57,10 @@ public class TeamScorePanel : MonoBehaviour
             new Vector2(0.205f - nameShift, 0.16f), new Vector2(0.475f - scoreShift, 0.90f));
         teamNameText.text = "Team";
         teamNameText.alignment = reverseFill ? TextAlignmentOptions.Right : TextAlignmentOptions.Left;
+        // Match-only names such as PICKUP HOME/AWAY must keep their distinguishing suffix visible.
+        teamNameText.enableAutoSizing = true;
+        teamNameText.fontSizeMin = nameFontSize * .25f;
+        teamNameText.fontSizeMax = nameFontSize;
         scoreText = CreateText("Score", displayFont, scoreFontSize,
             new Vector2(0.48f - scoreShift, 0.10f), new Vector2(0.635f - scoreShift, 0.94f));
         // Apply TMP's heavier SDF weight to identity only; Outfit meter copy keeps its weight.

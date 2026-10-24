@@ -11,6 +11,8 @@ public class PlayerAttributes : ScriptableObject
 
     // Bound only on a private runtime copy. Shared assets must never acquire a team's match state.
     [System.NonSerialized] public int ownerTeamId = -1;
+    MatchModifiers matchModifiers;
+    public void BindMatchModifiers(MatchModifiers modifiers) => matchModifiers = modifiers;
 
     [Range(0, 20)] public int passing = 10;
     [Range(0, 20)] public int speed = 10;
@@ -54,8 +56,14 @@ public class PlayerAttributes : ScriptableObject
     // how field/gamebreaker individually stack.
     public float Effective(AttributeStat stat, int rating, FieldModifiers field = null, float gamebreakerMult = 1f)
     {
+        // A bound match owns the field addition; a legacy optional argument cannot stack it twice.
+        float fieldAdd = matchModifiers != null ? matchModifiers.Get(stat) : field != null ? field.Get(stat) : 0f;
+        return Combined(stat, rating, fieldAdd, gamebreakerMult);
+    }
+
+    float Combined(AttributeStat stat, int rating, float fieldAdd, float gamebreakerMult)
+    {
         float curveMult = curves != null ? curves.Evaluate(stat, rating) : 1f;
-        float fieldAdd = field != null ? field.Get(stat) : 0f;
         // Resolve the boost live for this attribute owner's team, including defenders and AI teammates.
         float teamBoost = PlayState.Instance != null
             ? PlayState.Instance.GetGamebreakerMult(ownerTeamId, stat) : 1f;
@@ -65,9 +73,11 @@ public class PlayerAttributes : ScriptableObject
         return Mathf.Clamp(combined, min, max);
     }
 
-    // Per-stat convenience accessors — field/gamebreaker default to "inactive" so
-    // existing call sites (nothing selects a field yet — that's Tier 3) don't need to
-    // pass anything until a field-selection system exists.
+    // Acceleration is owned by Agility's base curve, but takes only the condition's Accel addition.
+    // Slick's Agility penalty still affects moves; it cannot also be charged to acceleration.
+    public float Acceleration() => Combined(AttributeStat.Agility, agility, matchModifiers?.Acceleration ?? 0f, 1f);
+
+    // Existing convenience accessors now automatically consume the bound match snapshot.
     public float Passing(FieldModifiers field = null, float gb = 1f) => Effective(AttributeStat.Passing, passing, field, gb);
     public float Speed(FieldModifiers field = null, float gb = 1f) => Effective(AttributeStat.Speed, speed, field, gb);
     public float Blocking(FieldModifiers field = null, float gb = 1f) => Effective(AttributeStat.Blocking, blocking, field, gb);

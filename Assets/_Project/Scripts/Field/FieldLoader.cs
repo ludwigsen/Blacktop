@@ -83,6 +83,11 @@ public sealed class FieldLoader : MonoBehaviour
         return true;
     }
 
+    public static bool IsPlayable(FieldDefinition definition) => definition != null && definition.playable &&
+        !string.IsNullOrWhiteSpace(definition.venueId) && definition.surfacePrefab != null &&
+        definition.surfacePrefab.SurfaceRenderer != null && IsVisualOnly(definition.surfacePrefab.gameObject) &&
+        (definition.detailPrefab == null || IsVisualOnly(definition.detailPrefab));
+
     static bool IsVisualOnly(GameObject root)
     {
         if (root.GetComponentInChildren<Collider>(true) != null ||

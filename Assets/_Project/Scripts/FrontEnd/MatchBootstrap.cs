@@ -17,27 +17,29 @@ public class MatchBootstrap : MonoBehaviour
         var match=FrontEndRuntime.Match;
         if(match==null)return; // Direct SampleScene launch retains its established development defaults.
         var snapshot=match.Snapshot;
+        var identities=new TeamIdentity[2];
         for(int side=0;side<2;side++)
         {
             string teamId=side==0?match.Team0Id:match.Team1Id;
             var source=snapshot.teams.Find(t=>t.teamId==teamId);
-            var definition=settings.Team(teamId);
-            var roster=ScriptableObject.CreateInstance<TeamRoster>();
-            ownedData.Add(roster);roster.curves=definition.roster.curves;roster.teamName=definition.identity.teamName;
+            identities[side]=match.Brand(side).CreateRuntime();ownedData.Add(identities[side]);
             foreach(var assignment in source.active)
             {
+                // Each source player's curve reference survives a mixed-team pickup draft.
+                var roster=ScriptableObject.CreateInstance<TeamRoster>();ownedData.Add(roster);
+                roster.curves=match.CurvesFor(assignment.playerId);roster.teamName=identities[side].teamName;
                 var saved=source.players.Find(p=>p.record.id==assignment.playerId);
                 var appearance=ScriptableObject.CreateInstance<PlayerAppearanceDefinition>();ownedData.Add(appearance);
                 saved.appearance.Apply(appearance,settings.appearances,saved.record.id);
-                var record=saved.record;record.appearance=appearance;record.accentColor=definition.identity.accentColor;
+                var record=saved.record;record.appearance=appearance;record.accentColor=identities[side].accentColor;
                 roster.players.Add(record);
                 var actor=players.Single(p=>p.teamId==side && p.slot==assignment.offense);
                 actor.defensiveLineupSlot=assignment.defense;
-                actor.GetComponent<CharacterApplier>().Configure(roster,record.id);
+                actor.GetComponent<CharacterApplier>().Configure(roster,record.id,match.Configuration.Modifiers);
                 var visual=actor.GetComponent<PlayerVisualAssembler>();visual.catalog=settings.appearances;visual.defaultAppearance=settings.defaultAppearance;
             }
         }
-        GetComponent<PlayState>().ConfigureMatch(settings.Team(match.Team0Id).identity,settings.Team(match.Team1Id).identity,match.HumanSide);
+        GetComponent<PlayState>().ConfigureMatch(identities[0],identities[1],match.HumanSide);
         var field=FindAnyObjectByType<FieldLoader>();
         if(field!=null && !field.SelectField(match.Field)) Debug.LogError("Selected field could not load; existing valid venue retained.",this);
     }

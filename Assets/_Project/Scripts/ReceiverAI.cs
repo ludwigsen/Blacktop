@@ -12,9 +12,8 @@ using UnityEngine;
 public class ReceiverAI : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 6f;
-    // Keep base AI tuning intact while applying the same team speed boost as controlled movement.
-    float EffectiveMoveSpeed => moveSpeed * (PlayState.Instance != null
-        ? PlayState.Instance.GetGamebreakerMult(GetComponent<TeamMember>().teamId, AttributeStat.Speed) : 1f);
+    // One attribute path includes identity, condition and Gamebreaker exactly once.
+    float EffectiveMoveSpeed => moveSpeed * (attributes != null ? attributes.Speed() : 1f);
     [SerializeField] float routeDepth = 12f;
     [SerializeField] float slantDistance = 4f; // lateral distance for Slant
     [SerializeField] float hitchDepth = 4f;   // distance upfield for Hitch before settling

@@ -27,11 +27,13 @@ public class CharacterApplier : MonoBehaviour
     [SerializeField] int nameplateFontSize = 28;
 
     PlayerAttributes runtimeAttributes;
+    MatchModifiers matchModifiers;
 
     public TeamRoster.PlayerRecord? Record { get; private set; }
 
     // MatchBootstrap calls this before Awake; all existing attribute wiring stays in one place.
-    public void Configure(TeamRoster source, string guid) { roster = source; playerId = guid; }
+    public void Configure(TeamRoster source, string guid, MatchModifiers modifiers = null)
+    { roster = source; playerId = guid; matchModifiers = modifiers; }
 
     void Awake()
     {
@@ -66,12 +68,14 @@ public class CharacterApplier : MonoBehaviour
     {
         runtimeAttributes = attr;
         attr.ownerTeamId = GetComponent<TeamMember>().teamId;
+        attr.BindMatchModifiers(matchModifiers);
         if (TryGetComponent<PlayerMovement>(out var movement)) movement.SetAttributes(attr);
         if (TryGetComponent<PlayerStateMachine>(out var stateMachine)) stateMachine.SetAttributes(attr);
         if (TryGetComponent<ReceiverAI>(out var receiverAI)) receiverAI.SetAttributes(attr);
         if (TryGetComponent<DefenderAI>(out var defenderAI)) defenderAI.SetAttributes(attr);
         if (TryGetComponent<AllyBlocker>(out var blocker)) blocker.SetAttributes(attr);
         if (TryGetComponent<GamebreakerController>(out var gamebreaker)) gamebreaker.SetAttributes(attr);
+        if (TryGetComponent<CPUCarrierAI>(out var cpuCarrier)) cpuCarrier.SetAttributes(attr);
     }
 
     void BuildNameplate(TeamRoster.PlayerRecord record)

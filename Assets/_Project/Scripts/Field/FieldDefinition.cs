@@ -6,6 +6,8 @@ public sealed class FieldDefinition : ScriptableObject
 {
     public string venueId;
     public string displayName;
+    [Tooltip("Only completed, playable venues belong in match selection or Random.")]
+    public bool playable = true;
     public FieldSurface surfacePrefab;
     public Material baseMaterial;
     public bool useTint;
