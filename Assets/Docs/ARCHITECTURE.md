@@ -240,3 +240,11 @@ The reference rig is the existing PlayerBody FBX behind a replaceable contract. 
 `CharacterPartDefinition.skinnedMeshOverride` permits compatible body/garment meshes using existing source bones/materials; skeleton validation checks the supplied mesh bind poses/submeshes. `temporaryVisual` is distinct from missing-art `placeholder`; `variantFamilyId` selects body-compatible garment variants. Catalog validation supports independently installed catalogs, while individual selections still validate against their chosen catalog. FrontEndTemporaryArt authoring never changes model importer readability or the canonical rig.
 
 Detailed setup, save recovery, source commit, source-data migration, preset extension and measured limitations: `FRONT_END.md`.
+
+## Editable character art sources
+
+`SourceAssets/Characters/BlacktopCharacters.blend` is the recommended editable source for all five current body/face builds, fifteen garments and four eye surfaces. Individual build/head `.blend` snapshots are supplied for focused editing; they target the same Unity meshes and are not automatically synchronized. Retain editable `.blend` sources for all future character geometry. `SourceAssets/Characters/README.md` documents authoritative-file selection and the complete workflow.
+
+`CharacterBlenderBridge` is Editor-only. It exports a compressed exact-mesh/rest-rig seed for initial conversion, and validates/applies Blender geometry exports to existing mesh assets with Undo. Bone-name order and existing bind poses/GUIDs are preserved; no runtime Blender dependency is introduced. `export_meshes.py` exports the current artist-edited base meshes; `build_sources.py` is a protected seed conversion utility, not the artist export path. Preview materials are separate from Unity's existing palette/shader data.
+
+Four editable Eye mesh assets copy the original imported eye geometry/bind poses. PlayerModel's nested renderer overrides reference those meshes; bone/material/Avatar/root-transform bindings remain intact. Original FBX/model metadata, gameplay prefab and all existing body/garment mesh assets remain unchanged by source conversion. The original shared skeleton still owns animation, and geometry imports never alter it.

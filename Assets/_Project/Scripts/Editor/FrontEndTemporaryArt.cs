@@ -60,7 +60,7 @@ public static class FrontEndTemporaryArt
         string path=$"{Folder}/{name}.asset";var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);if(existing!=null)return existing;
         var mesh=create();mesh.name="TEMP_"+name;AssetDatabase.CreateAsset(mesh,path);return mesh;
     }
-    static Mesh ReadableCopy(Mesh original)
+    internal static Mesh ReadableCopy(Mesh original)
     {
         // Editor-only MeshUtility reads the imported non-readable model without changing its importer.
         using(var arrays=MeshUtility.AcquireReadOnlyMeshData(original))

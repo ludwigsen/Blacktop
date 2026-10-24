@@ -116,10 +116,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8508698362825313665, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
+      propertyPath: m_Mesh
+      value:
+      objectReference: {fileID: 4300000, guid: ef1287700869f4f72813fc981869882a, type: 2}
+    - target: {fileID: -3653380296097935574, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
+      propertyPath: m_Mesh
+      value:
+      objectReference: {fileID: 4300000, guid: 169f2964403e94d60b80300bf681b186, type: 2}
     - target: {fileID: 919132149155446097, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
       propertyPath: m_Name
       value: PlayerBody
       objectReference: {fileID: 0}
+    - target: {fileID: 2152041971748808786, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
+      propertyPath: m_Mesh
+      value:
+      objectReference: {fileID: 4300000, guid: 8a4535362260e45dabbd62c5ca62e38a, type: 2}
+    - target: {fileID: 5176315690071908662, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
+      propertyPath: m_Mesh
+      value:
+      objectReference: {fileID: 4300000, guid: 706af7c26de6d41b7a4efbe4ddf361df, type: 2}
     - target: {fileID: 5866666021909216657, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
       propertyPath: m_Controller
       value:
