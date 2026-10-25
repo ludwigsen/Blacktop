@@ -5,15 +5,16 @@
   "name": "Massive",
   "family": "Barrel",
   "percent": {
-    "shoulder": 126,
-    "chest": 149,
-    "waist": 176,
-    "quad": 149,
-    "calf": 125,
-    "bicep": 138,
-    "forearm": 128,
-    "chest_depth": 157,
-    "abdomen_depth": 176,
-    "hip_depth": 162
-  }
+    "shoulder": 110,
+    "chest": 149.0,
+    "waist": 176.0,
+    "quad": 140,
+    "calf": 130,
+    "bicep": 138.0,
+    "forearm": 128.0,
+    "chest_depth": 157.0,
+    "abdomen_depth": 176.0,
+    "hip_depth": 162.0
+  },
+  "softness": 1.0
 }

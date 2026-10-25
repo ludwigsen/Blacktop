@@ -5,15 +5,15 @@
   "name": "Built",
   "family": "Power",
   "percent": {
-    "shoulder": 114,
-    "chest": 119,
-    "waist": 100,
-    "quad": 116,
-    "calf": 107,
-    "bicep": 120,
-    "forearm": 110,
-    "chest_depth": 119,
-    "abdomen_depth": 101,
-    "hip_depth": 115
+    "shoulder": 110.0,
+    "chest": 125.0,
+    "waist": 112.0,
+    "quad": 122.0,
+    "calf": 112.0,
+    "bicep": 134.0,
+    "forearm": 125.0,
+    "chest_depth": 125.0,
+    "abdomen_depth": 115.0,
+    "hip_depth": 120.0
   }
 }

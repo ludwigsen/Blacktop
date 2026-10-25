@@ -3,6 +3,7 @@ bl_info = {'name': 'Blacktop Body Editor', 'author': 'Blacktop', 'version': (1, 
            'blender': (5, 2, 0), 'location': '3D View > Sidebar > Blacktop', 'category': 'Mesh'}
 from pathlib import Path
 import json
+import importlib
 import sys
 import uuid
 import textwrap
@@ -15,10 +16,14 @@ from mathutils import Vector
 HERE = Path(bpy.data.filepath).resolve().parent
 if not (HERE/'engine.py').exists(): HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE)); sys.dont_write_bytecode = True
+import engine
+importlib.reload(engine)  # Re-running the embedded script picks up authoring fixes without restarting Blender.
 from engine import KEYS, LABELS, HEIGHTS, read_json, validate_preset
 import pipeline
+importlib.reload(pipeline)
 
 _BUSY = False
+_UNDOING = False
 _ITEMS = []
 _ITEM_CACHE = {}
 ORDER = ('Lean', 'Athletic', 'Built', 'Thick', 'Heavy', 'Massive')
@@ -42,14 +47,17 @@ def items(self, context):
 def current(settings):
     values = saved(bpy.context.scene)
     key = settings.preset or next(iter(values))
-    return {'version': 'blacktop.body.v1', 'reference': 'athletic-183-v1', 'id': key,
-            'name': settings.preset_name, 'family': settings.family,
-            'percent': {key: getattr(settings, key) for key in KEYS}}
+    preset = dict(values[key])  # Keep per-preset sculpt corrections and future authoring metadata.
+    preset.update(version='blacktop.body.v1', reference='athletic-183-v1', id=key,
+                  name=settings.preset_name, family=settings.family, softness=settings.softness,
+                  percent={key: getattr(settings, key) for key in KEYS})
+    return preset
 
 
 def refresh(self, context):
-    if _BUSY: return
+    if _BUSY or _UNDOING: return
     try:
+        pipeline.capture_sculpt(context.scene)
         preset = validate_preset(current(self)); values = saved(context.scene); values[preset['id']] = preset
         context.scene['blacktop_presets'] = json.dumps(values)
         report = pipeline.update_preview(preset, self.clothing)
@@ -61,11 +69,16 @@ def refresh(self, context):
 
 def choose(self, context):
     global _BUSY
+    if _UNDOING: return
+    try:
+        pipeline.capture_sculpt(context.scene)
+    except Exception as error:
+        self.status = str(error); return
     values = saved(context.scene)
     if self.preset not in values: return
     _BUSY = True
     try:
-        preset = values[self.preset]; self.family = preset['family']; self.preset_name = preset['name']
+        preset = values[self.preset]; self.family = preset['family']; self.preset_name = preset['name']; self.softness = preset.get('softness', 0)
         for key in KEYS: setattr(self, key, preset['percent'][key])
         for name in ORDER:
             if preset['id'] == 'body.'+name.lower()+'.parametric.v1': self.export_target = name
@@ -81,6 +94,7 @@ class BT_Settings(bpy.types.PropertyGroup):
     height: EnumProperty(name='Calibration height', items=[(str(h), str(h)+' cm', '') for h in HEIGHTS], default='183')
     clothing: BoolProperty(name='Preview shell clothing', default=False, update=refresh)
     export_target: EnumProperty(name='Unity target', items=[(x, x, '') for x in ORDER], default='Athletic')
+    softness: FloatProperty(name='Surface softness', min=0, max=1, default=0, update=refresh, description='Round soft tissue and blend torso/hips into limbs without changing the rig')
     status: StringProperty(default='Choose a preset to begin.')
 
 # Sliders always mean a percentage of the same measured Athletic canonical, regardless of selected family.
@@ -95,6 +109,7 @@ class BT_OT_Reset(bpy.types.Operator):
         settings = context.scene.blacktop_body; values = saved(context.scene)
         default = next((read_json(HERE/'Presets'/(name+'.json')) for name in ORDER if settings.preset == 'body.'+name.lower()+'.parametric.v1'), None)
         if default is None: default = json.loads(context.scene.get('blacktop_custom_defaults', '{}')).get(settings.preset)
+        pipeline.discard_preview_capture()  # Reset deliberately drops current unsaved sculpt corrections.
         if default: values[settings.preset] = default; context.scene['blacktop_presets'] = json.dumps(values); choose(settings, context)
         return {'FINISHED'}
 
@@ -102,6 +117,7 @@ class BT_OT_Reset(bpy.types.Operator):
 class BT_OT_Duplicate(bpy.types.Operator):
     bl_idname = 'blacktop.body_duplicate'; bl_label = 'Duplicate preset'
     def execute(self, context):
+        pipeline.capture_sculpt(context.scene)
         settings = context.scene.blacktop_body; preset = current(settings)
         preset['id'] = 'body.custom.'+uuid.uuid4().hex; preset['name'] += ' Copy'
         values = saved(context.scene); values[preset['id']] = preset; context.scene['blacktop_presets'] = json.dumps(values)
@@ -114,6 +130,7 @@ class BT_OT_Save(bpy.types.Operator, ExportHelper):
     bl_idname = 'blacktop.body_save'; bl_label = 'Save JSON preset'; filename_ext = '.json'
     filter_glob: StringProperty(default='*.json', options={'HIDDEN'})
     def execute(self, context):
+        pipeline.capture_sculpt(context.scene)
         Path(self.filepath).write_text(json.dumps(validate_preset(current(context.scene.blacktop_body)), indent=2)+'\n')
         return {'FINISHED'}
 
@@ -154,14 +171,16 @@ class BT_OT_Export(bpy.types.Operator):
     def execute(self, context):
         settings = context.scene.blacktop_body
         try:
+            pipeline.capture_sculpt(context.scene)
             if self.all_bodies:
                 values = saved(context.scene); presets = [values['body.'+name.lower()+'.parametric.v1'] for name in ORDER]
             else:
                 preset = current(settings)
                 # Explicit target selection allows a duplicated custom preset to update an existing Unity target safely.
                 preset['id'] = 'body.'+settings.export_target.lower()+'.parametric.v1'; presets = [preset]
-            packet = pipeline.export_presets(presets)
-            settings.status = 'Exported %d baked meshes. Apply GeneratedBodies.json in Unity.' % len(packet['meshes'])
+            filename = 'GeneratedBodies.json' if self.all_bodies else 'GeneratedBody_'+settings.export_target+'.json'
+            packet = pipeline.export_presets(presets, HERE.parents[2]/'Builds/CharacterExports'/filename)
+            settings.status = 'Exported %s (%d meshes). Apply %s in Unity.' % ('all six presets' if self.all_bodies else settings.export_target+' only', len(packet['meshes']), filename)
         except Exception as error: settings.status = str(error); self.report({'ERROR'}, str(error)); return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -182,6 +201,7 @@ class BT_PT_Body(bpy.types.Panel):
         layout.label(text='100% = Athletic canonical at 183 cm')
         layout.label(text='Reference ID: athletic-183-v1')
         for key in KEYS: layout.prop(settings, key, slider=True)
+        layout.prop(settings, 'softness', slider=True)
         layout.prop(settings, 'unit', text='Units'); layout.prop(settings, 'height', text='Height')
         layout.label(text='Height changes readouts; rig stays fixed.')
         report = json.loads(context.scene.get('blacktop_report', '{}'))
@@ -194,15 +214,34 @@ class BT_PT_Body(bpy.types.Panel):
                 row = box.row(align=True)
                 for field in ('reference_m', 'requested_m', 'measured_m'): row.label(text='%.2f' % (m[field]*factor))
         for line in textwrap.wrap(settings.status, max(24, int(context.region.width/7))): layout.label(text=line)
+        layout.label(text='Sculpt edits are kept per preset; avoid remesh.')
         layout.label(text='Prototype shells: seam/animation fit needs review.')
 
 
 CLASSES = (BT_Settings, BT_OT_Reset, BT_OT_Duplicate, BT_OT_Save, BT_OT_Load, BT_OT_View, BT_OT_Export, BT_PT_Body)
 
 
+@bpy.app.handlers.persistent
+def bt_body_before_undo(_):
+    global _UNDOING
+    _UNDOING = True
+
+
+@bpy.app.handlers.persistent
+def bt_body_after_undo(_):
+    global _UNDOING
+    _UNDOING = False
+
+
 def register():
     # Blender does not expose every registered PropertyGroup by Python class name.
     # Keep the actual class objects on Scene so rerunning the Text block and reopening files are both safe.
+    pipeline.capture_sculpt()  # Preserve a currently displayed sculpt before rebuilding the panel classes.
+    for handlers, callback in ((bpy.app.handlers.undo_pre, bt_body_before_undo), (bpy.app.handlers.undo_post, bt_body_after_undo),
+                               (bpy.app.handlers.redo_pre, bt_body_before_undo), (bpy.app.handlers.redo_post, bt_body_after_undo)):
+        for old in list(handlers):
+            if old.__name__ == callback.__name__: handlers.remove(old)
+        handlers.append(callback)
     previous = getattr(bpy.types.Scene, '_blacktop_body_classes', ())
     if hasattr(bpy.types.Scene, 'blacktop_body'): del bpy.types.Scene.blacktop_body
     for old in reversed(previous):
@@ -211,7 +250,10 @@ def register():
     bpy.types.Scene._blacktop_body_classes = CLASSES
     bpy.types.Scene.blacktop_body = PointerProperty(type=BT_Settings)
     settings = bpy.context.scene.blacktop_body
-    settings.preset = 'body.athletic.parametric.v1'; choose(settings, bpy.context)
+    preview = bpy.data.objects.get('BT_Body_Preview')
+    previous_id = preview.get('blacktop_preview_id') if preview else None
+    settings.preset = previous_id if previous_id in saved(bpy.context.scene) else 'body.athletic.parametric.v1'
+    choose(settings, bpy.context)
 
 
 def unregister():
@@ -219,5 +261,8 @@ def unregister():
     for cls in reversed(getattr(bpy.types.Scene, '_blacktop_body_classes', CLASSES)):
         if cls.is_registered: bpy.utils.unregister_class(cls)
     bpy.types.Scene._blacktop_body_classes = ()
+    for handlers in (bpy.app.handlers.undo_pre, bpy.app.handlers.undo_post, bpy.app.handlers.redo_pre, bpy.app.handlers.redo_post):
+        for callback in list(handlers):
+            if callback.__name__ in ('bt_body_before_undo', 'bt_body_after_undo'): handlers.remove(callback)
 
 if __name__ == '__main__': register()

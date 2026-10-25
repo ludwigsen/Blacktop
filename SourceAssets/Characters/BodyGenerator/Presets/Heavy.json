@@ -5,15 +5,15 @@
   "name": "Heavy",
   "family": "Barrel",
   "percent": {
-    "shoulder": 118,
-    "chest": 133,
-    "waist": 149,
-    "quad": 128,
-    "calf": 112,
-    "bicep": 122,
-    "forearm": 114,
-    "chest_depth": 139,
-    "abdomen_depth": 151,
-    "hip_depth": 139
+    "shoulder": 115.0,
+    "chest": 140.0,
+    "waist": 140.0,
+    "quad": 135.0,
+    "calf": 120.0,
+    "bicep": 130.0,
+    "forearm": 120.0,
+    "chest_depth": 139.0,
+    "abdomen_depth": 151.0,
+    "hip_depth": 139.0
   }
 }

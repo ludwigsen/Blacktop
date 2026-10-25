@@ -2,6 +2,7 @@
 from pathlib import Path
 import importlib.util
 import json
+from contextlib import contextmanager
 import sys
 import bpy
 import numpy as np
@@ -68,22 +69,71 @@ def garment(row, slot):
     return result
 
 
+@contextmanager
+def editable_surface(obj):
+    # Flush sculpt buffers while retaining the artist's mode after preview/save operations.
+    mode = obj.mode
+    if mode != 'OBJECT': bpy.ops.object.mode_set(mode='OBJECT')
+    try:
+        yield
+    finally:
+        if mode != 'OBJECT' and bpy.context.view_layer.objects.active == obj: bpy.ops.object.mode_set(mode=mode)
+
+
+def capture_sculpt(scene=None):
+    scene = scene or bpy.context.scene
+    obj = bpy.data.objects.get('BT_Body_Preview')
+    if obj is None: return False
+    with editable_surface(obj):
+        e = require_canonical()
+        actual = np.array([(v.co.x, v.co.z, -v.co.y) for v in obj.data.vertices])
+        if actual.shape != e.base.shape or [tuple(p.vertices) for p in obj.data.polygons] != [tuple(t) for t in e.triangles]:
+            raise ValueError('Sculpt topology changed. Undo remesh/Dyntopo; keep the shared vertex/UV/weight topology.')
+        values = json.loads(scene.get('blacktop_presets', '{}'))
+        key = obj.get('blacktop_preview_id') or json.loads(scene.get('blacktop_report', '{}')).get('preset')
+        if key not in values: return False
+        if 'blacktop_preview_positions' in obj:
+            previous = np.array(obj['blacktop_preview_positions']).reshape(-1, 3)
+        else:
+            previous, _ = e.solve(values[key])  # Adopt an already-open v1 workspace without discarding its current sculpt.
+        difference = actual-previous
+        if np.max(np.abs(difference)) <= 2e-6: return False
+        if np.max(np.abs(difference[e.base[:, 1] >= 1.495])) > 1e-7:
+            raise ValueError('Sculpt changed the fixed neck collar. Undo that stroke before switching/exporting.')
+        existing = np.array(values[key].get('sculpt_delta', np.zeros_like(actual).flatten().tolist())).reshape(-1, 3)
+        delta = existing+difference; delta[np.abs(delta) < 1e-7] = 0
+        values[key]['sculpt_delta'] = delta.flatten().tolist(); scene['blacktop_presets'] = json.dumps(values)
+        obj['blacktop_preview_id'] = key; obj['blacktop_preview_positions'] = actual.flatten().tolist()
+        return True
+
+
+def discard_preview_capture():
+    obj = bpy.data.objects.get('BT_Body_Preview')
+    if obj:
+        # Reset acknowledges the current surface so automatic capture cannot re-add the discarded stroke.
+        obj['blacktop_preview_positions'] = [value for vertex in obj.data.vertices for value in (vertex.co.x, vertex.co.z, -vertex.co.y)]
+        if 'blacktop_preview_id' not in obj:
+            obj['blacktop_preview_id'] = json.loads(bpy.context.scene.get('blacktop_report', '{}')).get('preset', '')
+
+
 def update_preview(preset, show_clothes=False):
     e = require_canonical(); positions, report = e.solve(preset)
     obj = bpy.data.objects['BT_Body_Preview']
-    obj.data.vertices.foreach_set('co', (positions[:, [0, 2, 1]]*[1, -1, 1]).flatten()); obj.data.update()
-    row = body_row(positions)
-    obj.data.normals_split_custom_set_from_vertices([(x, -z, y) for x, y, z in np.array(row['normals']).reshape(-1, 3)])
-    collection = obj.users_collection[0]; rig = bpy.data.objects['Blacktop_Rig']
-    for slot in ('Top', 'Shorts', 'Footwear'):
-        old = bpy.data.objects.get('BT_Preview_'+slot)
-        if old:
-            mesh = old.data; bpy.data.objects.remove(old, do_unlink=True); bpy.data.meshes.remove(mesh)
-        if show_clothes:
-            new = add_mesh('BT_Preview_'+slot, garment(row, slot), rig, collection)
-            new.data.materials.append(bpy.data.materials.get(slot))
-    bpy.context.scene['blacktop_report'] = json.dumps(report)
-    return report
+    with editable_surface(obj):
+        obj.data.vertices.foreach_set('co', (positions[:, [0, 2, 1]]*[1, -1, 1]).flatten()); obj.data.update()
+        row = body_row(positions)
+        obj.data.normals_split_custom_set_from_vertices([(x, -z, y) for x, y, z in np.array(row['normals']).reshape(-1, 3)])
+        collection = obj.users_collection[0]; rig = bpy.data.objects['Blacktop_Rig']
+        for slot in ('Top', 'Shorts', 'Footwear'):
+            old = bpy.data.objects.get('BT_Preview_'+slot)
+            if old:
+                mesh = old.data; bpy.data.objects.remove(old, do_unlink=True); bpy.data.meshes.remove(mesh)
+            if show_clothes:
+                new = add_mesh('BT_Preview_'+slot, garment(row, slot), rig, collection)
+                new.data.materials.append(bpy.data.materials.get(slot))
+        obj['blacktop_preview_id'] = preset['id']; obj['blacktop_preview_positions'] = positions.flatten().tolist()
+        bpy.context.scene['blacktop_report'] = json.dumps(report)
+        return report
 
 
 def export_presets(presets, output=None):

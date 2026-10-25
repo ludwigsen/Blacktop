@@ -51,6 +51,24 @@ def main():
             test = json.loads(json.dumps(athletic)); test['percent'][key] *= multiplier
             _, report = e.solve(test); assert report['valid'], (key, multiplier, report)
             slider_cases.append({'key': key, 'multiplier': multiplier, 'error': report['max_relative_error']})
+    # Sculpt corrections must survive switching, JSON round trips and actual baked export.
+    settings = bpy.context.scene.blacktop_body; settings.preset = 'body.athletic.parametric.v1'
+    preview = bpy.data.objects['BT_Body_Preview']
+    vertex = next(v for v in preview.data.vertices if 1.20 < v.co.z < 1.28 and .08 < v.co.x < .15)
+    vertex.co.y -= .002; preview.data.update()
+    assert pipeline.capture_sculpt()
+    sculpt = body_editor.saved(bpy.context.scene)[settings.preset]
+    assert max(abs(v) for v in sculpt['sculpt_delta']) > .001
+    settings.preset = 'body.lean.parametric.v1'; settings.preset = 'body.athletic.parametric.v1'
+    assert 'sculpt_delta' in body_editor.current(settings)
+    sculpt_file = out/'sculpt-preset.json'; bpy.ops.blacktop.body_save(filepath=str(sculpt_file))
+    assert json.loads(sculpt_file.read_text())['sculpt_delta'] == sculpt['sculpt_delta']
+    sculpt_packet = pipeline.export_presets([body_editor.current(settings)], out/'sculpted.json')
+    sculpted_positions, sculpted_report = e.solve(body_editor.current(settings))
+    assert sculpted_report['valid'] and sculpted_report['has_sculpt']
+    exported = next(row for row in sculpt_packet['meshes'] if row['name'] == 'Body_Athletic')
+    assert np.allclose(np.array(exported['positions']).reshape(-1, 3)[:len(sculpted_positions)], sculpted_positions, atol=1e-7, rtol=0)
+    bpy.ops.blacktop.body_reset(); assert not body_editor.current(settings).get('sculpt_delta')
     # Exercise the panel's saved state, preset switching, duplicate/rename/reset and JSON validation path.
     settings = bpy.context.scene.blacktop_body
     settings.preset = 'body.lean.parametric.v1'; settings.preset = 'body.massive.parametric.v1'
@@ -81,7 +99,7 @@ def main():
     else: report_shapes = {}
     result = {'canonical_hash': checksum, 'presets': reports, 'slider_cases': slider_cases, 'silhouette_widths': report_shapes,
               'deterministic_reset': True, 'immutable_reference': True, 'fixed_neck': True, 'panel_roundtrip': True,
-              'rig_pose_rejected': True, 'panel_reregister': True, 'selected_target_isolation': True, 'seconds': time.monotonic()-t, 'clothing': 'Matching offset shells; motion fit requires review.'}
+              'sculpt_switch_json_export_reset': True, 'rig_pose_rejected': True, 'panel_reregister': True, 'selected_target_isolation': True, 'seconds': time.monotonic()-t, 'clothing': 'Matching offset shells; motion fit requires review.'}
     (out/('tapered-results.json' if options.tapered else 'results.json')).write_text(json.dumps(result, indent=2))
     if options.render:
         scene = bpy.context.scene; scene.render.engine = 'CYCLES'; scene.cycles.samples = 16

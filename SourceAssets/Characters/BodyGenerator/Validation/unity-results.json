@@ -4,7 +4,7 @@
   "passed": "99",
   "failed": "0",
   "skipped": "0",
-  "duration": "69.6908119",
-  "coverage": "Six bodies x twelve heights x five installed clips x three poses; original 97 cases retained.",
-  "unity": "6000.5.6f1 graphics-enabled Editor Play Mode, macOS"
+  "duration": "76.3239226",
+  "unity": "6000.5.6f1 graphics-enabled Editor Play Mode, macOS",
+  "coverage": "All 99 regressions, including six bodies x twelve heights x five installed clips x three poses."
 }
