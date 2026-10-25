@@ -1,0 +1,19 @@
+{
+  "version": "blacktop.body.v1",
+  "reference": "athletic-183-v1",
+  "id": "body.thick.parametric.v1",
+  "name": "Thick",
+  "family": "Power",
+  "percent": {
+    "shoulder": 122,
+    "chest": 133,
+    "waist": 110,
+    "quad": 132,
+    "calf": 115,
+    "bicep": 137,
+    "forearm": 122,
+    "chest_depth": 133,
+    "abdomen_depth": 113,
+    "hip_depth": 131
+  }
+}

@@ -16,7 +16,7 @@ public class BodyWeightProfile : ScriptableObject
 {
     public BodyWeightEntry[] entries = {
         Entry(BodyArchetype.Lean,165), Entry(BodyArchetype.Athletic,190), Entry(BodyArchetype.Thick,220),
-        Entry(BodyArchetype.Heavy,250), Entry(BodyArchetype.Massive,275) };
+        Entry(BodyArchetype.Heavy,250), Entry(BodyArchetype.Massive,275), Entry(BodyArchetype.Built,205) };
     static BodyWeightEntry Entry(BodyArchetype build, float pounds) => new BodyWeightEntry {
         build = build, poundsAt183cm = pounds, heightExponent = 2.5f, poundLimits = new Vector2(120f,390f) };
     public int Pounds(PlayerHeight height, BodyArchetype build)

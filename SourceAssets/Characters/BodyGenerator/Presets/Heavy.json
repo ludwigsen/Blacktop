@@ -1,0 +1,19 @@
+{
+  "version": "blacktop.body.v1",
+  "reference": "athletic-183-v1",
+  "id": "body.heavy.parametric.v1",
+  "name": "Heavy",
+  "family": "Barrel",
+  "percent": {
+    "shoulder": 118,
+    "chest": 133,
+    "waist": 149,
+    "quad": 128,
+    "calf": 112,
+    "bicep": 122,
+    "forearm": 114,
+    "chest_depth": 139,
+    "abdomen_depth": 151,
+    "hip_depth": 139
+  }
+}

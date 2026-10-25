@@ -1,0 +1,19 @@
+{
+  "version": "blacktop.body.v1",
+  "reference": "athletic-183-v1",
+  "id": "body.athletic.parametric.v1",
+  "name": "Athletic",
+  "family": "Tapered",
+  "percent": {
+    "shoulder": 104,
+    "chest": 104,
+    "waist": 96,
+    "quad": 103,
+    "calf": 101,
+    "bicep": 104,
+    "forearm": 101,
+    "chest_depth": 103,
+    "abdomen_depth": 96,
+    "hip_depth": 102
+  }
+}

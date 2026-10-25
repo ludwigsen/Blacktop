@@ -76,7 +76,7 @@ public class PlayerVisualAssembler : MonoBehaviour
             if (!body.placeholder && !body.useExistingBody) CopySkin(body.skinnedSource, rig.bodyRenderer, body.skinnedMeshOverride);
             tinted.Add((rig.bodyRenderer, body));
             if (!body.placeholder && !body.useExistingBody) ConfigureLods(body, rig.bodyRenderer);
-            foreach (var renderer in rig.integratedHeadRenderers) if (renderer != null) renderer.enabled = body.integratedHead;
+            foreach (var renderer in rig.integratedHeadRenderers) if (renderer != null) renderer.enabled = body.integratedHead || Array.Exists(parts, p => p.slot == CharacterPartSlot.Face && p.usePrototypeEyes);
             for (int i = 1; i < parts.Length; i++) AddPart(parts[i]);
             signature = nextSignature;
         }

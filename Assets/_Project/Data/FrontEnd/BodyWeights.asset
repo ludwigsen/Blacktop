@@ -33,3 +33,7 @@ MonoBehaviour:
     poundsAt183cm: 275
     heightExponent: 2.5
     poundLimits: {x: 120, y: 390}
+  - build: 5
+    poundsAt183cm: 205
+    heightExponent: 2.5
+    poundLimits: {x: 120, y: 390}

@@ -1,0 +1,784 @@
+{
+  "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+  "presets": [
+    {
+      "preset": "body.lean.parametric.v1",
+      "family": "Tapered",
+      "version": "blacktop.body.v1",
+      "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+      "max_relative_error": 0.0003311738337685721,
+      "tolerance": 0.01,
+      "valid": true,
+      "iterations": 3,
+      "parameters": [
+        -0.2661152864233664,
+        -0.10319386264068164,
+        -0.07610911583167371,
+        -0.025885280138577608,
+        -0.03241977292671183,
+        -0.024125152798276477,
+        -0.137165628234365,
+        -0.0955142889171381,
+        -0.13567530847147952,
+        -0.1058787259628649
+      ],
+      "bilateral": {
+        "quad": {
+          "left_m": 0.4827983197796472,
+          "right_m": 0.48280106224931857,
+          "relative_difference": 5.680330649192259e-06
+        },
+        "calf": {
+          "left_m": 0.3378569815946423,
+          "right_m": 0.33785620346220824,
+          "relative_difference": 2.303141496055822e-06
+        },
+        "bicep": {
+          "left_m": 0.29682100759175745,
+          "right_m": 0.29682360296463445,
+          "relative_difference": 8.743822428806002e-06
+        },
+        "forearm": {
+          "left_m": 0.2285059505620532,
+          "right_m": 0.22850639457378316,
+          "relative_difference": 1.943104177870498e-06
+        }
+      },
+      "measurements": {
+        "shoulder": {
+          "reference_m": 0.4661552292212624,
+          "requested_m": 0.4475090200524119,
+          "measured_m": 0.4476170751716094,
+          "calibrated_inches": 18.500690778032197
+        },
+        "chest": {
+          "reference_m": 0.9890941233780477,
+          "requested_m": 0.9297484759753648,
+          "measured_m": 0.9296154297985292,
+          "calibrated_inches": 38.42241184073784
+        },
+        "waist": {
+          "reference_m": 0.7913109281325521,
+          "requested_m": 0.712179835319297,
+          "measured_m": 0.7121890627796649,
+          "calibrated_inches": 29.435851214861874
+        },
+        "quad": {
+          "reference_m": 0.530549353413692,
+          "requested_m": 0.48279991160645974,
+          "measured_m": 0.4827996910144829,
+          "calibrated_inches": 19.954841507697175
+        },
+        "calf": {
+          "reference_m": 0.35942875448371603,
+          "requested_m": 0.337863029214693,
+          "measured_m": 0.33785659252842526,
+          "calibrated_inches": 13.964124007761866
+        },
+        "bicep": {
+          "reference_m": 0.32969337560105183,
+          "requested_m": 0.29672403804094666,
+          "measured_m": 0.296822305278196,
+          "calibrated_inches": 12.268114847650201
+        },
+        "forearm": {
+          "reference_m": 0.24570944340270487,
+          "requested_m": 0.22850978236451555,
+          "measured_m": 0.22850617256791816,
+          "calibrated_inches": 9.444505748423362
+        },
+        "chest_depth": {
+          "reference_m": 0.24572,
+          "requested_m": 0.23097679999999998,
+          "measured_m": 0.23098,
+          "calibrated_inches": 9.54675277807837
+        },
+        "abdomen_depth": {
+          "reference_m": 0.2173,
+          "requested_m": 0.19557,
+          "measured_m": 0.19557000000000002,
+          "calibrated_inches": 8.083203917260313
+        },
+        "hip_depth": {
+          "reference_m": 0.22206,
+          "requested_m": 0.2087364,
+          "measured_m": 0.20873,
+          "calibrated_inches": 8.627126622947001
+        }
+      }
+    },
+    {
+      "preset": "body.athletic.parametric.v1",
+      "family": "Tapered",
+      "version": "blacktop.body.v1",
+      "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+      "max_relative_error": 0.0001821598404662117,
+      "tolerance": 0.01,
+      "valid": true,
+      "iterations": 3,
+      "parameters": [
+        0.23289947721535115,
+        0.022249881056630796,
+        0.014252715670467464,
+        0.03884176219684684,
+        0.019605283181258024,
+        0.061172264911304085,
+        -0.00017153568832231132,
+        -0.023709494898094423,
+        0.00585691447282431,
+        -0.023333504879875254
+      ],
+      "bilateral": {
+        "quad": {
+          "left_m": 0.546445327018892,
+          "right_m": 0.546448760849521,
+          "relative_difference": 6.28390230698544e-06
+        },
+        "calf": {
+          "left_m": 0.363013261509145,
+          "right_m": 0.36301238995413065,
+          "relative_difference": 2.4008902889728712e-06
+        },
+        "bicep": {
+          "left_m": 0.34290796505758603,
+          "right_m": 0.3429083257754692,
+          "relative_difference": 1.0519367891072134e-06
+        },
+        "forearm": {
+          "left_m": 0.2481685676544487,
+          "right_m": 0.24816598237437273,
+          "relative_difference": 1.041743561804158e-05
+        }
+      },
+      "measurements": {
+        "shoulder": {
+          "reference_m": 0.4661552292212624,
+          "requested_m": 0.4848014383901129,
+          "measured_m": 0.48483542139595737,
+          "calibrated_inches": 20.038981323589283
+        },
+        "chest": {
+          "reference_m": 0.9890941233780477,
+          "requested_m": 1.0286578883131696,
+          "measured_m": 1.0286731899355355,
+          "calibrated_inches": 42.51661890099494
+        },
+        "waist": {
+          "reference_m": 0.7913109281325521,
+          "requested_m": 0.75965849100725,
+          "measured_m": 0.7596346836010873,
+          "calibrated_inches": 31.396850489191117
+        },
+        "quad": {
+          "reference_m": 0.530549353413692,
+          "requested_m": 0.5464658340161028,
+          "measured_m": 0.5464470439342065,
+          "calibrated_inches": 22.585482876229975
+        },
+        "calf": {
+          "reference_m": 0.35942875448371603,
+          "requested_m": 0.3630230420285532,
+          "measured_m": 0.36301282573163784,
+          "calibrated_inches": 15.003869177121798
+        },
+        "bicep": {
+          "reference_m": 0.32969337560105183,
+          "requested_m": 0.3428811106250939,
+          "measured_m": 0.3429081454165276,
+          "calibrated_inches": 14.172912329556397
+        },
+        "forearm": {
+          "reference_m": 0.24570944340270487,
+          "requested_m": 0.24816653783673193,
+          "measured_m": 0.24816727501441072,
+          "calibrated_inches": 10.257128851727268
+        },
+        "chest_depth": {
+          "reference_m": 0.24572,
+          "requested_m": 0.2530916,
+          "measured_m": 0.25307999999999997,
+          "calibrated_inches": 10.460179206321213
+        },
+        "abdomen_depth": {
+          "reference_m": 0.2173,
+          "requested_m": 0.208608,
+          "measured_m": 0.20857,
+          "calibrated_inches": 8.620513580932572
+        },
+        "hip_depth": {
+          "reference_m": 0.22206,
+          "requested_m": 0.2265012,
+          "measured_m": 0.22651,
+          "calibrated_inches": 9.362000916800293
+        }
+      }
+    },
+    {
+      "preset": "body.built.parametric.v1",
+      "family": "Power",
+      "version": "blacktop.body.v1",
+      "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+      "max_relative_error": 0.00028043896958651615,
+      "tolerance": 0.01,
+      "valid": true,
+      "iterations": 5,
+      "parameters": [
+        0.6424950248321193,
+        0.03447801993193219,
+        -0.0005455571667020618,
+        0.01438901149563994,
+        -0.002514902072736567,
+        0.013602744046220121,
+        -0.04372030002111342,
+        -0.09116342867352392,
+        -0.05932404494517402,
+        -0.09080448916141529
+      ],
+      "bilateral": {
+        "quad": {
+          "left_m": 0.615426949809737,
+          "right_m": 0.6154296359088048,
+          "relative_difference": 4.364591678904847e-06
+        },
+        "calf": {
+          "left_m": 0.3845899585773813,
+          "right_m": 0.3845857465424486,
+          "relative_difference": 1.0952014837587952e-05
+        },
+        "bicep": {
+          "left_m": 0.39574195991764943,
+          "right_m": 0.39574404281415426,
+          "relative_difference": 5.263241589229254e-06
+        },
+        "forearm": {
+          "left_m": 0.27027260514925794,
+          "right_m": 0.2702742750936865,
+          "relative_difference": 6.178702830648465e-06
+        }
+      },
+      "measurements": {
+        "shoulder": {
+          "reference_m": 0.4661552292212624,
+          "requested_m": 0.5314169613122391,
+          "measured_m": 0.5314972830571943,
+          "calibrated_inches": 21.967586646321656
+        },
+        "chest": {
+          "reference_m": 0.9890941233780477,
+          "requested_m": 1.1770220068198767,
+          "measured_m": 1.1770266206009696,
+          "calibrated_inches": 48.648290588338824
+        },
+        "waist": {
+          "reference_m": 0.7913109281325521,
+          "requested_m": 0.7913109281325521,
+          "measured_m": 0.791301543640111,
+          "calibrated_inches": 32.70568971358529
+        },
+        "quad": {
+          "reference_m": 0.530549353413692,
+          "requested_m": 0.6154372499598827,
+          "measured_m": 0.6154282928592709,
+          "calibrated_inches": 25.436582234662193
+        },
+        "calf": {
+          "reference_m": 0.35942875448371603,
+          "requested_m": 0.3845887672975762,
+          "measured_m": 0.38458785255991496,
+          "calibrated_inches": 15.895597670108073
+        },
+        "bicep": {
+          "reference_m": 0.32969337560105183,
+          "requested_m": 0.3956320507212622,
+          "measured_m": 0.39574300136590185,
+          "calibrated_inches": 16.356656843427984
+        },
+        "forearm": {
+          "reference_m": 0.24570944340270487,
+          "requested_m": 0.27028038774297536,
+          "measured_m": 0.27027344012147225,
+          "calibrated_inches": 11.170810093170246
+        },
+        "chest_depth": {
+          "reference_m": 0.24572,
+          "requested_m": 0.29240679999999997,
+          "measured_m": 0.29241,
+          "calibrated_inches": 12.085747596492753
+        },
+        "abdomen_depth": {
+          "reference_m": 0.2173,
+          "requested_m": 0.219473,
+          "measured_m": 0.21948,
+          "calibrated_inches": 9.071440383291371
+        },
+        "hip_depth": {
+          "reference_m": 0.22206,
+          "requested_m": 0.255369,
+          "measured_m": 0.25537,
+          "calibrated_inches": 10.554828370152713
+        }
+      }
+    },
+    {
+      "preset": "body.thick.parametric.v1",
+      "family": "Power",
+      "version": "blacktop.body.v1",
+      "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+      "max_relative_error": 0.0005171500097249648,
+      "tolerance": 0.01,
+      "valid": true,
+      "iterations": 6,
+      "parameters": [
+        0.8736285865121751,
+        0.15296921740090252,
+        0.10952586168659378,
+        0.09828606427445377,
+        0.09812798655033245,
+        0.11738280671316235,
+        0.09626980879832037,
+        -0.019047267904694604,
+        0.06940906341439938,
+        0.012727816687896356
+      ],
+      "bilateral": {
+        "quad": {
+          "left_m": 0.7003221163638994,
+          "right_m": 0.7003254991354803,
+          "relative_difference": 4.830284753342355e-06
+        },
+        "calf": {
+          "left_m": 0.41334365549336016,
+          "right_m": 0.41334417170658644,
+          "relative_difference": 1.2488702190831072e-06
+        },
+        "bicep": {
+          "left_m": 0.4517113598472838,
+          "right_m": 0.4517106234923541,
+          "relative_difference": 1.6301448118260165e-06
+        },
+        "forearm": {
+          "left_m": 0.2997662035434678,
+          "right_m": 0.2997656159415531,
+          "relative_difference": 1.9602006755104275e-06
+        }
+      },
+      "measurements": {
+        "shoulder": {
+          "reference_m": 0.4661552292212624,
+          "requested_m": 0.5687093796499402,
+          "measured_m": 0.5690034877111568,
+          "calibrated_inches": 23.51777481618654
+        },
+        "chest": {
+          "reference_m": 0.9890941233780477,
+          "requested_m": 1.3154951840928035,
+          "measured_m": 1.3158372018888236,
+          "calibrated_inches": 54.38554187648712
+        },
+        "waist": {
+          "reference_m": 0.7913109281325521,
+          "requested_m": 0.8704420209458074,
+          "measured_m": 0.8704383847803959,
+          "calibrated_inches": 35.976535059521574
+        },
+        "quad": {
+          "reference_m": 0.530549353413692,
+          "requested_m": 0.7003251465060735,
+          "measured_m": 0.7003238077496898,
+          "calibrated_inches": 28.945442277204837
+        },
+        "calf": {
+          "reference_m": 0.35942875448371603,
+          "requested_m": 0.4133430676562734,
+          "measured_m": 0.4133439135999733,
+          "calibrated_inches": 17.084129169029055
+        },
+        "bicep": {
+          "reference_m": 0.32969337560105183,
+          "requested_m": 0.451679924573441,
+          "measured_m": 0.45171099166981893,
+          "calibrated_inches": 18.669898539321064
+        },
+        "forearm": {
+          "reference_m": 0.24570944340270487,
+          "requested_m": 0.29976552095129994,
+          "measured_m": 0.29976590974251044,
+          "calibrated_inches": 12.389778472627507
+        },
+        "chest_depth": {
+          "reference_m": 0.24572,
+          "requested_m": 0.32680760000000003,
+          "measured_m": 0.32681,
+          "calibrated_inches": 13.507551629594735
+        },
+        "abdomen_depth": {
+          "reference_m": 0.2173,
+          "requested_m": 0.24554899999999996,
+          "measured_m": 0.24555,
+          "calibrated_inches": 10.148952916517205
+        },
+        "hip_depth": {
+          "reference_m": 0.22206,
+          "requested_m": 0.2908986,
+          "measured_m": 0.29089,
+          "calibrated_inches": 12.022923697355688
+        }
+      }
+    },
+    {
+      "preset": "body.heavy.parametric.v1",
+      "family": "Barrel",
+      "version": "blacktop.body.v1",
+      "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+      "max_relative_error": 2.1382515711376726e-05,
+      "tolerance": 0.01,
+      "valid": true,
+      "iterations": 6,
+      "parameters": [
+        0.7533629522902352,
+        0.04911271324829779,
+        0.05469866270605892,
+        0.061556261162149094,
+        0.001372271725793301,
+        0.023276487776878362,
+        0.12346448368001608,
+        0.027135612436475054,
+        0.06770889088342169,
+        0.054057267785006455
+      ],
+      "bilateral": {
+        "quad": {
+          "left_m": 0.6791022357298683,
+          "right_m": 0.6791070583601664,
+          "relative_difference": 7.1014286167958314e-06
+        },
+        "calf": {
+          "left_m": 0.4025546548474291,
+          "right_m": 0.40255401191650547,
+          "relative_difference": 1.5971270382025346e-06
+        },
+        "bicep": {
+          "left_m": 0.40223224138815095,
+          "right_m": 0.402234537999069,
+          "relative_difference": 5.709631324738274e-06
+        },
+        "forearm": {
+          "left_m": 0.28010699168002007,
+          "right_m": 0.2801097064344066,
+          "relative_difference": 9.69175406689518e-06
+        }
+      },
+      "measurements": {
+        "shoulder": {
+          "reference_m": 0.4661552292212624,
+          "requested_m": 0.5500631704810897,
+          "measured_m": 0.5500688183891349,
+          "calibrated_inches": 22.735176292712616
+        },
+        "chest": {
+          "reference_m": 0.9890941233780477,
+          "requested_m": 1.3154951840928035,
+          "measured_m": 1.3154689058866982,
+          "calibrated_inches": 54.37031964563837
+        },
+        "waist": {
+          "reference_m": 0.7913109281325521,
+          "requested_m": 1.1790532829175027,
+          "measured_m": 1.1790480547914226,
+          "calibrated_inches": 48.731839521031745
+        },
+        "quad": {
+          "reference_m": 0.530549353413692,
+          "requested_m": 0.6791031723695258,
+          "measured_m": 0.6791046470450173,
+          "calibrated_inches": 28.06842226938674
+        },
+        "calf": {
+          "reference_m": 0.35942875448371603,
+          "requested_m": 0.402560205021762,
+          "measured_m": 0.4025543333819673,
+          "calibrated_inches": 16.638179498405847
+        },
+        "bicep": {
+          "reference_m": 0.32969337560105183,
+          "requested_m": 0.40222591823328324,
+          "measured_m": 0.40223338969361,
+          "calibrated_inches": 16.62491441030977
+        },
+        "forearm": {
+          "reference_m": 0.24570944340270487,
+          "requested_m": 0.28010876547908353,
+          "measured_m": 0.2801083490572133,
+          "calibrated_inches": 11.57730175567104
+        },
+        "chest_depth": {
+          "reference_m": 0.24572,
+          "requested_m": 0.3415508,
+          "measured_m": 0.34155,
+          "calibrated_inches": 14.116778125173902
+        },
+        "abdomen_depth": {
+          "reference_m": 0.2173,
+          "requested_m": 0.328123,
+          "measured_m": 0.32812,
+          "calibrated_inches": 13.561695911087865
+        },
+        "hip_depth": {
+          "reference_m": 0.22206,
+          "requested_m": 0.3086634,
+          "measured_m": 0.30867,
+          "calibrated_inches": 12.757797991208982
+        }
+      }
+    },
+    {
+      "preset": "body.massive.parametric.v1",
+      "family": "Barrel",
+      "version": "blacktop.body.v1",
+      "canonical_hash": "07f69c2e9281bd52b4a14cc43de7ec422ab09d8b6a95af340f182c1402fd3622",
+      "max_relative_error": 2.6697289801314028e-05,
+      "tolerance": 0.01,
+      "valid": true,
+      "iterations": 7,
+      "parameters": [
+        0.9606869630657446,
+        0.15768277711068152,
+        0.17118966226080812,
+        0.23687660906905442,
+        0.13106967513453727,
+        0.13920602246594316,
+        0.2871375039385379,
+        0.1369575913813067,
+        0.18798538445032384,
+        0.16988851898894292
+      ],
+      "bilateral": {
+        "quad": {
+          "left_m": 0.7905168283769556,
+          "right_m": 0.7905228265326597,
+          "relative_difference": 7.587580652708087e-06
+        },
+        "calf": {
+          "left_m": 0.4492867640030845,
+          "right_m": 0.4492863688062814,
+          "relative_difference": 8.796092712348474e-07
+        },
+        "bicep": {
+          "left_m": 0.4549840378133324,
+          "right_m": 0.45499397214365,
+          "relative_difference": 2.1833982263086725e-05
+        },
+        "forearm": {
+          "left_m": 0.31450677296905083,
+          "right_m": 0.3145088462957263,
+          "relative_difference": 6.592268229893546e-06
+        }
+      },
+      "measurements": {
+        "shoulder": {
+          "reference_m": 0.4661552292212624,
+          "requested_m": 0.5873555888187906,
+          "measured_m": 0.5873627865362168,
+          "calibrated_inches": 24.276592406721274
+        },
+        "chest": {
+          "reference_m": 0.9890941233780477,
+          "requested_m": 1.473750243833291,
+          "measured_m": 1.47378124422212,
+          "calibrated_inches": 60.913608050728726
+        },
+        "waist": {
+          "reference_m": 0.7913109281325521,
+          "requested_m": 1.3927072335132917,
+          "measured_m": 1.3927064091196406,
+          "calibrated_inches": 57.562662482944326
+        },
+        "quad": {
+          "reference_m": 0.530549353413692,
+          "requested_m": 0.7905185365864011,
+          "measured_m": 0.7905198274548076,
+          "calibrated_inches": 32.673380201230486
+        },
+        "calf": {
+          "reference_m": 0.35942875448371603,
+          "requested_m": 0.44928594310464504,
+          "measured_m": 0.44928656640468295,
+          "calibrated_inches": 18.56969337595116
+        },
+        "bicep": {
+          "reference_m": 0.32969337560105183,
+          "requested_m": 0.4549768583294515,
+          "measured_m": 0.4549890049784912,
+          "calibrated_inches": 18.80538378765921
+        },
+        "forearm": {
+          "reference_m": 0.24570944340270487,
+          "requested_m": 0.3145080875554622,
+          "measured_m": 0.31450780963238856,
+          "calibrated_inches": 12.999083493529087
+        },
+        "chest_depth": {
+          "reference_m": 0.24572,
+          "requested_m": 0.3857804,
+          "measured_m": 0.38578,
+          "calibrated_inches": 15.944870927037291
+        },
+        "abdomen_depth": {
+          "reference_m": 0.2173,
+          "requested_m": 0.382448,
+          "measured_m": 0.38244,
+          "calibrated_inches": 15.806823674986111
+        },
+        "hip_depth": {
+          "reference_m": 0.22206,
+          "requested_m": 0.35973720000000003,
+          "measured_m": 0.35973,
+          "calibrated_inches": 14.868185024063262
+        }
+      }
+    }
+  ],
+  "slider_cases": [
+    {
+      "key": "shoulder",
+      "multiplier": 0.95,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "shoulder",
+      "multiplier": 1.05,
+      "error": 0.0005879330273628192
+    },
+    {
+      "key": "chest",
+      "multiplier": 0.95,
+      "error": 0.00024264423262865265
+    },
+    {
+      "key": "chest",
+      "multiplier": 1.05,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "waist",
+      "multiplier": 0.95,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "waist",
+      "multiplier": 1.05,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "quad",
+      "multiplier": 0.95,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "quad",
+      "multiplier": 1.05,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "calf",
+      "multiplier": 0.95,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "calf",
+      "multiplier": 1.05,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "bicep",
+      "multiplier": 0.95,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "bicep",
+      "multiplier": 1.05,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "forearm",
+      "multiplier": 0.95,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "forearm",
+      "multiplier": 1.05,
+      "error": 0.0001821598404662117
+    },
+    {
+      "key": "chest_depth",
+      "multiplier": 0.95,
+      "error": 6.113128134077606e-05
+    },
+    {
+      "key": "chest_depth",
+      "multiplier": 1.05,
+      "error": 8.091966352696822e-05
+    },
+    {
+      "key": "abdomen_depth",
+      "multiplier": 0.95,
+      "error": 0.00010825447818207934
+    },
+    {
+      "key": "abdomen_depth",
+      "multiplier": 1.05,
+      "error": 8.300176776088186e-05
+    },
+    {
+      "key": "hip_depth",
+      "multiplier": 0.95,
+      "error": 7.016004116855434e-05
+    },
+    {
+      "key": "hip_depth",
+      "multiplier": 1.05,
+      "error": 0.0004047492484641202
+    }
+  ],
+  "silhouette_widths": {
+    "Lean": {
+      "chest": 0.32208,
+      "waist": 0.25052,
+      "hip": 0.30736
+    },
+    "Athletic": {
+      "chest": 0.3534,
+      "waist": 0.26714,
+      "hip": 0.31068
+    },
+    "Built": {
+      "chest": 0.39398,
+      "waist": 0.27596,
+      "hip": 0.33512
+    },
+    "Thick": {
+      "chest": 0.43034,
+      "waist": 0.29988,
+      "hip": 0.34014
+    },
+    "Heavy": {
+      "chest": 0.41876,
+      "waist": 0.4071,
+      "hip": 0.4149
+    },
+    "Massive": {
+      "chest": 0.45392,
+      "waist": 0.48436,
+      "hip": 0.4326
+    }
+  },
+  "deterministic_reset": true,
+  "immutable_reference": true,
+  "fixed_neck": true,
+  "panel_roundtrip": true,
+  "rig_pose_rejected": true,
+  "panel_reregister": true,
+  "selected_target_isolation": true,
+  "seconds": 40.89939920799952,
+  "clothing": "Matching offset shells; motion fit requires review."
+}

@@ -1,0 +1,130 @@
+{
+    "version": 1,
+    "meshes": [
+        {
+            "name": "Body_Lean",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Body_Lean.asset",
+            "targetGuid": "4c67d9c233bf443eb9066d49ebc97e1f"
+        },
+        {
+            "name": "Top_Lean",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Top_Lean.asset",
+            "targetGuid": "677aff278ff2446eb977d0a23cb0acb2"
+        },
+        {
+            "name": "Shorts_Lean",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Shorts_Lean.asset",
+            "targetGuid": "3435eb0955caa451da6014640fdd52aa"
+        },
+        {
+            "name": "Footwear_Lean",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Footwear_Lean.asset",
+            "targetGuid": "c47616c6b91554a019307ada7543f929"
+        },
+        {
+            "name": "Body_Athletic",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Body_Athletic.asset",
+            "targetGuid": "163e5b833caba441cbfa2795644d7a22"
+        },
+        {
+            "name": "Top_Athletic",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Top_Athletic.asset",
+            "targetGuid": "85f48a0221c0c4d7fb7772951b1ab539"
+        },
+        {
+            "name": "Shorts_Athletic",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Shorts_Athletic.asset",
+            "targetGuid": "8e9c1b8af8b73449f936318c44e2496c"
+        },
+        {
+            "name": "Footwear_Athletic",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Footwear_Athletic.asset",
+            "targetGuid": "4370a26566f2a460c837882b6da4ff9c"
+        },
+        {
+            "name": "Body_Built",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Body_Built.asset",
+            "targetGuid": "ba0b8c654323b46bdb7e1a28be21312b"
+        },
+        {
+            "name": "Top_Built",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Top_Built.asset",
+            "targetGuid": "cd2fb52242125479dbb8776709d5dc0a"
+        },
+        {
+            "name": "Shorts_Built",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Shorts_Built.asset",
+            "targetGuid": "0e0ba68ada59844739f83b128900f656"
+        },
+        {
+            "name": "Footwear_Built",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Footwear_Built.asset",
+            "targetGuid": "3b0745417db40479aa9d9696e5c6802a"
+        },
+        {
+            "name": "Body_Thick",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Body_Thick.asset",
+            "targetGuid": "64be434e5c54347df807cea13e5e60f0"
+        },
+        {
+            "name": "Top_Thick",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Top_Thick.asset",
+            "targetGuid": "eab0523cb120f4e1c9ae94a919c06076"
+        },
+        {
+            "name": "Shorts_Thick",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Shorts_Thick.asset",
+            "targetGuid": "f83fb398f503b42e2be9424ae6112e2a"
+        },
+        {
+            "name": "Footwear_Thick",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Footwear_Thick.asset",
+            "targetGuid": "c7960f66cfbdd49b6a0d818d5208eee5"
+        },
+        {
+            "name": "Body_Heavy",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Body_Heavy.asset",
+            "targetGuid": "6e56e19d8feed4818a771ae4206d6b63"
+        },
+        {
+            "name": "Top_Heavy",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Top_Heavy.asset",
+            "targetGuid": "8d2a494d48b87492490c4d1f72425a76"
+        },
+        {
+            "name": "Shorts_Heavy",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Shorts_Heavy.asset",
+            "targetGuid": "213a44f8152e141be8afab2c1a600c73"
+        },
+        {
+            "name": "Footwear_Heavy",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Footwear_Heavy.asset",
+            "targetGuid": "d9d03745757934a099a7cc67250b5c80"
+        },
+        {
+            "name": "Body_Massive",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Body_Massive.asset",
+            "targetGuid": "46ce1d84ca0b34469ab590189de2e36e"
+        },
+        {
+            "name": "Top_Massive",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Top_Massive.asset",
+            "targetGuid": "a1853927b998446b8befd94dd4f87868"
+        },
+        {
+            "name": "Shorts_Massive",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Shorts_Massive.asset",
+            "targetGuid": "bff2e7ee9da49456191a4b566c35b7be"
+        },
+        {
+            "name": "Footwear_Massive",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Footwear_Massive.asset",
+            "targetGuid": "3d06fe84aa7ca4348baf42e36e2f9b46"
+        },
+        {
+            "name": "Head_Prototype",
+            "targetAsset": "Assets/_Project/Art/Characters/Generated/v1/Head_Prototype.asset",
+            "targetGuid": "f5e4e5c39837c45f28982510db3a99fc"
+        }
+    ]
+}

@@ -1,0 +1,1 @@
+PASS: 9 real meshes imported; triangle geometry, GUIDs and bind poses retained; seven malformed packets rejected without partial writes.

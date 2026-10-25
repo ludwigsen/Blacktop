@@ -10,7 +10,7 @@ using UnityEngine;
 public static class CharacterBlenderBridge
 {
     const string Folder="SourceAssets/Characters";
-    [Serializable] public class Packet { public int version=1; public Bone[] bones; public Surface[] meshes; }
+    [Serializable] public class Packet { public int version=1; public string generator,canonicalHash; public Bone[] bones; public Surface[] meshes; }
     [Serializable] public class Bone { public string name,parent; public float[] matrix; }
     [Serializable] public class Surface
     {
@@ -99,9 +99,10 @@ public static class CharacterBlenderBridge
     public static void Apply(string path)
     {
         var packet=JsonUtility.FromJson<Packet>(File.ReadAllText(path));
-        if(packet==null||packet.version!=1||packet.meshes==null||packet.meshes.Length==0)throw new InvalidDataException("Unsupported or empty Blender mesh export.");
+        if(packet==null||(packet.version!=1&&packet.version!=2)||packet.meshes==null||packet.meshes.Length==0)throw new InvalidDataException("Unsupported or empty Blender mesh export.");
         var canonical=AssetDatabase.LoadAssetAtPath<CharacterSkeletonDefinition>("Assets/_Project/Data/Characters/CanonicalSkeleton.asset").referenceSkin;
         var bodyBones=canonical.bones.Select(b=>b.name).ToArray();
+        if(packet.version==2)ValidateGeneratedRig(packet,canonical);
         var eyes=canonical.GetComponentInParent<Animator>(true).GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(s=>s!=canonical).ToArray();
         var staged=new List<(Mesh target,Mesh replacement)>();var paths=new HashSet<string>();
         try
@@ -109,7 +110,7 @@ public static class CharacterBlenderBridge
             foreach(var row in packet.meshes)
             {
                 // Restrict writes to existing character meshes; never accept arbitrary export paths.
-                if(row==null||string.IsNullOrEmpty(row.targetAsset)||!row.targetAsset.StartsWith(FrontEndTemporaryArt.Folder+"/",StringComparison.Ordinal)||
+                if(row==null||string.IsNullOrEmpty(row.targetAsset)||!(packet.version==2?GeneratedBodySetup.IsTarget(row.targetAsset):row.targetAsset.StartsWith(FrontEndTemporaryArt.Folder+"/",StringComparison.Ordinal))||
                     row.targetAsset.Contains("..")||!paths.Add(row.targetAsset)||AssetDatabase.AssetPathToGUID(row.targetAsset)!=row.targetGuid)
                     throw new InvalidDataException("Export targets must be unique existing character mesh assets with matching GUIDs.");
                 var target=AssetDatabase.LoadAssetAtPath<Mesh>(row.targetAsset);
@@ -147,4 +148,25 @@ public static class CharacterBlenderBridge
         }
         finally {foreach(var item in staged)UnityEngine.Object.DestroyImmediate(item.replacement);}
     }
+    static void ValidateGeneratedRig(Packet packet,SkinnedMeshRenderer canonical)
+    {
+        // Generated packets carry the complete rest contract; the importer never trusts a matching bone list alone.
+        if(packet.generator!="blacktop.body.v1"||packet.canonicalHash==null||packet.canonicalHash.Length!=64||packet.bones==null)
+            throw new InvalidDataException("Missing generated-body provenance or rig contract.");
+        var root=canonical.GetComponentInParent<Animator>(true).transform;
+        var nodes=new HashSet<Transform>();
+        foreach(var bone in canonical.bones)for(var node=bone;node!=root;node=node.parent)nodes.Add(node);
+        if(packet.bones.Length!=nodes.Count||packet.bones.Select(b=>b.name).Distinct().Count()!=nodes.Count)
+            throw new InvalidDataException("Generated rig hierarchy changed.");
+        foreach(var node in nodes)
+        {
+            var row=packet.bones.SingleOrDefault(b=>b.name==node.name);
+            var expected=Matrix(canonical.transform.worldToLocalMatrix*node.localToWorldMatrix);
+            string parent=nodes.Contains(node.parent)?node.parent.name:"";
+            if(row==null||(row.parent??"")!=parent||row.matrix==null||row.matrix.Length!=16||
+                row.matrix.Where((value,i)=>float.IsNaN(value)||float.IsInfinity(value)||Mathf.Abs(value-expected[i])>0.00001f).Any())
+                throw new InvalidDataException("Generated rig rest transform changed: "+node.name);
+        }
+    }
+
 }

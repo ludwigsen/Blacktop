@@ -75,7 +75,8 @@ public class PlayerAppearanceTests
         var carrier = BallController.Instance.Carrier;
         int possession = PlayState.Instance.PossessionTeamId;
         var bounds = Object.FindAnyObjectByType<FieldBounds>();
-        foreach (BodyArchetype build in Enum.GetValues(typeof(BodyArchetype)))
+        // Keep the five original prototype IDs covered independently of the additive six-body catalog.
+        foreach (BodyArchetype build in new[] { BodyArchetype.Lean, BodyArchetype.Athletic, BodyArchetype.Thick, BodyArchetype.Heavy, BodyArchetype.Massive })
         foreach (var profile in assembler.catalog.heightProfiles)
         {
             definition.bodyArchetype = build;

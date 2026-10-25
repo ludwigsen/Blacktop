@@ -151,7 +151,7 @@ PossessionController ─► BallController
 - **StumbleMove:** an `IPlayerMove` triggered by wall/fence contact; zero velocity, apply knockback, no evasion window.
 - **Downs/yardage tracker:** already implemented as `DownsTracker` and scene-wired; listed here previously as planned.
 - **Create-a-Team / progression:** new-team creation, trading rules, free agency and career systems remain deferred. Development roster transfers between installed teams are implemented.
-- **Production appearance art:** five authored bodies, pooled distinct faces / hair / facial hair and fitted garments. Shared-rig assembly, height profiles and temporary body/garment variants are implemented.
+- **Production appearance art:** six presets in three anatomical families, pooled distinct faces / hair / facial hair and fitted garments. Shared-rig assembly, height profiles and temporary body/garment variants are implemented.
 - **Handoff animation and designed run plays.**
 
 ## Play-resolution and live-turnover ownership (2026-10-17)
@@ -252,3 +252,10 @@ Detailed setup, save recovery, source commit, source-data migration, preset exte
 `CharacterBlenderBridge` is Editor-only. It exports a compressed exact-mesh/rest-rig seed for initial conversion, and validates/applies Blender geometry exports to existing mesh assets with Undo. Bone-name order and existing bind poses/GUIDs are preserved; no runtime Blender dependency is introduced. `export_meshes.py` exports the current artist-edited base meshes; `build_sources.py` is a protected seed conversion utility, not the artist export path. Preview materials are separate from Unity's existing palette/shader data.
 
 Four editable Eye mesh assets copy the original imported eye geometry/bind poses. PlayerModel's nested renderer overrides reference those meshes; bone/material/Avatar/root-transform bindings remain intact. Original FBX/model metadata, gameplay prefab and all existing body/garment mesh assets remain unchanged by source conversion. The original shared skeleton still owns animation, and geometry imports never alter it.
+
+
+## Parametric body authoring and additive migration (2026-10-25)
+
+`BodyGenerator/engine.py` evaluates an immutable headless canonical topology with normalized family profiles and a coupled measured-target solve. `body_editor.py` owns Blender-only preset/UI state; `pipeline.py` creates preview and baked export copies, including matching prototype garment shells. Runtime players never run the solver. The fixed v1 neck interface supports future modular heads while a detached original head and original eyes provide the current fallback.
+
+Editor `GeneratedBodySetup` prepares new GUID-backed meshes with canonical bind poses and registers additive catalog records only after headless/head checks. CharacterBlenderBridge v2 restricts generated writes to 25 known targets and validates the complete rig hierarchy/rest matrices before staging geometry. v1 legacy export is unchanged. No new runtime manager, package or assembly dependency is added. `CharacterPartDefinition.compatibleBodyIds` expresses exact shell fits; the Face-only `usePrototypeEyes` flag enables original eyes with the detached fallback. PlayerVisualAssembler continues to share the original live rig/Avatar. The creator selects generated art only on an explicit build change; stable save IDs remain authoritative. Built appends enum value 5 without shifting existing serialization. Height scaling, gameplay hitboxes, hand/ball anchors, ratings and roster GUIDs remain owned by the existing systems.

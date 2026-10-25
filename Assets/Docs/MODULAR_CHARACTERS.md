@@ -1,5 +1,17 @@
 # Modular player characters — foundation
 
+## Parametric body generator (2026-10-25)
+
+The current authoring tool is `SourceAssets/Characters/BodyGenerator/CanonicalBody.blend`, with the **Blacktop Body Editor** sidebar source in `body_editor.py`. Read its README and AUDIT first. It adds three versioned families (Tapered: Lean/Athletic; Power: Built/Thick; Barrel: Heavy/Massive), six JSON presets, ten measured controls, calibrated inch/cm readouts, non-destructive preview, JSON editing and baked selected/all export. `canonical.json.gz` is the immutable 12,529-vertex / 19,575-triangle headless reference derived once from the unmodified Athletic snapshot. Its neck plane is Y=1.515m in Unity renderer space; 79 unique seam points, orientation and coordinates are recorded in `neck-interface.json`. The detached original head and unchanged eye skins are prototype fallbacks, not a finished head catalog.
+
+New meshes/parts live under `Assets/_Project/{Art,Data}/Characters/Generated/v1/`. The existing FrontEndCatalog adds `body.<name>.parametric.v1`, matching gear IDs and `face.prototype.parametric.v1`. Built is enum value 5, preserving original 0–4 values. Existing temporary/prototype IDs, mesh GUIDs, sources, FBX, prefab, rosters and saved appearances remain available. Loading a save performs no silent migration; changing build chooses the generated family and matching shells. `compatibleBodyIds` restricts exact garment fit; `usePrototypeEyes` on the detached head preserves the existing eye skins. Neither field changes gameplay.
+
+The v2 JSON bridge checks the complete canonical hierarchy/rest matrices, known target paths/GUIDs, topology arrays and normalized weights before any asset write. It retains target bind poses. Legacy v1 exports remain supported. Export uses baked temporary copies without shape keys or unsupported modifiers. Measurement tolerance is 1%; canonical percentage references and anatomical planes are documented in the generator README. Height calibration is separate from shape, and Unity's legacy uniform foot-pivot mapping is unchanged.
+
+Matching garments are 4mm normal-offset shells from each solved body, preserving UVs and weights. Open seams, bent-joint fit and production topology/correctives need artist acceptance. The retained five installed animation clips are the coverage limit; no throw/catch/block/tackle coverage is claimed. See TESTING T-108 and the tracked generator Validation comparison/report. Roll back individual characters by choosing their original body, face and clothing IDs; keep generated IDs installed while saves still reference them. Revert the feature together for a full rollback.
+
+## Legacy foundation and manual sources
+
 ## Current front-end extension
 
 **Editable source:** all current body, integrated-face, clothing and eye geometry is available under `SourceAssets/Characters/` as `.blend` files with the shared rig/weights. Use the combined BlacktopCharacters.blend as the main authoring file, then export through export_meshes.py and apply with Blacktop > Characters > Blender > Apply Blender Mesh Export. Individual source files are independent snapshots targeting the same meshes, not synchronized libraries. All new character art must retain editable `.blend` source; see that folder's README for the source/export rules and the distinction between an integrated prototype face and future modular heads.
@@ -49,23 +61,24 @@ Rigid prefabs allow Transform, MeshFilter, MeshRenderer and LODGroup only. They 
 | Very Tall | 6'5, 6'6 | 196, 198 |
 | Giant | 6'7 | 201 |
 
-The five bands derive from the actual discrete value. Twelve heights × five bodies = sixty valid data combinations, with no position restriction. Profiles expose leg, torso and arm lengths, shoulder height, head placement, camera and nameplate offsets. Anatomical measurements are **authoring/calibration metadata**, left at zero until measured; the foundation does not pretend these slots reshape limbs.
+The five bands derive from the actual discrete value. Twelve heights × six generated presets = seventy-two combinations, with no position restriction. The original sixty prototype combinations remain covered as legacy fallbacks. Profiles expose leg, torso and arm lengths, shoulder height, head placement, camera and nameplate offsets. Anatomical measurements are **authoring/calibration metadata**, left at zero until measured; the foundation does not pretend these slots reshape limbs.
 
-The current adapter uses its calibrated 183cm reference and foot pivot: scale = selected cm / reference cm. Position is adjusted around local (0,-1,0), preserving the prototype's grounded feet while its gameplay root/capsule stays unchanged. The legacy fitted six-foot prototype is **2 world units** tall; this is an explicit legacy visual calibration, not a claim of metre-accurate art. Production authoring should start with a 1.83m Athletic source and calibrate its adapter against the same gameplay footprint. Do not resize gameplay to compensate for art.
+The current adapter uses its calibrated 183cm reference and foot pivot: scale = selected cm / reference cm. Position is adjusted around local (0,-1,0), preserving the prototype's grounded feet while its gameplay root/capsule stays unchanged. The legacy fitted six-foot prototype is **2 world units** tall; this is an explicit legacy visual calibration, not a claim of metre-accurate art. The parametric source retains the existing renderer space and records its measured 1.743155m stature with a separate 183cm measurement calibration. Preserve that space/rig until a separately validated production migration. Do not resize gameplay to compensate for art.
 
 No independently scaled leg/torso/arm bones are applied. Non-uniform proportions require an authored skin calibration with the same rig and bind poses, named by `proportionCalibrationId` on the height profile and every non-empty real part. The prototype adapter rejects a nonempty calibration ID. A calibrated mesh may alter body surface proportions without altering the shared rig; changing joint rest positions requires a deliberate rig-version/adapter migration and a new deformation test pass. Camera offsets are exposed for future consumers; this change does not retarget the gameplay camera or ball grip. Nameplate offsets are applied after initial assembly. Tackle/contact/ball anchors stay gameplay-owned.
 
 Head enlargement is adjustable from 1.00 to 1.05 on the shared head chain, with the prototype default 1.00 to preserve its fit. Evaluate 1.03–1.05 on authored heads at gameplay distance, including the neck seam and attached eyes/hair. No per-frame bone correction is added.
 
-| Archetype | Required authored silhouette |
+| Preset | Family / required silhouette |
 |---|---|
-| Lean | Narrow athletic shoulders/torso, slim waist, light musculature. |
-| Athletic | Balanced muscular proportions, broad shoulders, moderate legs; base authoring reference at six feet. |
-| Thick | Stocky musculature, broad chest, strong thighs, larger shoulders/upper arms. |
-| Heavy | Substantial torso and limbs with visible body-fat distribution, softer waist and different belly/hip mass. |
-| Massive | Exceptionally broad, powerful chest/shoulders, substantial musculature; different torso taper and mass placement from Heavy. |
+| Lean | Tapered: narrow waist/hips, slender limbs and lower distributed mass. |
+| Athletic | Tapered: shoulder-to-waist taper with more muscular fullness. |
+| Built | Power: broad chest/back, strong V-taper and developed muscle contour. |
+| Thick | Power: increased muscle volume/density while retaining the V-taper. |
+| Heavy | Barrel: broad, substantially cylindrical trunk, hips and upper legs. |
+| Massive | Barrel: more abdominal projection, trunk depth, hip/glute and thigh volume. |
 
-Use five authored skins on the shared skeleton, preferably common topology and UV conventions. Do not stretch one mesh sideways into all five builds. Optional small blend shapes may refine seams or face fit. Extreme corrective deformation is not the physique system.
+The original five-skin plan is superseded by the six-preset parametric generator above: one shared headless topology, three normalized anatomical profiles and independent measured targets. Do not replace it with global sideways scaling. Production retopology and corrective shapes remain an artist task and require a new canonical version if vertex identity changes.
 
 ## Delivered slice and explicit missing art
 
@@ -87,7 +100,7 @@ Run idle, standard/fast/backward run and Jump on every test height and mesh. Wal
 
 1. Import the canonical source rig for reference, keep an untouched collection and work in a separate mesh collection. Confirm the file's provenance/licence before shipping the prototype model; this change does not establish rights to the existing imported art.
 2. Use metres, apply mesh object rotation/scale before binding, use one common armature and a consistent T/A rest pose matching the contract. Preserve bone roll/orientation and inverse binds. Export selected mesh + armature as FBX, disable added leaf bones and animation export for static parts, and use one documented axis conversion consistently. Reimport into Unity and validate instead of assuming FBX names prove compatibility.
-3. Start at six feet/Athletic. Model body variations around the same skeleton. Use consistent neck seam ring topology, vertex positions, normals, UV borders and weights across all bodies/heads. Keep the cut ring fixed relative to the canonical Neck/Head transforms; record its exact mesh-space position in the production source file. The existing monolithic model has **no authored neck seam**, so there is no fabricated numeric seam specification to copy.
+3. Start at six feet/Athletic. Model body variations around the same skeleton. Use consistent neck seam ring topology, vertex positions, normals, UV borders and weights across all bodies/heads. Keep the cut ring fixed relative to the canonical Neck/Head transforms; record its exact mesh-space position in the production source file. The legacy monolithic model has no neck seam. The new parametric canonical defines its separate v1 interface in `SourceAssets/Characters/BodyGenerator/neck-interface.json`; use that interface for future compatible heads.
 4. A separate head skin includes the neck transition and uses the canonical Head/Neck bones and matching bind poses. Its renderer is in canonical mesh space. Add authored lower-detail skins in Lower Detail Levels; supply descending screen-height thresholds and validate each skin against the same contract. Eyes, brows and mouth use fixed documented local landmarks in the production template. Eye height/spacing, pupil forward axis and the scalp envelope must be consistent enough for the selected compatibility family. Do not depend on live bone discovery by vague name.
 5. Author three visibly different bald heads first: jaw width/angle, cheekbones, brow, nose bridge/tip/width, eye shape, age, asymmetry and silhouette. Faces must remain distinguishable without hair/beards. NFL Street **1** is the aesthetic benchmark: grounded athletic stylized realism, slightly emphasized features, varied skin tones and lived-in character. Avoid generic symmetry, glossy photoreal skin, anime eyes, giant heads or extreme caricature. Use geometry and purposeful albedo/roughness, not increasingly complex skin shaders. Do not copy or redistribute NFL assets.
 6. Hair can be a rigid Head socket attachment or a skinned mesh for longer styles. Author fades, curls, braids, locs and shaved variants with deliberate silhouettes. Use shared colorable material slots rather than separate meshes/materials for every color. `scalpProfileId` on faces and `supportedScalpProfiles` on hair/headbands describe scalp-envelope compatibility; `compatibleFaceIds` can narrow unusual fits. An empty compatibility list means unrestricted, so constrain it intentionally when art needs fitting.

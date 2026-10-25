@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-10-23
+Last updated: 2026-10-25
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -195,3 +195,12 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 - Head 2 Head and Pickup use the existing gameplay scene/bootstrap, detached GUID snapshots and independent lineup assignments. Shared settings, bounded conditions, acceleration ownership and four meaningful CPU profiles are implemented. No persistent pickup assets/save schema change.
 - Graphics-enabled Unity 6000.5.6f1 Editor Play Mode: **97/97 passed**, including all prior regressions, real menu launch, both human sides, complete exhibition matches to 21, shipped winner/rematch and cross-mode condition reset. Native 1080p screens inspected, including full pickup scorebug names.
 - Normal macOS development build: **0 errors / 438 warnings**; graphics-enabled Metal MainMenu startup passed and was intentionally stopped. No physical-controller, Windows, 720p readability or human-played standalone match acceptance is claimed. See TESTING.md and FRONT_END.md.
+
+
+## Parametric character bodies (2026-10-25)
+
+**Working:** Blender Body Editor sidebar, one immutable headless canonical with the existing rig/UV/weights, a fixed modular neck interface, Tapered/Power/Barrel profiles and six editable presets including Built. Ten controls solve measured targets together and display explicit reference/requested/current inch/cm values. Preset switch/reset/duplicate/rename/JSON and selected/all baked export work in one session. The additive Unity migration installs six new bodies, eighteen matching shells and a detached prototype head while retaining original eye skins, legacy assets/IDs/saves and independent height scaling. New selection uses generated art; old saves keep their previous selections.
+
+**Validation:** Six presets and twenty independent slider perturbations pass the documented 1% tolerance; largest stock-preset error is 0.052%. Determinism, symmetry, immutable reference, UV/weight/topology identity and the fixed seam pass. Real Tapered and all-body Unity exports preserve triangle geometry, GUIDs and bind poses; malformed packets fail before writes. Front/side/three-quarter comparison is tracked under SourceAssets/Characters/BodyGenerator/Validation. Graphics-enabled Unity Play Mode passes **99/99**, including all 97 prior regressions and 1,080 generated-body pose combinations. See TESTING T-108 for evidence and coverage limits.
+
+**Incomplete / known limits:** This is a reusable procedural prototype, not final anatomy/garment art. The triangulated imported source constrains muscle contour and joint deformation; large deltoids, groin/hip transitions, open garment seams and motion intersections need artist review. The head is the detached original prototype; finished interchangeable heads, hair, beards, production garments/correctives and LODs remain deferred. Numerical animation checks cover only the five installed idle/run/backward/fast-run/Jump clips. Throws, catches, blocks, tackles and celebrations need source clips before acceptance. Windows, physical controller feel and production performance remain unverified. The generator README/AUDIT contain migration and rollback instructions.

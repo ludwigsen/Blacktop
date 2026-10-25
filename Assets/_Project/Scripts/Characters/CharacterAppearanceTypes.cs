@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 // Explicit values keep saved selections stable when the Inspector lists grow.
-public enum BodyArchetype { Lean, Athletic, Thick, Heavy, Massive }
+public enum BodyArchetype { Lean = 0, Athletic = 1, Thick = 2, Heavy = 3, Massive = 4, Built = 5 }
 public enum PlayerHeightBand { Short, Average, Tall, VeryTall, Giant }
 public enum PlayerHeight { Ft5In7 = 170, Ft5In9 = 175, Ft5In10 = 178, Ft5In11 = 180,
     Ft6In0 = 183, Ft6In1 = 185, Ft6In2 = 188, Ft6In3 = 191, Ft6In4 = 193,

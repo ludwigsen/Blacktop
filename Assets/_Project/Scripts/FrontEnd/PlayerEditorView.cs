@@ -108,18 +108,26 @@ public class PlayerEditorView : MonoBehaviour
             session.Draft.appearance.height=heights[i];UpdatePreview();},Settings);
         FrontEndUI.Picker(form,"Build",Enum.GetNames(typeof(BodyArchetype)),(int)session.Draft.appearance.bodyArchetype,i=>{
             var selection=session.Draft.appearance;selection.bodyArchetype=(BodyArchetype)i;
-            var body=Settings.appearances.parts.First(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==(BodyArchetype)i&&p.temporaryVisual);
+            // Prefer validated generated art for a new selection; loading an old save keeps its explicit IDs.
+            var body=Settings.appearances.parts.Where(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==(BodyArchetype)i&&p.temporaryVisual)
+                .OrderByDescending(p=>p.variantFamilyId=="body.parametric.v1").First();
             selection.bodyId=body.id;
+            if(body.variantFamilyId=="body.parametric.v1")selection.faceId="face.prototype.parametric.v1";
+            else if(selection.faceId=="face.prototype.parametric.v1")selection.faceId="face.prototype.a";
             selection.clothingIds=selection.clothingIds.Select(CompatibleVariant).ToArray();
             selection.accessoryIds=selection.accessoryIds.Select(CompatibleVariant).ToArray();UpdatePreview();},Settings);
         Note("Weight follows height and build. You control the ratings separately. Every height and build is available at every position.");
-        Note("Body and garment variants are functional TEMPORARY silhouettes, not finished character art. Heavy emphasizes torso/belly mass; Massive emphasizes chest, shoulders and limbs.");
+        Note("Body and garment variants are functional TEMPORARY silhouettes, not finished character art. Heavy emphasizes torso/belly mass; Massive increases belly, hip and thigh volume within the Barrel family.");
         FrontEndUI.Picker(form,"Preview animation",new[]{"IDLE","RUN","BACKWARD","FAST RUN"},0,i=>preview.Animation(new[]{0f,1f,-1f,2f}[i]),Settings);
         preview.SetHeadView(false);
     }
     string CompatibleVariant(string id)
     {
-        var old=Settings.appearances.Find(id);if(old==null||string.IsNullOrEmpty(old.variantFamilyId))return id;
+        var old=Settings.appearances.Find(id);if(old==null)return id;
+        // Keep selected clothing slots, resolving their matching generated fit during a body change.
+        if(session.Draft.appearance.bodyId.EndsWith(".parametric.v1",StringComparison.Ordinal)&&old.slot>=CharacterPartSlot.Top&&old.slot<=CharacterPartSlot.Footwear)
+            return Settings.appearances.parts.First(p=>p.slot==old.slot&&p.compatibleBodyIds.Contains(session.Draft.appearance.bodyId)).id;
+        if(string.IsNullOrEmpty(old.variantFamilyId))return id;
         var match=Settings.appearances.parts.FirstOrDefault(p=>p.slot==old.slot&&p.variantFamilyId==old.variantFamilyId&&
             (p.supportedBodies.Length==0||p.supportedBodies.Contains(session.Draft.appearance.bodyArchetype)));
         return match!=null?match.id:id;
@@ -142,7 +150,10 @@ public class PlayerEditorView : MonoBehaviour
     }
     void Preset(string label,CharacterPartSlot slot,string current,Action<string> set,bool optional=false)
     {
-        var options=Settings.appearances.parts.Where(p=>p.slot==slot&&(p.supportedBodies.Length==0||p.supportedBodies.Contains(session.Draft.appearance.bodyArchetype))).ToList();
+        var options=Settings.appearances.parts.Where(p=>p.slot==slot&&(p.supportedBodies.Length==0||p.supportedBodies.Contains(session.Draft.appearance.bodyArchetype))&&
+            (p.compatibleBodyIds.Length==0||p.compatibleBodyIds.Contains(session.Draft.appearance.bodyId))&&
+            (!(slot>=CharacterPartSlot.Top&&slot<=CharacterPartSlot.Footwear)||!session.Draft.appearance.bodyId.EndsWith(".parametric.v1",StringComparison.Ordinal)||p.placeholder||p.compatibleBodyIds.Contains(session.Draft.appearance.bodyId))&&
+            (slot!=CharacterPartSlot.Face||!session.Draft.appearance.bodyId.EndsWith(".parametric.v1",StringComparison.Ordinal)||p.id=="face.prototype.parametric.v1")).ToList();
         var labels=options.Select(p=>Label(p)).ToList();int selected=options.FindIndex(p=>p.id==current);
         if(optional){labels.Insert(0,"NONE");selected=string.IsNullOrEmpty(current)?0:selected+1;}
         FrontEndUI.Picker(form,label,labels,selected,i=>{set(optional&&i==0?null:options[optional?i-1:i].id);UpdatePreview();},Settings);

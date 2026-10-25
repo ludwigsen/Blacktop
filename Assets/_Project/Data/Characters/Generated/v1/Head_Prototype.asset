@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc1a4e377f9644fc6a5ab628ea929ab8, type: 3}
+  m_Name: Head_Prototype
+  m_EditorClassIdentifier: Blacktop::CharacterPartDefinition
+  id: face.prototype.parametric.v1
+  displayName: Head Prototype (parametric prototype)
+  variantFamilyId: 
+  temporaryVisual: 1
+  slot: 1
+  bodyArchetype: 1
+  skeleton: {fileID: 11400000, guid: 985357a217d524e44927dc1c70ba514b, type: 2}
+  placeholder: 0
+  authoringNote: Generated v1 prototype; canonical rig/UVs retained. Shell clothing
+    and unavailable action clips need artist acceptance.
+  emptyOption: 0
+  useExistingBody: 0
+  integratedHead: 0
+  usePrototypeEyes: 1
+  skinnedSource: {fileID: -3103262157978312569, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
+  skinnedMeshOverride: {fileID: 4300000, guid: f5e4e5c39837c45f28982510db3a99fc, type: 2}
+  lod0ScreenHeight: 0.6
+  lowerDetailLevels: []
+  attachmentPrefab: {fileID: 0}
+  socket: 10
+  localPosition: {x: 0, y: 0, z: 0}
+  localEulerAngles: {x: 0, y: 0, z: 0}
+  localScale: {x: 1, y: 1, z: 1}
+  materialTints: 01000000
+  supportedBodies: 
+  compatibleBodyIds: []
+  compatibleFaceIds: []
+  proportionCalibrationId: 
+  scalpProfileId: prototype
+  supportedScalpProfiles: []

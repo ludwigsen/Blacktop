@@ -107,10 +107,11 @@ public class FrontEndTests
     public void HeightWeightAndTemporarySilhouettesUseOneRigWithoutChangingRatings()
     {
         int[] baseline={165,190,220,250,275};var meshes=new System.Collections.Generic.HashSet<Mesh>();
-        foreach(BodyArchetype build in Enum.GetValues(typeof(BodyArchetype)))
+        // These original five saved IDs remain the legacy migration regression.
+        foreach(BodyArchetype build in new[]{BodyArchetype.Lean,BodyArchetype.Athletic,BodyArchetype.Thick,BodyArchetype.Heavy,BodyArchetype.Massive})
         {
             Assert.That(settings.weights.Pounds(PlayerHeight.Ft6In0,build),Is.EqualTo(baseline[(int)build]));
-            var part=settings.appearances.parts.Single(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==build&&p.temporaryVisual);
+            var part=settings.appearances.parts.Single(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==build&&p.temporaryVisual&&p.id.EndsWith(".temporary",StringComparison.Ordinal));
             Assert.That(part.skeleton.ValidateSkin(part.skinnedSource,out string error,part.skinnedMeshOverride),Is.True,error);
             meshes.Add(part.skinnedMeshOverride);
             foreach(PlayerHeight height in Enum.GetValues(typeof(PlayerHeight)))Assert.That(settings.weights.Pounds(height,build),Is.InRange(120,390));

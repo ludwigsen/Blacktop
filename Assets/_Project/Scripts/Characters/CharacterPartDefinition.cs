@@ -16,6 +16,7 @@ public class CharacterPartDefinition : ScriptableObject
     public bool emptyOption; // Shaved / clean-shaven are real choices without a renderer.
     public bool useExistingBody;
     public bool integratedHead;
+    public bool usePrototypeEyes; // Detached prototype head may reuse existing eye skins on the same live rig.
     [Header("Choose a skinned source OR a rigid attachment")]
     public SkinnedMeshRenderer skinnedSource;
     public Mesh skinnedMeshOverride; // Optional compatible mesh using the source renderer's bones/materials.
@@ -30,6 +31,7 @@ public class CharacterPartDefinition : ScriptableObject
     public CharacterTint[] materialTints = System.Array.Empty<CharacterTint>();
     [Header("Compatibility (empty lists mean unrestricted)")]
     public BodyArchetype[] supportedBodies = System.Array.Empty<BodyArchetype>();
+    public string[] compatibleBodyIds = System.Array.Empty<string>(); // Optional exact fit restriction for generated garments.
     public string[] compatibleFaceIds = System.Array.Empty<string>();
     public string proportionCalibrationId;
     public string scalpProfileId;

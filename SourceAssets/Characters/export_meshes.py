@@ -18,7 +18,7 @@ def project_root():
 def close(a, b):
     return all(abs(a[r][c] - b[r][c]) < 0.00001 for r in range(4) for c in range(4))
 
-def export(output=None):
+def export(output=None, objects=None, packet_metadata=None):
     if bpy.context.object and bpy.context.object.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')  # Flush Edit/Sculpt mode geometry without saving over the source.
     bpy.context.view_layer.update()  # Refresh matrices after script-driven or just-completed edits.
@@ -32,7 +32,9 @@ def export(output=None):
         if not close(bone.matrix_local, Matrix(rest[bone.name])) or not close(rig.pose.bones[bone.name].matrix_basis, Matrix.Identity(4)):
             raise RuntimeError('Export in the unchanged rest pose. Clear pose transforms; rig rest changes are unsupported.')
     packet = {'version': 1, 'meshes': []}
-    for obj in sorted(bpy.data.objects, key=lambda o: o.name):
+    if packet_metadata:
+        packet.update(packet_metadata)  # Generated exports declare their canonical rig/version explicitly.
+    for obj in sorted(bpy.data.objects if objects is None else objects, key=lambda o: o.name):
         if obj.type != 'MESH' or 'blacktop_surface' not in obj:
             continue
         row = json.loads(obj['blacktop_surface'])

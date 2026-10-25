@@ -1,3 +1,7 @@
+# Current parametric workflow
+
+Use **BodyGenerator/CanonicalBody.blend** and its **Blacktop Body Editor** sidebar for the six-preset procedural system. Start with [BodyGenerator/README.md](BodyGenerator/README.md) and [AUDIT.md](BodyGenerator/AUDIT.md). The files below remain untouched legacy snapshots/fallbacks and use the existing v1 export route. They do not target the new generated meshes.
+
 # Editable Blacktop character sources
 
 **Open `BlacktopCharacters.blend` to edit all current character geometry in Blender.** The five body builds, integrated faces, fifteen clothing meshes and four eye meshes are real editable mesh objects with UVs, skin weights and the shared rest rig. Unity still consumes ordinary mesh assets; installing Blender is not required to open/play Blacktop.

@@ -1,0 +1,19 @@
+{
+  "version": "blacktop.body.v1",
+  "reference": "athletic-183-v1",
+  "id": "body.built.parametric.v1",
+  "name": "Built",
+  "family": "Power",
+  "percent": {
+    "shoulder": 114,
+    "chest": 119,
+    "waist": 100,
+    "quad": 116,
+    "calf": 107,
+    "bicep": 120,
+    "forearm": 110,
+    "chest_depth": 119,
+    "abdomen_depth": 101,
+    "hip_depth": 115
+  }
+}

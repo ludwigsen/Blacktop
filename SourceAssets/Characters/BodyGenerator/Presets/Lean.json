@@ -1,0 +1,19 @@
+{
+  "version": "blacktop.body.v1",
+  "reference": "athletic-183-v1",
+  "id": "body.lean.parametric.v1",
+  "name": "Lean",
+  "family": "Tapered",
+  "percent": {
+    "shoulder": 96,
+    "chest": 94,
+    "waist": 90,
+    "quad": 91,
+    "calf": 94,
+    "bicep": 90,
+    "forearm": 93,
+    "chest_depth": 94,
+    "abdomen_depth": 90,
+    "hip_depth": 94
+  }
+}

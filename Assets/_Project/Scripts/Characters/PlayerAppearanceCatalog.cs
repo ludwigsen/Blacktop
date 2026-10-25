@@ -78,6 +78,12 @@ public class PlayerAppearanceCatalog : ScriptableObject
         {
             if (part.supportedBodies.Length > 0 && Array.IndexOf(part.supportedBodies, appearance.bodyArchetype) < 0)
                 errors.Add($"{part.id} does not support {appearance.bodyArchetype}.");
+            if (part.compatibleBodyIds.Length > 0 && Array.IndexOf(part.compatibleBodyIds, appearance.bodyId) < 0)
+                errors.Add($"{part.id} does not fit body {appearance.bodyId}.");
+            // Legacy shells cannot be assumed to fit generated volume distributions.
+            if (body != null && body.variantFamilyId == "body.parametric.v1" && part.slot >= CharacterPartSlot.Top &&
+                part.slot <= CharacterPartSlot.Footwear && !part.placeholder && Array.IndexOf(part.compatibleBodyIds, appearance.bodyId) < 0)
+                errors.Add($"{part.id} needs a generated garment variant for {appearance.bodyId}.");
             if (part.compatibleFaceIds.Length > 0 && Array.IndexOf(part.compatibleFaceIds, appearance.faceId) < 0)
                 errors.Add($"{part.id} does not fit {appearance.faceId}.");
             if (part.supportedScalpProfiles.Length > 0 && (face == null || Array.IndexOf(part.supportedScalpProfiles, face.scalpProfileId) < 0))

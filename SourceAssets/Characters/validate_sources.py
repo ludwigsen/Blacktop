@@ -18,7 +18,9 @@ with gzip.open(SOURCE / 'Reference/character_seed.json.gz', 'rt') as file:
     seed = json.load(file)
 originals = {row['name']: row for row in seed['meshes']}
 report = {'files': [], 'max_position_error': 0, 'mesh_objects_checked': 0}
-for path in sorted(SOURCE.rglob('*.blend')):
+# The parametric canonical has its own topology and validation, separate from these seven legacy snapshots.
+legacy_sources = [SOURCE/'BlacktopCharacters.blend', *sorted((SOURCE/'Bodies').glob('*.blend')), SOURCE/'Faces/PrototypeFace.blend']
+for path in legacy_sources:
     bpy.ops.wm.open_mainfile(filepath=str(path))
     rig = bpy.data.objects['Blacktop_Rig']
     assert len(rig.data.bones) == len(seed['bones'])
