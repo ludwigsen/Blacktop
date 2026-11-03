@@ -152,7 +152,7 @@ To author additional playable fields, register validated FieldDefinitions in set
 
 ## Testing the menu prototype (2026-11-02)
 
-Open the existing MainMenu scene and press Play. No scene regeneration is needed. The menu uses the four committed concept-field backdrops in Assets/_Project/Art/MainMenu/Fields. Background timing, blur strength, transition duration, fonts and authoring gate live on FrontEndSettings.asset. The small asset-wiring utility Blacktop > Front End > Wire Menu Prototype Assets restores those explicit references and prewarms the TMP fonts; it does not replace scene or roster wiring.
+Open the existing MainMenu scene and press Play. No scene regeneration is needed. The menu uses the eleven supplied 3840x2160 cinematic backdrops in Assets/_Project/Art/MainMenu/Fields. Background timing, blur strength, transition duration, fonts and authoring gate live on FrontEndSettings.asset. The small asset-wiring utility Blacktop > Front End > Wire Menu Prototype Assets restores those explicit references and prewarms the TMP fonts; it does not replace scene or roster wiring.
 
 Edit Players opens Player Summary directly. Choose Edit Attributes or Edit Fit & Body; the latter has fixed Body / Face / Hair / Fit / Accessories / Identity tabs. Summary retains the current draft. Save Player commits through RosterService; Discard Changes restores the saved player. Selecting another roster card or team with a dirty draft prompts before discarding. Previous 7 / Next 7 pages all reserves with no scrolling. Dev Roster Tools opens the existing create/duplicate/transfer/delete/source-commit workflow.
 

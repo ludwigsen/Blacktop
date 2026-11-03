@@ -47,7 +47,9 @@ public class MenuPrototypeTests
     [UnityTest]
     public IEnumerator FieldCycleBlurAndMainNavigationWork()
     {
-        Assert.That(settings.menuFields.Length,Is.EqualTo(4));Assert.That(settings.menuFields.All(t=>t!=null),Is.True);
+        Assert.That(settings.menuFields.Length,Is.EqualTo(11));Assert.That(settings.menuFields.All(t=>t!=null),Is.True);
+        // Catch importer resizing as well as missing entries in the supplied 4K catalog.
+        Assert.That(settings.menuFields.All(t=>t.width==3840&&t.height==2160),Is.True,"Menu images must retain their supplied 4K dimensions.");
         Assert.That(settings.menuTitleFont.name,Does.Contain("BlacktopProDuo"));Assert.That(settings.menuFont.name,Does.Contain("BarlowCondensed"));
         Assert.That(Object.FindObjectsByType<Button>().Count(b=>b.isActiveAndEnabled),Is.EqualTo(4));
         Capture("Main",1920,1080);

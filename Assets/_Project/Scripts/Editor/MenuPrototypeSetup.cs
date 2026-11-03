@@ -18,11 +18,12 @@ public static class MenuPrototypeSetup
         var settings=AssetDatabase.LoadAssetAtPath<FrontEndSettings>(FrontEndSetup.SettingsPath);
         settings.menuTitleFont=Font("BlacktopProDuo", "Blacktop");
         settings.menuFont=Font("BarlowCondensed-SemiBold",new string(Enumerable.Range(32,95).Select(i=>(char)i).ToArray())+"‹›′″−–—•×");
-        settings.menuFields=new[]{"Downtown-Day","Campus-GoldenHour","Downtown-Dusk","Campus-Morning"}.Select(name=>{
+        settings.menuFields=new[]{"Alley","Beach","Downtown","Junkyard","Quad","Rooftop","Shipyard","Suburbs","The-Lot","Underpass","Warehouse"}.Select(name=>{
             string path=Art+"/Fields/"+name+".png";
             var importer=(TextureImporter)AssetImporter.GetAtPath(path);
             if(importer==null)throw new InvalidOperationException("Missing menu field: "+path);
-            importer.textureType=TextureImporterType.Default;importer.mipmapEnabled=false;
+            // Keep the supplied 3840x2160 framing instead of rounding to power-of-two dimensions.
+            importer.textureType=TextureImporterType.Default;importer.npotScale=TextureImporterNPOTScale.None;importer.mipmapEnabled=false;
             importer.wrapMode=TextureWrapMode.Clamp;importer.maxTextureSize=4096;importer.textureCompression=TextureImporterCompression.CompressedHQ;
             importer.SaveAndReimport();
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
@@ -30,7 +31,7 @@ public static class MenuPrototypeSetup
         settings.menuBlurShader=AssetDatabase.LoadAssetAtPath<Shader>(Art+"/MenuFieldBlur.shader");
         settings.menuBlurFilterShader=AssetDatabase.LoadAssetAtPath<Shader>(Art+"/MenuFieldGaussian.shader");
         EditorUtility.SetDirty(settings);AssetDatabase.SaveAssets();
-        Debug.Log("MENU_PROTOTYPE_ASSETS_READY: 4 fields, Blacktop Pro Duo and Barlow Condensed.");
+        Debug.Log("MENU_PROTOTYPE_ASSETS_READY: "+settings.menuFields.Length+" fields, Blacktop Pro Duo and Barlow Condensed.");
     }
 
     static TMP_FontAsset Font(string name,string characters)
