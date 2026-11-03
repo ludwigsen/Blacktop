@@ -10,6 +10,7 @@ public class FrontEndSettings : ScriptableObject
     public TMPro.TMP_FontAsset menuFont;
     public Texture2D[] menuFields = Array.Empty<Texture2D>();
     public Shader menuBlurShader;
+    public Shader menuBlurFilterShader; // Explicit reference retains the offline filter in standalone builds.
     [Min(1f)] public float fieldHoldSeconds = 6f;
     [Min(.1f)] public float fieldBlendSeconds = 2.4f;
     [Range(0f,40f)] public float submenuBlurPixels = 18f;

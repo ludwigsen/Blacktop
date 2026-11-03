@@ -34,27 +34,5 @@ Shader "Blacktop/Menu Field Blur"
             }
             ENDCG
         }
-        Pass
-        {
-            Blend Off
-            CGPROGRAM
-            #pragma vertex vert_img
-            #pragma fragment gaussian
-            #include "UnityCG.cginc"
-            sampler2D _MainTex;
-            float4 _Direction;
-            fixed4 gaussian(v2f_img i):SV_Target
-            {
-                // This separable Gaussian runs twice per image at load, never every frame.
-                float2 d=_Direction.xy;
-                fixed4 c=tex2D(_MainTex,i.uv)*.227027;
-                c+=(tex2D(_MainTex,i.uv+d)+tex2D(_MainTex,i.uv-d))*.1945946;
-                c+=(tex2D(_MainTex,i.uv+2*d)+tex2D(_MainTex,i.uv-2*d))*.1216216;
-                c+=(tex2D(_MainTex,i.uv+3*d)+tex2D(_MainTex,i.uv-3*d))*.054054;
-                c+=(tex2D(_MainTex,i.uv+4*d)+tex2D(_MainTex,i.uv-4*d))*.016216;
-                return c;
-            }
-            ENDCG
-        }
     }
 }

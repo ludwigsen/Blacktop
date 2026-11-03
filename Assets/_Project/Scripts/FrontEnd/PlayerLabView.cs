@@ -13,6 +13,7 @@ public class PlayerLabView : MonoBehaviour
     PlayerEditorSession session;
     RuntimePlayerPreview preview;
     TextMeshProUGUI dimensions, status;
+    TMP_InputField weightInput;
     RectTransform form;
     FrontEndSettings Settings => menu.settings;
     AppearanceSelection Appearance => session.Draft.appearance;
@@ -123,12 +124,12 @@ public class PlayerLabView : MonoBehaviour
             Appearance.bodyId=body.id;
             Appearance.clothingIds=Appearance.clothingIds.Select(Compatible).ToArray();
             Appearance.accessoryIds=Appearance.accessoryIds.Select(Compatible).ToArray();Refresh();},Settings);
-        var weight=FrontEndUI.Input(form,"WEIGHT (LB)",Appearance.Pounds(Settings.weights).ToString(),text=>{
+        weightInput=FrontEndUI.Input(form,"WEIGHT (LB)",Appearance.Pounds(Settings.weights).ToString(),text=>{
             bool valid=int.TryParse(text,out int pounds)&&pounds>=120&&pounds<=450;
             session.HasUncommittedInput=!valid;if(valid)Appearance.weightPounds=pounds;
             if(status!=null)status.text=valid?"UNSAVED CHANGES":"WEIGHT MUST BE 120–450 LB";
             if(valid)Refresh();},Settings,true);
-        weight.characterLimit=3;
+        weightInput.characterLimit=3;
         FrontEndUI.Button(form,"USE BUILD-DERIVED WEIGHT",()=>{Appearance.weightPounds=0;session.HasUncommittedInput=false;menu.ShowLabPage(PlayerLabPage.Body);},Settings,48);
         FrontEndUI.Picker(form,"PREVIEW",new[]{"IDLE","RUN","BACKPEDAL","FAST RUN"},0,i=>preview.Animation(new[]{0f,1f,-1f,2f}[i]),Settings);
         Note("Build changes the silhouette. Weight is appearance metadata; it does not change ratings or collisions.");
@@ -186,6 +187,9 @@ public class PlayerLabView : MonoBehaviour
     {
         preview.Apply(session.Draft,Settings.Team(session.TeamId).identity);
         dimensions.text=$"{RosterBrowserView.HeightLabel(Appearance.height)}   /   {Appearance.Pounds(Settings.weights)} LB   /   {Appearance.bodyArchetype.ToString().ToUpperInvariant()}";
+        // Refresh derived weight after height/build changes without creating a manual override or erasing invalid text.
+        if(weightInput!=null&&Appearance.weightPounds==0&&!session.HasUncommittedInput)
+            weightInput.SetTextWithoutNotify(Appearance.Pounds(Settings.weights).ToString());
         if(status!=null&&session.Dirty&&!session.HasUncommittedInput)status.text="UNSAVED CHANGES";
     }
 

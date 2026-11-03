@@ -18,9 +18,10 @@ public class FrontEndBackdrop : MonoBehaviour
     {
         settings = configuration;
         softened = new RenderTexture[settings.menuFields.Length];
-        if(settings.menuBlurShader != null)
+        if(settings.menuBlurFilterShader != null)
         {
-            var filter = new Material(settings.menuBlurShader);
+            // The visible material must have only its composite pass; overlays draw all material passes.
+            var filter = new Material(settings.menuBlurFilterShader);
             for(int i=0;i<softened.Length;i++)
             {
                 var field=settings.menuFields[i];if(field==null)continue;
@@ -30,9 +31,9 @@ public class FrontEndBackdrop : MonoBehaviour
                 temp.filterMode=FilterMode.Bilinear;Graphics.Blit(field,softened[i]);
                 // Low-resolution cached passes avoid a full-screen blur kernel every frame.
                 filter.SetVector("_Direction",new Vector4(settings.submenuBlurPixels/field.width/1.7f,0,0,0));
-                Graphics.Blit(softened[i],temp,filter,1);
+                Graphics.Blit(softened[i],temp,filter,0);
                 filter.SetVector("_Direction",new Vector4(0,settings.submenuBlurPixels/field.height/1.7f,0,0));
-                Graphics.Blit(temp,softened[i],filter,1);RenderTexture.ReleaseTemporary(temp);
+                Graphics.Blit(temp,softened[i],filter,0);RenderTexture.ReleaseTemporary(temp);
             }
             Destroy(filter);
         }

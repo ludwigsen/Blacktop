@@ -28,6 +28,7 @@ public static class MenuPrototypeSetup
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }).ToArray();
         settings.menuBlurShader=AssetDatabase.LoadAssetAtPath<Shader>(Art+"/MenuFieldBlur.shader");
+        settings.menuBlurFilterShader=AssetDatabase.LoadAssetAtPath<Shader>(Art+"/MenuFieldGaussian.shader");
         EditorUtility.SetDirty(settings);AssetDatabase.SaveAssets();
         Debug.Log("MENU_PROTOTYPE_ASSETS_READY: 4 fields, Blacktop Pro Duo and Barlow Condensed.");
     }

@@ -78,6 +78,12 @@ public class MenuPrototypeTests
         Assert.That(service.Team("kings").players.Single(p=>p.record.id==id).record.passing,Is.EqualTo(original));
         Click("SAVE PLAYER");Assert.That(menu.LabPage,Is.EqualTo(PlayerLabPage.Summary));
         Click("EDIT FIT & BODY");yield return null;
+        // Build changes must refresh both weight readouts while retaining the derived-weight mode.
+        var buildLabel=Object.FindAnyObjectByType<PlayerLabView>().GetComponentsInChildren<TMP_Text>().Single(t=>t.text=="BUILD");
+        buildLabel.transform.parent.GetComponentsInChildren<Button>().Last().onClick.Invoke();
+        Assert.That(Object.FindObjectsByType<TMP_InputField>().Single(f=>f.name=="WEIGHT (LB)").text,
+            Is.EqualTo(menu.Session.Draft.appearance.Pounds(settings.weights).ToString()));
+        Assert.That(menu.Session.Draft.appearance.weightPounds,Is.Zero);
         Object.FindObjectsByType<TMP_InputField>().Single(f=>f.name=="WEIGHT (LB)").text="247";
         Click("SAVE PLAYER");
         var reloaded=new RosterService(settings,new RosterSaveStore(Path.Combine(directory,"rosters.json")));
