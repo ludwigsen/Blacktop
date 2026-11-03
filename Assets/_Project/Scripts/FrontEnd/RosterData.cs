@@ -12,12 +12,14 @@ public class AppearanceSelection
     public string[] clothingIds = Array.Empty<string>();
     public string[] accessoryIds = Array.Empty<string>();
     public int appearanceSeed;
+    public int weightPounds; // Zero preserves the established height/build-derived estimate.
+    public int Pounds(BodyWeightProfile profile) => weightPounds>0?weightPounds:profile.Pounds(height,bodyArchetype);
 
     public static AppearanceSelection From(PlayerAppearanceDefinition value) => new AppearanceSelection {
         bodyId=value.bodyId, faceId=value.faceId, hairId=value.hairId, facialHairId=value.facialHairId,
         skinToneId=value.skinToneId, hairColorId=value.hairColorId, bodyArchetype=value.bodyArchetype,
         height=value.heightProfile.height, headScale=value.headScale, clothingIds=(string[])value.clothingIds.Clone(),
-        accessoryIds=(string[])value.accessoryIds.Clone(), appearanceSeed=value.appearanceSeed };
+        accessoryIds=(string[])value.accessoryIds.Clone(), appearanceSeed=value.appearanceSeed, weightPounds=value.weightPounds };
 
     public void Apply(PlayerAppearanceDefinition target, PlayerAppearanceCatalog catalog, string playerId)
     {
@@ -27,7 +29,7 @@ public class AppearanceSelection
         target.skinToneId=skinToneId; target.hairColorId=hairColorId; target.bodyArchetype=bodyArchetype;
         target.heightProfile=Array.Find(catalog.heightProfiles, p=>p != null && p.height == height);
         target.headScale=headScale; target.clothingIds=clothingIds ?? Array.Empty<string>();
-        target.accessoryIds=accessoryIds ?? Array.Empty<string>(); target.appearanceSeed=appearanceSeed;
+        target.accessoryIds=accessoryIds ?? Array.Empty<string>(); target.appearanceSeed=appearanceSeed;target.weightPounds=weightPounds;
     }
 }
 

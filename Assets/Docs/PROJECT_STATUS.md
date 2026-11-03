@@ -195,3 +195,14 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 - Head 2 Head and Pickup use the existing gameplay scene/bootstrap, detached GUID snapshots and independent lineup assignments. Shared settings, bounded conditions, acceleration ownership and four meaningful CPU profiles are implemented. No persistent pickup assets/save schema change.
 - Graphics-enabled Unity 6000.5.6f1 Editor Play Mode: **97/97 passed**, including all prior regressions, real menu launch, both human sides, complete exhibition matches to 21, shipped winner/rematch and cross-mode condition reset. Native 1080p screens inspected, including full pickup scorebug names.
 - Normal macOS development build: **0 errors / 438 warnings**; graphics-enabled Metal MainMenu startup passed and was intentionally stopped. No physical-controller, Windows, 720p readability or human-played standalone match acceptance is claimed. See TESTING.md and FRONT_END.md.
+
+
+## Main menu / player lab prototype (2026-11-02)
+
+Implemented: centered Blacktop Pro Duo branding; Barlow Condensed menu text; New Game, Edit Players, Settings and confirmed Quit; four concept-field views with continuous crossfades; submenu blur and directional slide/fade transitions. Settings exposes persisted SFX volume and Application.version. New Game uses the existing real match setup and gameplay scene.
+
+Player Summary has a visual-only player on the left, all twelve square-block cold-to-hot ratings on the right, and a seven-card paged roster below. Separate Attributes and Fit & Body pages keep the lab free of scroll views. Fit & Body includes body, face, hair, fit, accessories and developer identity/lineup pages. The existing roster tools remain accessible to development users. Saves use the existing atomic roster transaction; source assets require the existing explicit commit action. Developer weight overrides are saved appearance metadata; builds still control the visible silhouette.
+
+Known prototype limits: face IDs still share the prototype head; most hair/facial-hair/accessory options await art. Field images are concept backdrops, not screenshots of playable venues: campus is not registered as a playable venue. Supplied and generated source images are 1672x941, suitable for this prototype but not native 4K. SFX currently controls the new menu clicks; gameplay audio remains unimplemented. This branch starts at master and intentionally does not include the separate parametric-body branch or its local sculpt work. Physical-controller feel and Windows acceptance remain manual checks.
+
+Validation captured: 102/102 full Play Mode regression tests; 14/14 focused tests after final visual adjustments; inspected 1080p/720p native menu renders; successful macOS development build and standalone startup. Visible standalone input testing was unavailable while the Mac was locked. See TESTING.md T-108 and ignored Builds/Validation for evidence.

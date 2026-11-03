@@ -157,7 +157,7 @@ public class PlayerEditorView : MonoBehaviour
         if(preview==null)return;
         bool valid=preview.Apply(session.Draft,Settings.Team(session.TeamId).identity);
         var appearance=session.Draft.appearance;
-        dimensions.text=$"{RosterBrowserView.HeightLabel(appearance.height)} / {Settings.weights.Pounds(appearance.height,appearance.bodyArchetype)} LB / {appearance.bodyArchetype}";
+        dimensions.text=$"{RosterBrowserView.HeightLabel(appearance.height)} / {appearance.Pounds(Settings.weights)} LB / {appearance.bodyArchetype}";
         status.text=invalidNumber?"Enter a non-negative whole jersey number.":valid?"DRAFT • "+preview.Diagnostics:preview.Diagnostics;
     }
     void Save()

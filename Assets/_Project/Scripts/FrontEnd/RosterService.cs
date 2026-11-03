@@ -74,6 +74,8 @@ public sealed class RosterService
                 if(player.record.jerseyNumber<0 || !numbers.Add(player.record.jerseyNumber)) return $"{Settings.Team(team.teamId).identity.teamName}: jersey number {player.record.jerseyNumber} is already used or invalid.";
                 if(RosterRatings.Get(player.record).Any(r=>r<0 || r>20)) return "All twelve ratings must be 0–20.";
                 if(player.record.appearance!=null || player.appearance==null) return "Appearance must be a portable selection, not a Unity asset reference.";
+                if(player.appearance.weightPounds!=0&&(player.appearance.weightPounds<120||player.appearance.weightPounds>450))
+                    return "Appearance weight must be 120–450 lb, or zero for a derived estimate.";
                 var visual=ScriptableObject.CreateInstance<PlayerAppearanceDefinition>();
                 player.appearance.Apply(visual,Settings.appearances,player.record.id);
                 var errors=Settings.appearances.Validate(visual,out _,false);

@@ -58,7 +58,7 @@ public static class FrontEndUI
     {
         var go=new GameObject("Text",typeof(RectTransform),typeof(TextMeshProUGUI),typeof(LayoutElement));go.transform.SetParent(parent,false);
         var text=go.GetComponent<TextMeshProUGUI>();text.text=value;text.fontSize=size;text.color=Paper;
-        text.font=settings?.theme!=null?(display?settings.theme.displayFont:settings.theme.legibleFont):TMP_Settings.defaultFontAsset;
+        text.font=settings?.menuFont!=null?settings.menuFont:settings?.theme!=null?(display?settings.theme.displayFont:settings.theme.legibleFont):TMP_Settings.defaultFontAsset;
         text.raycastTarget=false;text.textWrappingMode=TextWrappingModes.Normal;text.overflowMode=TextOverflowModes.Ellipsis;
         go.GetComponent<LayoutElement>().preferredHeight=height;
         go.GetComponent<LayoutElement>().minWidth=0;go.GetComponent<LayoutElement>().preferredWidth=0;
@@ -68,11 +68,11 @@ public static class FrontEndUI
     public static Button Button(Transform parent,string label,Action click,FrontEndSettings settings,float height=64)
     {
         var go=new GameObject(label,typeof(RectTransform),typeof(Image),typeof(Button),typeof(LayoutElement));go.transform.SetParent(parent,false);
-        go.GetComponent<Image>().color=new Color(.13f,.15f,.17f);
+        go.GetComponent<Image>().color=new Color(.07f,.09f,.085f,.88f);
         var button=go.GetComponent<Button>();button.targetGraphic=go.GetComponent<Image>();
         var colors=button.colors;colors.normalColor=Color.white;colors.highlightedColor=new Color(1.4f,1.4f,1.4f);
         colors.selectedColor=Accent;colors.pressedColor=new Color(.7f,.7f,.7f);colors.disabledColor=new Color(.4f,.4f,.4f);
-        button.colors=colors;button.onClick.AddListener(()=>click());
+        button.colors=colors;button.onClick.AddListener(()=>click());go.AddComponent<MenuSoundCue>();
         go.GetComponent<LayoutElement>().preferredHeight=height;
         var outline=go.AddComponent<Outline>();outline.effectColor=new Color(.3f,.31f,.32f);outline.effectDistance=new Vector2(2,2);
         var text=Text(go.transform,label,settings,26,false,height);Anchor(text.rectTransform,new Vector2(.06f,.03f),new Vector2(.94f,.97f));
@@ -116,16 +116,55 @@ public static class FrontEndUI
         input.contentType=numeric?TMP_InputField.ContentType.IntegerNumber:TMP_InputField.ContentType.Standard;
         input.text=value;input.onValueChanged.AddListener(v=>changed(v));return input;
     }
-    public static void Rating(Transform parent,string label,int value,Action<int> changed,FrontEndSettings settings)
+    public static void Rating(Transform parent,string label,int value,Action<int> changed,FrontEndSettings settings,int maximum=20,string suffix="")
     {
-        var row=Row(parent,48);Text(row,label,settings,23,false,48).GetComponent<LayoutElement>().flexibleWidth=1.3f;
+        var row=Row(parent,48);row.GetComponent<LayoutElement>().flexibleHeight=0;Text(row,label,settings,23,false,48).GetComponent<LayoutElement>().flexibleWidth=1.3f;
         var track=Panel(row,"Rating",Vector2.zero,Vector2.one,new Color(.2f,.22f,.24f));track.gameObject.AddComponent<LayoutElement>().flexibleWidth=2;
         var fill=Panel(track,"Fill",new Vector2(0,.28f),new Vector2(1,.72f),Accent);
         var handle=Panel(track,"Handle",new Vector2(0,0),new Vector2(0,1),Paper);handle.sizeDelta=new Vector2(20,0);
         var slider=track.gameObject.AddComponent<Slider>();slider.fillRect=fill;slider.handleRect=handle;slider.targetGraphic=handle.GetComponent<Image>();
-        slider.minValue=0;slider.maxValue=20;slider.wholeNumbers=true;slider.value=value;
-        var number=Text(row,value.ToString(),settings,25,false,48);number.GetComponent<LayoutElement>().preferredWidth=42;
-        slider.onValueChanged.AddListener(v=>{number.text=((int)v).ToString();changed((int)v);});
+        slider.minValue=0;slider.maxValue=maximum;slider.wholeNumbers=true;slider.value=value;
+        var number=Text(row,value+suffix,settings,25,false,48);number.GetComponent<LayoutElement>().preferredWidth=62;
+        slider.onValueChanged.AddListener(v=>{number.text=((int)v)+suffix;changed((int)v);});
+    }
+    public static Slider SquareRating(Transform parent,string label,int value,Action<int> changed,FrontEndSettings settings)
+    {
+        var row=Row(parent,38);row.name="Rating "+label;
+        row.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth=false; // Reserve the remaining width for distinct squares.
+        var caption=Text(row,label,settings,23,false,38);
+        caption.GetComponent<LayoutElement>().preferredWidth=178;
+        var track=Panel(row,"Squares",Vector2.zero,Vector2.one,Color.clear);
+        track.gameObject.AddComponent<LayoutElement>().flexibleWidth=1;
+        var blocks=new Image[20];
+        for(int i=0;i<20;i++)
+        {
+            float center=(i+.5f)/20f;
+            var block=Panel(track,"Step "+(i+1),new Vector2(center,.5f),new Vector2(center,.5f),Color.white);
+            block.sizeDelta=new Vector2(19,19);blocks[i]=block.GetComponent<Image>();blocks[i].raycastTarget=false;
+        }
+        var number=Text(row,value.ToString("00"),settings,26,false,38);
+        number.GetComponent<LayoutElement>().preferredWidth=34;
+        number.alignment=TextAlignmentOptions.MidlineRight;
+        Paint(value);
+        if(changed==null)return null;
+        // The native Slider preserves mouse dragging, keyboard steps and gamepad left/right.
+        var slider=track.gameObject.AddComponent<Slider>();slider.minValue=0;slider.maxValue=20;slider.wholeNumbers=true;
+        var handle=Panel(track,"Selection cursor",new Vector2(0,0),new Vector2(0,1),Color.clear);
+        handle.sizeDelta=new Vector2(2,0);handle.GetComponent<Image>().raycastTarget=false;
+        slider.handleRect=handle;slider.targetGraphic=track.GetComponent<Image>();slider.value=value;
+        var marker=Panel(track,"Focus underline",new Vector2(0,.03f),new Vector2(1,.08f),Paper);
+        marker.gameObject.SetActive(false);track.gameObject.AddComponent<FrontEndFocus>().marker=marker.gameObject;
+        slider.onValueChanged.AddListener(v=>{Paint((int)v);changed((int)v);});return slider;
+        void Paint(int rating)
+        {
+            number.text=rating.ToString("00");
+            for(int i=0;i<20;i++)
+            {
+                float t=i/19f;
+                var cold=new Color(.40f,.77f,1f);var middle=new Color(1f,.80f,.34f);var hot=new Color(.96f,.23f,.18f);
+                blocks[i].color=i<rating?(t<.5f?Color.Lerp(cold,middle,t*2):Color.Lerp(middle,hot,(t-.5f)*2)):new Color(.22f,.27f,.27f,.8f);
+            }
+        }
     }
     public static void FocusFirst(Transform root)
     {

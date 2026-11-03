@@ -131,7 +131,7 @@ public class FrontEndTests
     {
         InjectService();yield return SceneManager.LoadSceneAsync("MainMenu");yield return null;
         var menu=Object.FindAnyObjectByType<FrontEndController>();Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.Main));
-        Click("PLAYERS");Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.Teams));menu.ShowRoster("kings");Click("CREATE PLAYER");
+        Click("EDIT PLAYERS");Assert.That(menu.Screen,Is.EqualTo(FrontEndScreen.PlayerLab));menu.ShowRoster("kings");Click("CREATE PLAYER");
         yield return null;
         var inputs=Object.FindObjectsByType<TMP_InputField>();inputs.Single(f=>f.name=="First name").text="Created";inputs.Single(f=>f.name=="Last name").text="InMenu";
         // Populate the editor's actual working copy, then use the visible Save command.
