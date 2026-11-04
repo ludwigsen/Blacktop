@@ -71,6 +71,8 @@ public class PlayCallSelector : MonoBehaviour
     readonly List<TextMeshProUGUI> cardDetailTexts = new();
     readonly List<Image> categoryBackgrounds = new();
     readonly List<Image> cardBackgrounds = new();
+    readonly List<PlayDiagram> diagrams=new();
+    readonly List<Outline> cardBorders=new();
 
     SelectionMode selectionMode = SelectionMode.Categories;
     int categoryIndex;
@@ -113,12 +115,12 @@ public class PlayCallSelector : MonoBehaviour
 
     void OnEnable()
     {
-        controls.UI.Enable();
+        controls.UI.Enable();UITheme.Changed+=ApplyTheme;ApplyTheme();
     }
 
     void OnDisable()
     {
-        controls.UI.Disable();
+        controls.UI.Disable();UITheme.Changed-=ApplyTheme;
     }
 
     void OnDestroy()
@@ -346,8 +348,19 @@ public class PlayCallSelector : MonoBehaviour
         canvasGroup.blocksRaycasts = visible;
     }
 
+    void ApplyTheme()
+    {
+        panelColor=UITheme.Color(UIColorRole.BackgroundPrimary);cardColor=UITheme.Color(UIColorRole.SurfacePrimary);
+        activeColor=UITheme.Color(UIColorRole.SelectionHighlight);textColor=UITheme.Color(UIColorRole.TextPrimary);
+        mutedColor=UITheme.Color(UIColorRole.TextSecondary);
+        if(panel!=null)panel.GetComponent<Image>().color=panelColor;
+        if(situationText!=null)situationText.color=mutedColor;
+        Refresh();
+    }
+
     void BuildHUD()
     {
+        FrontEndUI.EnsureInput();
         var canvasGO = new GameObject("PlayCallCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
         canvasGO.transform.SetParent(transform, false);
 
@@ -363,7 +376,7 @@ public class PlayCallSelector : MonoBehaviour
         canvasGroup = canvasGO.GetComponent<CanvasGroup>();
         canvasGroup.alpha = 0f;
 
-        var panelGO = new GameObject("PlayCallPanel", typeof(Image));
+        var panelGO = new GameObject("PlayCallPanel", typeof(AngularPanel));
         panelGO.transform.SetParent(canvasGO.transform, false);
         panel = panelGO.GetComponent<RectTransform>();
         panel.anchorMin = new Vector2(0f, 0f);
@@ -410,7 +423,7 @@ public class PlayCallSelector : MonoBehaviour
 
         for (int i = 0; i < 4; i++)
         {
-            var card = new GameObject($"Category{i}", typeof(Image));
+            var card = new GameObject($"Category{i}", typeof(AngularPanel));
             card.transform.SetParent(row.transform, false);
             var image = card.GetComponent<Image>();
             categoryBackgrounds.Add(image);
@@ -426,6 +439,10 @@ public class PlayCallSelector : MonoBehaviour
             var label = CreateText(card.transform, "", categoryFontSize, TextAlignmentOptions.Center, theme != null ? theme.legibleFont : null);
             Anchor(label.rectTransform, Vector2.zero, Vector2.one);
             categoryTexts.Add(label);
+            int category=i;
+            var click=card.AddComponent<Button>();click.transition=Selectable.Transition.None;
+            click.navigation=new Navigation{mode=Navigation.Mode.None};
+            click.onClick.AddListener(()=>{if(!CanInteract())return;categoryIndex=category;playIndex=0;selectionMode=SelectionMode.Categories;PushHighlightedPlay();Refresh();});
         }
     }
 
@@ -444,10 +461,18 @@ public class PlayCallSelector : MonoBehaviour
         const int visibleCards = 5;
         for (int i = 0; i < visibleCards; i++)
         {
-            var card = new GameObject($"PlayCard{i}", typeof(Image));
+            var card = new GameObject($"PlayCard{i}", typeof(AngularPanel));
             card.transform.SetParent(row.transform, false);
             var image = card.GetComponent<Image>();
             cardBackgrounds.Add(image);
+            var border=card.AddComponent<Outline>();border.effectDistance=new Vector2(2,-2);cardBorders.Add(border);
+            int slot=i;
+            var click=card.AddComponent<Button>();click.transition=Selectable.Transition.None;click.navigation=new Navigation{mode=Navigation.Mode.None};
+            click.onClick.AddListener(()=>{
+                if(!CanInteract())return;int index=CardIndexForSlot(slot,GetFilteredPlays().Count);if(index<0)return;
+                if(selectionMode==SelectionMode.Plays&&playIndex==index){ConfirmPlay();return;}
+                playIndex=index;selectionMode=SelectionMode.Plays;PushHighlightedPlay();Refresh();
+            });
 
             var cardRT = card.GetComponent<RectTransform>();
             float width = 1f / visibleCards;
@@ -457,14 +482,17 @@ public class PlayCallSelector : MonoBehaviour
             cardRT.offsetMax = new Vector2(-cardGap / 2f, 0f);
 
             var title = CreateText(card.transform, "", playFontSize, TextAlignmentOptions.Center, theme != null ? theme.legibleFont : null);
-            title.enableAutoSizing = false;
-            Anchor(title.rectTransform, new Vector2(0f, 0.42f), new Vector2(1f, 0.82f));
+            title.enableAutoSizing = true;title.fontSizeMin=22;title.fontSizeMax=playFontSize;
+            Anchor(title.rectTransform, new Vector2(.04f, .76f), new Vector2(.96f, .99f));
             cardTitleTexts.Add(title);
 
             var detail = CreateText(card.transform, "", detailFontSize, TextAlignmentOptions.Center, theme != null ? theme.legibleFont : null);
             detail.color = mutedColor;
-            Anchor(detail.rectTransform, new Vector2(0f, 0.08f), new Vector2(1f, 0.38f));
+            Anchor(detail.rectTransform, new Vector2(.04f, .02f), new Vector2(.96f, .20f));
             cardDetailTexts.Add(detail);
+            var diagram=new GameObject("Authored play schematic",typeof(RectTransform),typeof(PlayDiagram));
+            diagram.transform.SetParent(card.transform,false);Anchor(diagram.GetComponent<RectTransform>(),new Vector2(.03f,.21f),new Vector2(.97f,.75f));
+            var graphic=diagram.GetComponent<PlayDiagram>();graphic.raycastTarget=false;diagrams.Add(graphic);
         }
     }
 
@@ -484,9 +512,9 @@ public class PlayCallSelector : MonoBehaviour
         {
             bool active = i == categoryIndex;
             categoryTexts[i].text = labels[i];
-            categoryTexts[i].color = active ? activeColor : textColor;
+            categoryTexts[i].color = active ? UITheme.Color(UIColorRole.TextOnBright) : textColor;
             categoryBackgrounds[i].color = active
-                ? new Color(activeColor.r, activeColor.g, activeColor.b, 0.18f)
+                ? activeColor
                 : cardColor;
         }
 
@@ -514,6 +542,7 @@ public class PlayCallSelector : MonoBehaviour
             }
 
             var play = plays[index];
+            diagrams[slot].Show(play);
             SetCard(slot,
                 play != null ? play.DisplayName : "(missing)",
                 play != null ? play.PlayType.ToString().ToUpperInvariant() : "",
@@ -535,6 +564,7 @@ public class PlayCallSelector : MonoBehaviour
             }
 
             var play = plays[index];
+            diagrams[slot].Show(play);
             SetCard(slot,
                 play != null ? play.DisplayName : "(missing)",
                 play != null ? DefenseSummary(play) : "",
@@ -555,12 +585,14 @@ public class PlayCallSelector : MonoBehaviour
 
     void SetCard(int slot, string title, string detail, bool selected)
     {
-        cardTitleTexts[slot].text = title;
+        cardTitleTexts[slot].text = (selected?"> ":"")+title;
+        diagrams[slot].gameObject.SetActive(!string.IsNullOrEmpty(title));
+        cardBorders[slot].effectColor=selected?activeColor:UITheme.Color(UIColorRole.BorderSubtle);
         cardDetailTexts[slot].text = detail;
         cardTitleTexts[slot].color = selected ? activeColor : textColor;
         cardDetailTexts[slot].color = selected ? activeColor : mutedColor;
         cardBackgrounds[slot].color = selected
-            ? new Color(activeColor.r, activeColor.g, activeColor.b, 0.22f)
+            ? UITheme.Color(UIColorRole.SurfaceRaised)
             : cardColor;
     }
 
@@ -586,7 +618,8 @@ public class PlayCallSelector : MonoBehaviour
         if (font != null) text.font = font;
         text.text = value;
         text.fontSize = size;
-        text.fontStyle = FontStyles.Bold;
+        text.fontStyle = FontStyles.Normal;
+        var type=ThemeableUI.Bind(text,UIColorRole.TextPrimary,UITypeRole.Navigation);type.tint=false;
         text.alignment = alignment;
         text.enableWordWrapping = false;
         text.overflowMode = TextOverflowModes.Ellipsis;

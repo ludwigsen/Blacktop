@@ -84,7 +84,8 @@ public class FrontEndBackdrop : MonoBehaviour
         float mix = Mathf.SmoothStep(0, 1, Mathf.Clamp01((elapsed - hold) / fade));
         layers[1].color = new Color(1, 1, 1, mix);layers[1].enabled=mix>0;
         blur = Mathf.MoveTowards(blur, targetBlur, Time.unscaledDeltaTime * 3.5f);
-        shade.color = new Color(.015f, .025f, .025f, Mathf.Lerp(.28f, .79f, blur));
+        var tint=UITheme.Color(UIColorRole.BackgroundPrimary);
+        tint.a=Mathf.Lerp(UITheme.Current.id==UIThemeId.AfterDark?.46f:.28f,.79f,blur);shade.color=tint;
         for (int i = 0; i < layers.Length; i++)
         {
             if (materials[i] != null) materials[i].SetFloat("_Blur", blur);

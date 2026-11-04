@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68dd93daed0b84334bf4076405acce8f, type: 3}
   m_Name: FrontEndSettings
   m_EditorClassIdentifier: Blacktop::FrontEndSettings
+  submenuLogoTopPadding: 54
   menuTitleFont: {fileID: 11400000, guid: 2e606136a830948a28e096b5a0ae9f10, type: 2}
   menuFont: {fileID: 11400000, guid: abcba217e93ef4a029d3450276a4056c, type: 2}
   menuFields:

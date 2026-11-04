@@ -58,10 +58,17 @@ public class FrontEndController : MonoBehaviour
         chrome=FrontEndUI.Panel(canvas.transform,"Submenu chrome",Vector2.zero,Vector2.one,Color.clear);
         chrome.GetComponent<Image>().raycastTarget=false;
         var brand=FrontEndUI.Text(chrome,"Blacktop",settings,54);
+        brand.name="Secondary Blacktop wordmark";
+        ThemeableUI.Bind(brand,UIColorRole.TextPrimary,UITypeRole.Brand);
         if(settings.menuTitleFont!=null)brand.font=settings.menuTitleFont;
-        FrontEndUI.Anchor(brand.rectTransform,new Vector2(.04f,.91f),new Vector2(.30f,.985f));
+        FrontEndUI.Anchor(brand.rectTransform,new Vector2(.04f,1),new Vector2(.30f,1));
+        // Fixed reference-pixel padding scales with the canvas; glyphs stay below the safe top edge.
+        brand.rectTransform.offsetMin=new Vector2(0,-settings.submenuLogoTopPadding-80);
+        brand.rectTransform.offsetMax=new Vector2(0,-settings.submenuLogoTopPadding);
+        brand.alignment=TMPro.TextAlignmentOptions.MidlineLeft;
+        brand.characterSpacing=0;brand.textWrappingMode=TMPro.TextWrappingModes.NoWrap;
         var help=FrontEndUI.Text(chrome,"7 ON 7  /  OWN THE BLOCK     •     ESC / B: BACK",settings,22);
-        FrontEndUI.Anchor(help.rectTransform,new Vector2(.46f,.925f),new Vector2(.96f,.97f));help.alignment=TMPro.TextAlignmentOptions.MidlineRight;
+        FrontEndUI.Anchor(help.rectTransform,new Vector2(.46f,.885f),new Vector2(.96f,.94f));help.alignment=TMPro.TextAlignmentOptions.MidlineRight;
         content=FrontEndUI.Panel(canvas.transform,"Screen",new Vector2(.04f,.055f),new Vector2(.96f,.89f),Color.clear);
         content.GetComponent<Image>().raycastTarget=false;
         back=new InputAction("Menu back",binding:"<Keyboard>/escape");back.AddBinding("<Gamepad>/buttonEast");back.performed+=_=>Back();back.Enable();
@@ -84,9 +91,17 @@ public class FrontEndController : MonoBehaviour
         }
         bool main=screen==FrontEndScreen.Main;
         chrome.gameObject.SetActive(!main);Backdrop.SetSubmenu(!main);
-        FrontEndUI.Anchor(content,new Vector2(.04f,main?0:.055f),new Vector2(.96f,main?1:.89f));
+        FrontEndUI.Anchor(content,new Vector2(.04f,main?0:.055f),new Vector2(.96f,main?1:1-(settings.submenuLogoTopPadding+125)/1080f));
         view=FrontEndUI.Panel(content,screen.ToString(),Vector2.zero,Vector2.one,Color.clear);
         view.GetComponent<Image>().raycastTarget=false;
+        if(!main)
+        {
+            var surface=FrontEndUI.Panel(view,"Page surface",Vector2.zero,Vector2.one,UIColorRole.BackgroundPrimary,.87f);
+            surface.GetComponent<Image>().raycastTarget=false;
+            FrontEndUI.Mask(surface,UITheme.Library?.asphaltGrain);
+        }
+        var progress=chrome.GetComponent<SetupProgress>()??chrome.gameObject.AddComponent<SetupProgress>();
+        progress.Show(screen,settings);
     }
     public void ShowPreferences(){Clear(FrontEndScreen.Preferences);MainMenuView.Preferences(this,view);Focus();}
     public void ShowPlayerLab(string team=null,string id=null)
@@ -197,8 +212,8 @@ public class FrontEndController : MonoBehaviour
         var group=view.GetComponent<CanvasGroup>();
         if(group==null)group=view.gameObject.AddComponent<CanvasGroup>();
         group.interactable=false;group.blocksRaycasts=false; // Keep controller focus inside the dialog.
-        modal=FrontEndUI.Panel(canvas.transform,"Confirm",Vector2.zero,Vector2.one,new Color(0,0,0,.88f)).gameObject;
-        var frame=FrontEndUI.Panel(modal.transform,"Dialog",new Vector2(.25f,.29f),new Vector2(.75f,.72f),FrontEndUI.Ink);
+        modal=FrontEndUI.Panel(canvas.transform,"Confirm",Vector2.zero,Vector2.one,UIColorRole.ShadowPrimary,.92f).gameObject;
+        var frame=FrontEndUI.Panel(modal.transform,"Dialog",new Vector2(.25f,.29f),new Vector2(.75f,.72f),UIColorRole.BackgroundPrimary);
         var list=FrontEndUI.Vertical(frame);FrontEndUI.Anchor(list,Vector2.zero,Vector2.one);
         FrontEndUI.Text(list,title,settings,38,true,78);FrontEndUI.Text(list,text,settings,25,false,104);
         FrontEndUI.Button(list,"CANCEL / KEEP EDITING",CloseModal,settings);

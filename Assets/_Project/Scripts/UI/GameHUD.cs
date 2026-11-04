@@ -4,25 +4,11 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Single unified HUD for everything that isn't play selection: team score + Gamebreaker
-// on each side, play clock + down/distance/field position in the center. Structure
-// matches the concept board's HUD breakdown, with individually tinted grunge team
-// panels and a compact down/distance center panel.
-//
-// Typeface comes from a HUDTheme asset (assign one in the Inspector once you've built
-// TMP Font Assets from your real fonts); leave it unassigned and everything falls back
-// to TMP's default font with zero errors. Center panel (clock/downs) uses
-// theme.legibleFont; TeamScorePanel reserves theme.displayFont for team names and
-// scores.
-//
-// Pure display — every value comes from ScoreBoard/DownsTracker/PlayState's already-
-// resolved state, with one deliberate exception: the play clock is polled every frame
-// in Update() rather than event-driven, since it changes continuously with no natural
-// discrete "changed" event to hook.
-//
-// SETUP: drop on GameManager, alongside PlayState/DownsTracker/ScoreBoard. Assign a
-// HUDTheme (Assets > Create > Blacktop > HUD Theme) and PlayState's
-// Team1Identity/Team2Identity for real fonts/names/colors.
+// Unified display for score, team meters, play clock, downs and event announcements.
+// Clean geometry and Barlow typography bind to the shared UI theme; team accents remain
+// TeamIdentity-owned. All values/events come from existing gameplay owners. The play
+// clock is polled because it changes continuously; the remaining bindings are event-driven.
+// Legacy serialized artwork/font fields remain compatible with existing scene references.
 public class GameHUD : MonoBehaviour
 {
     [Header("Theme")]
@@ -67,6 +53,15 @@ public class GameHUD : MonoBehaviour
     TextMeshProUGUI postPlayText;
     InputSystem_Actions controls;
     float gameOverTime;
+    GameAnnouncement announcement;
+    int driveBefore;float losBefore,yardsBefore;
+    readonly bool[] gamebreakerWasActive=new bool[2];
+    void CapturePrePlay()
+    {
+        var ps=PlayState.Instance;if(ps==null)return;
+        driveBefore=ps.PossessionTeamId;losBefore=ps.CurrentLineOfScrimmageZ;
+        yardsBefore=DownsTracker.Instance!=null?DownsTracker.Instance.YardsToGo:float.PositiveInfinity;
+    }
 
     void Awake()
     {
@@ -92,6 +87,8 @@ public class GameHUD : MonoBehaviour
             team2Panel.ApplyIdentity(PlayState.Instance.IdentityFor(1));
 
             PlayState.Instance.OnGameOver += ShowGameOver;
+            PlayState.Instance.OnPlayReset+=CapturePrePlay;CapturePrePlay();
+            PlayState.Instance.OnPossessionChanged+=RefreshPossession;RefreshPossession(PlayState.Instance.PossessionTeamId);
             PlayState.Instance.OnTeamMeterChanged += RefreshTeamMeter;
             PlayState.Instance.OnPostPlayPresentationStarted += ShowPostPlayResult;
             PlayState.Instance.OnPostPlayPresentationCompleted += HidePostPlayResult;
@@ -120,6 +117,8 @@ public class GameHUD : MonoBehaviour
         {
             PlayState.Instance.OnTeamMeterChanged -= RefreshTeamMeter;
             PlayState.Instance.OnGameOver -= ShowGameOver;
+            PlayState.Instance.OnPlayReset-=CapturePrePlay;
+            PlayState.Instance.OnPossessionChanged-=RefreshPossession;
             PlayState.Instance.OnPostPlayPresentationStarted -= ShowPostPlayResult;
             PlayState.Instance.OnPostPlayPresentationCompleted -= HidePostPlayResult;
         }
@@ -141,6 +140,7 @@ public class GameHUD : MonoBehaviour
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
         var scaler = canvasGO.GetComponent<CanvasScaler>();
+        scaler.matchWidthOrHeight=.5f;
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
@@ -166,6 +166,7 @@ public class GameHUD : MonoBehaviour
         postPlayText = ConfigureText(textGO, theme != null ? theme.legibleFont : null, 34);
         AnchorStrip(postPlayText.rectTransform, Vector2.zero, Vector2.one);
         postPlayRoot.SetActive(false);
+        announcement=postPlayRoot.AddComponent<GameAnnouncement>();announcement.Initialize(postPlayText);
     }
 
     // Full-screen dim + winner + final score + prompt. Built hidden, last, with its own
@@ -199,7 +200,7 @@ public class GameHUD : MonoBehaviour
         promptGO.transform.SetParent(gameOverRoot.transform, false);
         var prompt = ConfigureText(promptGO, legibleFont, 30);
         prompt.text = "PRESS CONFIRM TO PLAY AGAIN";
-        prompt.color = new Color(1f, 1f, 1f, 0.7f);
+        ThemeableUI.Bind(prompt,UIColorRole.TextSecondary,UITypeRole.Body);
         AnchorStrip(promptGO.GetComponent<RectTransform>(), new Vector2(0f, 0.25f), new Vector2(1f, 0.35f));
 
         gameOverRoot.SetActive(false);
@@ -235,7 +236,17 @@ public class GameHUD : MonoBehaviour
             PlayState.PlayEndReason.OutOfBounds => "OUT OF BOUNDS",
             _ => "PLAY DEAD"
         };
-        postPlayRoot.SetActive(true);
+        var ps=PlayState.Instance;
+        bool turnover=ps.PossessionTeamId!=driveBefore&&reason!=PlayState.PlayEndReason.Touchdown&&reason!=PlayState.PlayEndReason.Safety;
+        // Scoring resets the LOS for the next drive; that reset is not a first-down gain.
+        bool firstDown=reason!=PlayState.PlayEndReason.Touchdown&&reason!=PlayState.PlayEndReason.Safety&&
+            reason!=PlayState.PlayEndReason.Interception&&!turnover&&
+            ps.DirectionFor(driveBefore).YardsPastLOS(ps.CurrentLineOfScrimmageZ,losBefore)>=yardsBefore;
+        var kind=reason==PlayState.PlayEndReason.Touchdown?AnnouncementKind.Touchdown:
+            reason==PlayState.PlayEndReason.Interception||turnover?AnnouncementKind.Turnover:
+            firstDown?AnnouncementKind.FirstDown:AnnouncementKind.Information;
+        if(turnover)postPlayText.text="TURNOVER!";else if(firstDown)postPlayText.text="FIRST DOWN!";
+        announcement.Show(kind,postPlayText.text);
     }
 
     void HidePostPlayResult(PlayState.PlayEndReason _)
@@ -268,11 +279,11 @@ public class GameHUD : MonoBehaviour
         scorebugRT.offsetMin = new Vector2(0f, -topInset);
         scorebugRT.offsetMax = new Vector2(0f, -topInset);
         var baseImage = scorebugGO.GetComponent<Image>();
-        baseImage.sprite = scorebugBase;
+        baseImage.sprite = null; // Existing serialized artwork is retained, but clean geometry owns the active silhouette.
         baseImage.type = Image.Type.Simple;
-        baseImage.color = scorebugBase != null ? Color.white : backgroundColor;
-        // Individual tinted plates supply the silhouette when panel art is assigned.
-        baseImage.enabled = scorebugBase != null || team1PanelBackground == null;
+        ThemeableUI.Bind(baseImage,UIColorRole.ShadowPrimary);
+        // Team plates supply the same clean silhouette in both themes.
+        baseImage.enabled = true;
         baseImage.raycastTarget = false;
 
         BuildTeamPanel(scorebugGO.transform, isTeam1: true);
@@ -299,10 +310,10 @@ public class GameHUD : MonoBehaviour
             scoreFontSize: scoreFontSize,
             labelFontSize: gamebreakerLabelFontSize,
             reverseFill: !isTeam1,
-            backgroundSprite: isTeam1 ? team1PanelBackground : (team2PanelBackground != null ? team2PanelBackground : team1PanelBackground),
+            backgroundSprite: null,
             flipBackground: !isTeam1 && team2PanelBackground == null,
             textColor: theme != null ? theme.scorebugTextColor : Color.white,
-            outlineWidth: theme != null ? theme.scorebugOutlineWidth : 0.22f,
+            outlineWidth: .07f,
             logoScale: theme != null ? theme.logoScale : 1.25f,
             logoOutwardTilt: theme != null ? theme.logoOutwardTilt : 20f,
             nameOutwardShift: theme != null ? theme.nameOutwardShift : 0.10f,
@@ -324,7 +335,7 @@ public class GameHUD : MonoBehaviour
         rt.offsetMax = Vector2.zero;
 
         // An opaque center keeps field action from reducing down/distance readability.
-        centerGO.GetComponent<Image>().color = backgroundColor;
+        ThemeableUI.Bind(centerGO.GetComponent<Image>(),UIColorRole.BackgroundPrimary);
         centerGO.GetComponent<Image>().raycastTarget = false;
         var border = centerGO.GetComponent<Outline>();
         border.effectColor = new Color(0.65f, 0.65f, 0.62f, 0.8f);
@@ -334,7 +345,7 @@ public class GameHUD : MonoBehaviour
         var clockGO = new GameObject("PlayClock", typeof(TextMeshProUGUI));
         clockGO.transform.SetParent(centerGO.transform, false);
         clockText = ConfigureText(clockGO, legibleFont, Mathf.RoundToInt(centerFontSize * 0.62f));
-        clockText.color = new Color(1f, 1f, 1f, 0.68f);
+        ThemeableUI.Bind(clockText,UIColorRole.TextSecondary,UITypeRole.Navigation);
         AnchorStrip(clockGO.GetComponent<RectTransform>(), new Vector2(0.10f, 0.08f), new Vector2(0.90f, 0.29f));
 
         var downGO = new GameObject("DownAndDistance", typeof(TextMeshProUGUI));
@@ -343,14 +354,14 @@ public class GameHUD : MonoBehaviour
         AnchorStrip(downGO.GetComponent<RectTransform>(), new Vector2(0.04f, 0.28f), new Vector2(0.96f, 0.94f));
     }
 
-    // font left null is fine — TMP falls back to TMP_Settings.defaultFontAsset, same as
-    // ReceiverSelectionUI already relies on elsewhere in this project.
+    // The shared theme supplies the native font; null still permits TMP fixture fallback.
     static TextMeshProUGUI ConfigureText(GameObject go, TMP_FontAsset font, int fontSize)
     {
         var text = go.GetComponent<TextMeshProUGUI>();
         if (font != null) text.font = font;
         text.fontSize = fontSize;
-        text.fontStyle = FontStyles.Bold;
+        text.fontStyle = FontStyles.Normal;
+        ThemeableUI.Bind(text,UIColorRole.TextPrimary,fontSize>=56?UITypeRole.Numeral:UITypeRole.Navigation);
         text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
         text.enableWordWrapping = false;
@@ -370,6 +381,11 @@ public class GameHUD : MonoBehaviour
         rt.offsetMax = Vector2.zero;
     }
 
+    void RefreshPossession(int teamId)
+    {
+        team1Panel?.SetPossession(teamId==0);team2Panel?.SetPossession(teamId==1);
+    }
+
     void RefreshScore()
     {
         if (ScoreBoard.Instance == null) return;
@@ -379,7 +395,11 @@ public class GameHUD : MonoBehaviour
 
     void RefreshTeamMeter(int teamId, float value)
     {
-        (teamId == 0 ? team1Panel : team2Panel)?.SetGamebreaker(value, PlayState.Instance.IsGamebreakerActiveFor(teamId));
+        bool active=PlayState.Instance.IsGamebreakerActiveFor(teamId);
+        (teamId == 0 ? team1Panel : team2Panel)?.SetGamebreaker(value,active);
+        if(active&&!gamebreakerWasActive[teamId]&&announcement!=null&&!PlayState.Instance.IsPlayEnding)
+            announcement.Show(AnnouncementKind.Gamebreaker,"GAMEBREAKER!",1.35f);
+        gamebreakerWasActive[teamId]=active;
     }
 
     void RefreshClock()

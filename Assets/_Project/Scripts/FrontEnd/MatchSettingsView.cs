@@ -9,25 +9,39 @@ public static class MatchSettingsView
     public static readonly string[] DefenseNames={"EDGE-L","EDGE-R","LB-L","LB-R","DB-L","DB-R","S"};
     public static void Build(FrontEndController menu,RectTransform root)
     {
-        Header(root,menu,menu.Mode==ExhibitionMode.Pickup?"PICKUP / MATCH SETTINGS":"HEAD 2 HEAD / MATCH SETTINGS");
-        var area=FrontEndUI.Panel(root,"Settings",new Vector2(.1f,.13f),new Vector2(.9f,.87f),Color.clear);
-        var list=FrontEndUI.Scroll(area);var options=menu.Options;
+        Header(root,menu,menu.Mode==ExhibitionMode.Pickup?"PICKUP / BUILD YOUR MATCH":"HEAD 2 HEAD / BUILD YOUR MATCH");
+        var options=menu.Options;
         string team(string id)=>string.IsNullOrEmpty(id)?"RANDOM":menu.settings.Team(id)?.identity.teamName;
-        FrontEndUI.Text(list,menu.Mode==ExhibitionMode.Pickup?"YOUR SEVEN  vs  CPU DRAFT  /  FIRST TO 21":$"YOU: {team(menu.HumanTeam)}    vs    CPU: {team(menu.OpponentTeam)}",menu.settings,32,true,64);
-        FrontEndUI.Picker(list,"Your side",new[]{"RANDOM","HOME / FIRST POSSESSION","AWAY / DEFEND FIRST"},menu.MatchSide+1,i=>menu.MatchSide=i-1,menu.settings);
+        var summary=FrontEndUI.Text(root,menu.Mode==ExhibitionMode.Pickup?"YOUR SEVEN  vs  CPU DRAFT  /  FIRST TO 21":$"YOU: {team(menu.HumanTeam)}    vs    CPU: {team(menu.OpponentTeam)}",menu.settings,30,true);
+        FrontEndUI.Anchor(summary.rectTransform,new Vector2(.02f,.80f),new Vector2(.60f,.88f));
+        var side=FrontEndUI.Vertical(root,"Possession choice",0);FrontEndUI.Anchor(side,new Vector2(.60f,.80f),new Vector2(.98f,.88f));
+        FrontEndUI.Picker(side,"Your side",new[]{"RANDOM","HOME / FIRST POSSESSION","AWAY / DEFEND FIRST"},menu.MatchSide+1,i=>menu.MatchSide=i-1,menu.settings);
+        var field=Card("03 / FIELD",0,.33f);var modifier=Card("04 / MODIFIER",.345f,.675f);var difficulty=Card("05 / DIFFICULTY",.69f,1);
         var fields=MatchConfiguration.PlayableFields(menu.settings);
-        FrontEndUI.Picker(list,"Field",new[]{"RANDOM"}.Concat(fields.Select(f=>f.displayName)).ToArray(),
-            Array.FindIndex(fields,f=>f.venueId==options.fieldId)+1,i=>options.fieldId=i==0?null:fields[i-1].venueId,menu.settings);
+        var fieldButtons=new List<UnityEngine.UI.Button>();
+        AddField("RANDOM",null);
+        foreach(var venue in fields)AddField(venue.displayName.ToUpperInvariant(),venue.venueId);
+        FrontEndUI.Text(field,"Choose the block. The modifier is selected independently.",menu.settings,24,false,80);
         var conditions=Enum.GetValues(typeof(MatchCondition)).Cast<MatchCondition>().ToArray();
-        var severityRow=default(RectTransform);
-        FrontEndUI.Picker(list,"Condition",conditions.Select(c=>c.ToString().ToUpperInvariant()).ToArray(),(int)options.condition,i=>{
+        RectTransform severity=null;
+        FrontEndUI.Picker(modifier,"Condition",conditions.Select(c=>c.ToString().ToUpperInvariant()).ToArray(),(int)options.condition,i=>{
             options.condition=(MatchCondition)i;UpdateSeverity();},menu.settings);
-        severityRow=FrontEndUI.Vertical(list,"Severity",0);severityRow.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().preferredHeight=62;
-        FrontEndUI.Picker(severityRow,"Severity",new[]{"CLEAN / 0.5x","REGULAR / 1.0x","HARD / 1.8x"},(int)options.severity,i=>options.severity=(ConditionSeverity)i,menu.settings);
-        FrontEndUI.Picker(list,"Difficulty",new[]{"RANDOM","EASY","NORMAL","HARD","STREET LEGEND"},(int)options.difficulty,i=>options.difficulty=(MatchDifficulty)i,menu.settings);
+        severity=FrontEndUI.Vertical(modifier,"Severity",0);severity.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().preferredHeight=72;
+        FrontEndUI.Picker(severity,"Severity",new[]{"CLEAN / 0.5x","REGULAR / 1.0x","HARD / 1.8x"},(int)options.severity,i=>options.severity=(ConditionSeverity)i,menu.settings);
+        FrontEndUI.Text(modifier,"Clear ignores severity. Conditions apply equally to both squads.",menu.settings,24,false,120);
+        var difficultyButtons=new List<UnityEngine.UI.Button>();
+        foreach(MatchDifficulty choice in Enum.GetValues(typeof(MatchDifficulty)))
+        {
+            var selected=choice;
+            var button=FrontEndUI.Button(difficulty,DifficultyName(choice),()=>{
+                options.difficulty=selected;
+                for(int i=0;i<difficultyButtons.Count;i++)difficultyButtons[i].GetComponent<ThemeButton>().SetSelected((int)selected==i);
+            },menu.settings,62);
+            button.GetComponent<ThemeButton>().SetSelected(choice==options.difficulty);difficultyButtons.Add(button);
+        }
         UpdateSeverity();
-        FrontEndUI.Text(list,"Random resolves on review. Clear ignores severity. Rematch keeps every resolved choice.",menu.settings,23,false,58);
-        FrontEndUI.Text(list,menu.Message,menu.settings,24,false,60);
+        var status=FrontEndUI.Text(root,"Random resolves on review. Rematch keeps every resolved choice.  "+menu.Message,menu.settings,22);
+        FrontEndUI.Anchor(status.rectTransform,new Vector2(.02f,.115f),new Vector2(.98f,.20f));
         var review=FrontEndUI.Button(root,"REVIEW MATCH",menu.PrepareMatch,menu.settings,82);
         FrontEndUI.Anchor(review.GetComponent<RectTransform>(),new Vector2(.65f,0),new Vector2(1,.1f));
         if(menu.Mode==ExhibitionMode.HeadToHead)
@@ -36,10 +50,33 @@ public static class MatchSettingsView
             FrontEndUI.Anchor(manage.GetComponent<RectTransform>(),new Vector2(.25f,0),new Vector2(.6f,.1f));
         }
         Back(menu,root);
+        var progress=root.GetComponentInParent<FrontEndController>().GetComponentInChildren<SetupProgress>();
+        // Spatial focus follows the same Field → Modifier → Difficulty order as the setup cards.
+        for(int step=2;step<=4;step++)
+        {
+            var section=step==2?field:step==3?modifier:difficulty;
+            foreach(var control in section.GetComponentsInChildren<UnityEngine.UI.Selectable>())
+            {var focus=control.gameObject.AddComponent<SetupStepFocus>();focus.progress=progress;focus.step=step;}
+        }
+        RectTransform Card(string name,float left,float right)
+        {
+            var panel=FrontEndUI.Panel(root,name,new Vector2(left,.22f),new Vector2(right,.78f),UIColorRole.SurfacePrimary);
+            var list=FrontEndUI.Vertical(panel,name,20);FrontEndUI.Anchor(list,Vector2.zero,Vector2.one);
+            list.GetComponent<UnityEngine.UI.VerticalLayoutGroup>().spacing=9;
+            FrontEndUI.Text(list,name,menu.settings,36,true,66);return list;
+        }
+        void AddField(string name,string id)
+        {
+            var button=FrontEndUI.Button(field,name,()=>{
+                options.fieldId=id;
+                for(int i=0;i<fieldButtons.Count;i++)fieldButtons[i].GetComponent<ThemeButton>().SetSelected(i==0?id==null:fields[i-1].venueId==id);
+            },menu.settings,82);
+            button.GetComponent<ThemeButton>().SetSelected(options.fieldId==id);fieldButtons.Add(button);
+        }
         void UpdateSeverity()
         {
-            if(severityRow==null)return;
-            foreach(var button in severityRow.GetComponentsInChildren<UnityEngine.UI.Button>())button.interactable=options.condition!=MatchCondition.Clear;
+            if(severity==null)return;
+            foreach(var button in severity.GetComponentsInChildren<UnityEngine.UI.Button>())button.interactable=options.condition!=MatchCondition.Clear;
         }
     }
     public static void HumanLineup(FrontEndController menu,RectTransform root)

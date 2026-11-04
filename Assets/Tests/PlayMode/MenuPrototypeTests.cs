@@ -124,7 +124,7 @@ public class MenuPrototypeTests
     }
 
     [UnityTest]
-    public IEnumerator EveryLabPageFitsWithoutScrollingAt1080And720()
+    public IEnumerator EveryLabPageKeepsFixedActionsAndPreviewInBoundsAt1080And720()
     {
         foreach(var size in new[]{new Vector2Int(1920,1080),new Vector2Int(1280,720)})
         {
@@ -134,9 +134,12 @@ public class MenuPrototypeTests
             foreach(PlayerLabPage page in Enum.GetValues(typeof(PlayerLabPage)))
             {
                 menu.ShowLabPage(page);yield return new WaitForSecondsRealtime(.35f);Canvas.ForceUpdateCanvases();
-                var lab=Object.FindAnyObjectByType<PlayerLabView>();Assert.That(lab.GetComponentsInChildren<ScrollRect>(),Is.Empty,page.ToString());
+                var lab=Object.FindAnyObjectByType<PlayerLabView>();
+                bool fixedPage=page==PlayerLabPage.Summary||page==PlayerLabPage.Attributes;
+                Assert.That(lab.GetComponentsInChildren<ScrollRect>().Length,Is.EqualTo(fixedPage?0:1),page.ToString());
                 foreach(var control in lab.GetComponentsInChildren<Selectable>())
                 {
+                    if(control.GetComponentInParent<ScrollRect>()!=null)continue; // Accordion contents are clipped by their viewport.
                     var corners=new Vector3[4];((RectTransform)control.transform).GetWorldCorners(corners);
                     Assert.That(corners.All(p=>p.x>=-2&&p.y>=-2&&p.x<=Screen.width+2&&p.y<=Screen.height+2),Is.True,page+" / "+control.name);
                 }
@@ -145,13 +148,16 @@ public class MenuPrototypeTests
         }
     }
 
-    static void Capture(string name,int width,int height)
+    public static void Capture(string name,int width,int height)
     {
         // Render the real canvas with a native camera: batchmode has no reliable Game view capture.
         var go=new GameObject("Menu capture",typeof(Camera));var camera=go.GetComponent<Camera>();camera.cullingMask=-1;
         camera.transform.position=new Vector3(0,0,-10000);camera.orthographic=true;camera.orthographicSize=5;
         camera.nearClipPlane=.01f;camera.farClipPlane=10;
         camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=Color.black;
+        // Gameplay captures include the real field camera; menu captures retain the isolated overlay view.
+        if(SceneManager.GetActiveScene().name=="SampleScene"&&Camera.main!=null)
+        {camera.CopyFrom(Camera.main);camera.cullingMask|=1<<5;}
         var target=new RenderTexture(width,height,24);target.Create();camera.targetTexture=target;
         var canvases=Object.FindObjectsByType<Canvas>().Where(c=>c.isRootCanvas&&c.renderMode==RenderMode.ScreenSpaceOverlay).ToArray();
         foreach(var canvas in canvases){canvas.renderMode=RenderMode.ScreenSpaceCamera;canvas.worldCamera=camera;canvas.planeDistance=1;}

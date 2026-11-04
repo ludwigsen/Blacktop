@@ -30,7 +30,7 @@ public class PlayerLabView : MonoBehaviour
         var image=FrontEndUI.PreviewSurface(transform,new Vector2(0,.30f),new Vector2(.42f,.88f));
         image.transform.parent.GetComponent<Image>().color=Color.clear;
         preview=image.gameObject.AddComponent<RuntimePlayerPreview>();preview.Initialize(Settings);
-        var name=FrontEndUI.Text(transform,$"<color=#D6F184>#{session.Draft.record.jerseyNumber:00}</color>  {session.Draft.record.displayName.ToUpperInvariant()}",Settings,39);
+        var name=FrontEndUI.Text(transform,$"#{session.Draft.record.jerseyNumber:00}  {session.Draft.record.displayName.ToUpperInvariant()}",Settings,39);
         FrontEndUI.Anchor(name.rectTransform,new Vector2(.02f,.84f),new Vector2(.43f,.91f));
         dimensions=FrontEndUI.Text(transform,"",Settings,24);
         FrontEndUI.Anchor(dimensions.rectTransform,new Vector2(.02f,.29f),new Vector2(.44f,.34f));
@@ -59,16 +59,26 @@ public class PlayerLabView : MonoBehaviour
         }
         else
         {
-            var tabs=FrontEndUI.Row(transform,43);FrontEndUI.Anchor(tabs,new Vector2(.47f,.81f),new Vector2(1,.865f));
-            FrontEndUI.Anchor(form,new Vector2(.47f,.30f),new Vector2(1,.795f));
-            foreach(var tab in new[]{PlayerLabPage.Body,PlayerLabPage.Face,PlayerLabPage.Hair,PlayerLabPage.Fit,PlayerLabPage.Accessories,PlayerLabPage.Identity})
+            // Customization has one scrollable accordion, keeping the 3D preview and actions fixed.
+            Destroy(form.gameObject);
+            var area=FrontEndUI.Panel(transform,"Customization accordion",new Vector2(.47f,.30f),new Vector2(1,.86f),UIColorRole.SurfacePrimary);
+            form=FrontEndUI.Scroll(area);
+            foreach(var section in new[]{PlayerLabPage.Identity,PlayerLabPage.Body,PlayerLabPage.Face,PlayerLabPage.Hair,PlayerLabPage.Fit,PlayerLabPage.Accessories})
             {
-                if(tab==PlayerLabPage.Identity&&!menu.CanAuthorPlayers)continue;
-                var choice=tab;
-                var button=FrontEndUI.Button(tabs,tab.ToString().ToUpperInvariant(),()=>menu.ShowLabPage(choice),Settings,43);
-                button.interactable=tab!=page;
-                button.GetComponentInChildren<TextMeshProUGUI>().fontSize=22;
+                if(section==PlayerLabPage.Identity&&!menu.CanAuthorPlayers)continue;
+                var choice=section;
+                string label=section==PlayerLabPage.Body?"BODY BUILD / HEIGHT":section==PlayerLabPage.Hair?"HAIR / FACIAL HAIR":section.ToString().ToUpperInvariant();
+                var header=FrontEndUI.Button(form,label,()=>menu.ShowLabPage(choice),Settings,48);
+                header.GetComponent<ThemeButton>().SetSelected(section==page);
+                if(section!=page)continue;
+                var sectionFields=FrontEndUI.Vertical(form,"Expanded "+section,8);
+                sectionFields.gameObject.AddComponent<LayoutElement>();
+                form=sectionFields;
+                BuildSection();
+                form=(RectTransform)sectionFields.parent;
             }
+            void BuildSection()
+            {
             switch(page)
             {
                 case PlayerLabPage.Body:Body();break;
@@ -90,6 +100,7 @@ public class PlayerLabView : MonoBehaviour
                     Note("Unavailable pieces are marked MISSING ART.");break;
                 case PlayerLabPage.Identity:Identity();break;
             }
+        }
         }
 
         status=FrontEndUI.Text(transform,session.Dirty?"UNSAVED CHANGES":menu.CanAuthorPlayers?"DEV ACCESS  /  LOCAL ROSTER":"COSMETIC EDITING  /  RATINGS LOCKED",Settings,22);
@@ -213,7 +224,7 @@ public class PlayerLabView : MonoBehaviour
             var record=player.record;
             var button=FrontEndUI.Button(strip,$"#{record.jerseyNumber:00}\n{record.displayName.ToUpperInvariant()}",()=>menu.SelectLabPlayer(session.TeamId,record.id),Settings,83);
             var text=button.GetComponentInChildren<TextMeshProUGUI>();text.fontSize=24;text.enableAutoSizing=true;text.fontSizeMin=18;text.fontSizeMax=24;
-            if(record.id==session.Draft.record.id)button.GetComponent<Image>().color=new Color(.30f,.36f,.21f);
+            if(record.id==session.Draft.record.id)button.GetComponent<ThemeButton>().SetSelected(true);
         }
         var pager=FrontEndUI.Row(transform,32);FrontEndUI.Anchor(pager,new Vector2(0,0),new Vector2(1,.038f));
         int displayed=page;

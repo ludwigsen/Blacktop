@@ -382,3 +382,83 @@ Final graphics-enabled full Play Mode regression after both corrections: **102 p
 
 
 **4K backdrop replacement (2026-11-03):** The slideshow now uses the eleven supplied cinematic PNGs in the order documented in Art/MainMenu/README.md. Verify every image appears over one complete loop, the last returns to Alley, aspect ratios stay intact, and transitions remain continuous. Open Settings or Player Lab during rotation: the new image must crossfade while blurred, then return to a sharp field on Main. The existing MenuPrototypeTests also checks all eleven imports retain 3840x2160. Focused graphics-enabled MenuPrototypeTests: **5 passed, 0 failed, 0 skipped** (16.347 seconds), including all eleven 3840x2160 texture imports. All eleven project PNG SHA-256 hashes match the supplied originals and the serialized GUIDs match the documented order. The macOS development build succeeded (434,981,423 bytes reported). Native 1280x720 checks showed Alley on Main, a crossfade with Downtown, blurred Underpass in Settings, and sharp Shipyard after Escape returned to Main. The menu continues rotating while a submenu is open. No roster or SFX edits were saved. The app is left on Main. Logs, XML, source hashes and 1080p Main/Settings renders are under ignored Builds/Validation/blacktop-menu-4k-* and Menu-4K-*.png; native screenshots are in the chat computer-use record. This image-only follow-up did not repeat the prior full 102-test gameplay run, Windows or physical-controller checks.
+
+
+## T-109: UI themes, contrast and persistence (2026-11-04)
+
+Start MainMenu with no Blacktop.UITheme preference: Street Classic is the default.
+Settings → UI THEME selects After Dark using mouse, keyboard arrows/Submit and a
+controller. Open elements must recolor immediately; return to menus, enter gameplay,
+restart the app, and verify the selection persists. Repeat Street Classic. Bright
+selection/pressed surfaces use dark ink text and a shape/focus marker. Team crests,
+team accents, ratings, GUIDs, saves, input mappings and gameplay values stay unchanged.
+Repeatedly enter/leave pages and switch themes; no stale listeners or missing fonts.
+
+UIThemeTests uses disposable roster saves and restores the original theme preference.
+It exercises the actual Settings picker, immediate color/contrast roles, preference
+reload, newly built screens and source/team/roster isolation. Native Barlow font
+assignments are checked. The four optional mask slots are intentionally unassigned.
+
+## T-110: Logo safe margin, editor accordions and rating tiers
+
+At 1280x720, 1920x1080, 2560x1440 and 3840x2160, open Settings, New Game, both team
+screens, Pickup, roster tools and each Player Lab page in both themes. Confirm the
+Blacktop glyphs have clear space above them, the header/content do not collide,
+fixed controls are on screen, text stays legible and panel geometry stays crisp.
+The tunable submenuLogoTopPadding default is 54 reference pixels. Automated checks
+measure visible glyph bounds with at least 20 scaled pixels of top clearance.
+
+Summary/Attributes remain fixed. Fit/Body and developer Create/Edit use a vertical
+accordion; scroll its form with the mouse and move controller focus to the last
+header. Focus must reveal the entry while preview, save/discard and roster strip
+stay fixed. Rotate/zoom the model; edit a real field, save, restart, and discard a
+second edit. Existing save/access/derived-weight tests remain active. This supersedes
+the historical T-108 requirement that customization never scroll; the fixed summary
+and rating panes still do not scroll.
+
+All 12 attributes retain exact numbers and twenty discrete cells. At 0,4,5,8,9,12,
+13,16,17,20 check the precise filled count and constant tier color across both themes:
+red/orange/yellow/blue/light-blue. No green/purple/gradient. Appearance/ratings stay
+independent. Native captures and control/glyph bounds are checked at all four sizes.
+
+## T-111: Play selection, clean scorebug and announcement lifecycle
+
+Use both human sides through Head 2 Head and Pickup. Verify ALL/PASS/RUN/TRICK and
+ALL/BLITZ/ZONE/MAN categories, category/play keyboard/controller navigation, mouse
+selection and confirmation, crisp authored schematics, selected border and selection
+marker. Empty authored categories stay empty; no play data is manufactured. The
+custom Graphic must have CanvasRenderer and a nonempty mesh (regression for the
+initial blank schematic). Schematics illustrate authored routes/jobs, not exact
+execution trajectories or unavailable football animations.
+
+Check team crest orientation, original independent team accents/meters, names,
+scores, play clock, downs/distance/field spot and possession marker. No distressed
+scorebug sprite should cover important text. Trigger touchdown, first down, turnover,
+Gamebreaker and game over through normal gameplay. Existing post-play delay, AI
+reactions, input handoff, huddle, rematch and return-to-menu must remain unchanged.
+Both themes get the same compact geometry with palette-specific surfaces/accents.
+
+Actual final graphics-enabled Unity 6000.5.6f1 full Play Mode run: **117 passed,
+0 failed, 0 skipped**, **140.779226 seconds**. This includes a resolved-play test that
+scores a real held-ball touchdown and earns a real first down in both themes,
+ensuring the receiving-drive reset cannot relabel a touchdown. Earlier focused
+UIThemeTests + MenuPrototypeTests passed 19/19. Final evidence: ignored
+Builds/Validation/ui-release.xml and ui-release.log.
+
+Both themes have native canvas PNGs at 720p/1080p/1440p/4K; representative screens
+were rendered and inspected. Event-treatment captures are component visual fixtures;
+full existing gameplay regressions separately validate the event flow. They are not
+claims of a human-played match or physical-controller acceptance. Windows and a
+human-played/controller match remain unperformed. Legacy gameplay nameplate overlap
+and provisional character/play/venue art remain recorded limitations.
+
+
+Final macOS development build: **0 errors / 408 reported warnings**, 435,525,615
+bytes reported (the earlier build reported 438 warnings). Actual standalone native
+checks exercised keyboard and mouse navigation, immediate Street Classic/After Dark
+switching, background cycling/blur, secondary-logo clearance, and After Dark retained
+after a full app restart. Street Classic was restored and the app left on Main.
+No runtime exception was found in the captured startup/settings Player log. No roster
+edits were saved. This does not claim a physical-controller or human-played full match.
+Build and native evidence: ignored Builds/Validation/ui-release-build.log and
+ui-native-player.log; screenshots are in the chat computer-use record.

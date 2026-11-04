@@ -34,7 +34,7 @@ public static class MenuPrototypeSetup
         Debug.Log("MENU_PROTOTYPE_ASSETS_READY: "+settings.menuFields.Length+" fields, Blacktop Pro Duo and Barlow Condensed.");
     }
 
-    static TMP_FontAsset Font(string name,string characters)
+    public static TMP_FontAsset Font(string name,string characters)
     {
         string path=Art+"/Fonts/"+name+" SDF.asset";
         var asset=AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);

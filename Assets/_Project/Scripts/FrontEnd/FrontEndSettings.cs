@@ -6,6 +6,8 @@ using UnityEngine;
 public class FrontEndSettings : ScriptableObject
 {
     [Header("Menu presentation")]
+    [Tooltip("Reference-resolution pixels above the secondary-page wordmark, including ascender clearance.")]
+    [Range(32f,100f)] public float submenuLogoTopPadding=54f;
     public TMPro.TMP_FontAsset menuTitleFont;
     public TMPro.TMP_FontAsset menuFont;
     public Texture2D[] menuFields = Array.Empty<Texture2D>();

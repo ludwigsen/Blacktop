@@ -25,7 +25,7 @@ public static class RosterBrowserView
         FrontEndUI.Anchor(heading.rectTransform,new Vector2(0,.9f),Vector2.one);
         var area=FrontEndUI.Panel(root,"Roster",new Vector2(0,.14f),new Vector2(.65f,.88f),Color.clear);
         var list=FrontEndUI.Scroll(area);
-        var side=FrontEndUI.Panel(root,"Actions",new Vector2(.68f,.14f),new Vector2(1,.88f),new Color(.09f,.11f,.13f));
+        var side=FrontEndUI.Panel(root,"Actions",new Vector2(.68f,.14f),new Vector2(1,.88f),UIColorRole.SurfacePrimary);
         var actions=FrontEndUI.Scroll(side,"Roster actions");
         var detail=FrontEndUI.Text(actions,"",settings,25,false,110);
         foreach(var player in roster.players)

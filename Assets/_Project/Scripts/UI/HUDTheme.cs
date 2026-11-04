@@ -1,14 +1,14 @@
 using TMPro;
 using UnityEngine;
 
-// Shared HUD typography. Team names/scores use the display face; supporting copy uses Outfit.
+// Legacy scene-compatible typography references. The shared UI theme assigns native Barlow weights.
 [CreateAssetMenu(menuName = "Blacktop/HUD Theme")]
 public class HUDTheme : ScriptableObject
 {
-    [Tooltip("Old London — team names and score digits.")]
+    [Tooltip("Barlow Condensed ExtraBold — team names and score digits.")]
     public TMP_FontAsset displayFont;
 
-    [Tooltip("Outfit — Gamebreaker, downs, field position, clock, and other HUD copy.")]
+    [Tooltip("Barlow Condensed SemiBold — Gamebreaker, downs, field position and clock.")]
     public TMP_FontAsset legibleFont;
 
     // SDF outline settings are copied to a panel-owned material, never the shared font asset.
