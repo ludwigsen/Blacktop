@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbbb0cb66f7d4e23bd8b0429276ae0d2, type: 3}
+  m_Name: AfterDark
+  m_EditorClassIdentifier: Blacktop::BlacktopTheme
+  id: 1
+  displayName: After Dark
+  colors:
+  - {r: 0.043137256, g: 0.0627451, b: 0.1254902, a: 1}
+  - {r: 0.039215688, g: 0.078431375, b: 0.15686275, a: 1}
+  - {r: 0.105882354, g: 0.14509805, b: 0.2509804, a: 1}
+  - {r: 0.14509805, g: 0.20392157, b: 0.32156864, a: 1}
+  - {r: 0.9490196, g: 0.95686275, b: 0.98039216, a: 1}
+  - {r: 0.57254905, g: 0.6431373, b: 0.77254903, a: 1}
+  - {r: 0.039215688, g: 0.078431375, b: 0.15686275, a: 1}
+  - {r: 0.20392157, g: 0.3019608, b: 0.5686275, a: 1}
+  - {r: 0.45490196, g: 0.8509804, b: 0.92941177, a: 1}
+  - {r: 1, g: 0.7058824, b: 0.32941177, a: 1}
+  - {r: 1, g: 0.41960785, b: 0.4117647, a: 1}
+  - {r: 0.3882353, g: 0.78431374, b: 0.64705884, a: 1}
+  - {r: 1, g: 0.7058824, b: 0.32941177, a: 1}
+  - {r: 1, g: 0.7058824, b: 0.32941177, a: 1}
+  - {r: 0.2627451, g: 0.34509805, b: 0.4745098, a: 1}
+  - {r: 0.019607844, g: 0.039215688, b: 0.078431375, a: 1}
+  textureStrength: 0.045

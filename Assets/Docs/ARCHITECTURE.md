@@ -252,3 +252,46 @@ Detailed setup, save recovery, source commit, source-data migration, preset exte
 `CharacterBlenderBridge` is Editor-only. It exports a compressed exact-mesh/rest-rig seed for initial conversion, and validates/applies Blender geometry exports to existing mesh assets with Undo. Bone-name order and existing bind poses/GUIDs are preserved; no runtime Blender dependency is introduced. `export_meshes.py` exports the current artist-edited base meshes; `build_sources.py` is a protected seed conversion utility, not the artist export path. Preview materials are separate from Unity's existing palette/shader data.
 
 Four editable Eye mesh assets copy the original imported eye geometry/bind poses. PlayerModel's nested renderer overrides reference those meshes; bone/material/Avatar/root-transform bindings remain intact. Original FBX/model metadata, gameplay prefab and all existing body/garment mesh assets remain unchanged by source conversion. The original shared skeleton still owns animation, and geometry imports never alter it.
+
+
+## Main menu presentation and player lab (2026-11-02)
+
+The existing MainMenu scene and FrontEndController remain authoritative. FrontEndBackdrop owns two field-image layers, a continuous unscaled-time crossfade, cover cropping, and submenu-only blur. It caches low-resolution separable Gaussian blur textures at initialization and releases them with its materials on destruction; per-frame presentation blends sharp/soft samples. The Gaussian filter has its own shader, separate from the single-pass visible UI composite: standalone overlay canvases also draw additional material passes, which would overwrite blur and crossfade alpha if the offline filter were included on the visible material. FrontEndSettings explicitly references eleven owner-supplied 3840x2160 images, both shaders, Blacktop Pro Duo and Barlow Condensed TMP font assets; hold/blend/transition/blur tuning is exposed in the Inspector. MainMenuView builds the centered brand and New Game / Edit Players / Settings / Quit. New Game retains the shipped Head 2 Head / Pickup and MatchBootstrap path.
+
+PlayerLabView provides Summary -> Attributes or Fit & Body using the existing PlayerEditorSession. Its left visual-only preview, right fixed-page controls and bottom seven-card roster never register gameplay actors. Paging supports reserves without scrolling. One draft survives lab category changes; switching player/team or leaving with unsaved edits requires Save or Discard. The developer roster tools remain available for create/duplicate/transfer/delete, lineup authoring and explicit source commits. Those existing tools are distinct from the simple lab presentation.
+
+Full authoring requires FrontEndSettings.allowDevelopmentEditing AND (Application.isEditor OR Debug.isDebugBuild). Standard builds can view ratings and edit cosmetics but cannot open ratings, identity or physique authoring. This is a product UI gate, not a security boundary against modified clients. No development toggle is exposed in Settings. AppearanceSelection/PlayerAppearanceDefinition weightPounds is optional appearance-only metadata: 0 preserves the height/build estimate, 120–450 stores an explicit weight. It round-trips through runtime saves, match snapshots and explicit source commits without affecting attributes, movement, shared bones or colliders. Old v1 roster files remain compatible.
+
+MenuSound owns a local generated click and the persisted SFX preference (Blacktop.SfxVolume). No global audio singleton is added. Gameplay has no audio consumers yet. Blacktop.Editor now references the already-installed Unity.TextMeshPro assembly solely for MenuPrototypeSetup's font authoring. No new package or gameplay assembly dependency was introduced. The setup command only wires presentation assets; it does not regenerate scenes, character catalogs, rosters or venue prefabs.
+
+
+## Shared UI theme system (2026-11-04)
+
+`BlacktopTheme` ScriptableObjects and `UIThemeLibrary` centralize semantic colors,
+actual Barlow weights, wordmark, optional masks and schematic fallback formations.
+The library is one Resources asset, reachable from MainMenu or direct SampleScene.
+`UITheme` owns presentation preference only (`Blacktop.UITheme` PlayerPrefs) and
+publishes changes; it owns no gameplay actors or input. `ThemeableUI`, `ThemeButton`
+and `AttributeSegments` bind explicit graphics and unsubscribe on disable.
+Team identity colors and fixed attribute tiers are outside the theme palette.
+
+`FrontEndUI` remains the common runtime uGUI factory. `AngularPanel` draws scalable
+clipped corners without panel textures. MainMenu retains all eleven supplied field
+images/crossfades/blur. Shared submenu chrome reserves a tunable 54-pixel top margin
+for the wordmark. MatchSettingsView uses three large Field/Modifier/Difficulty
+cards with the existing MatchOptions, independent condition, review and bootstrap.
+SetupProgress follows screen/focus without changing navigation or gameplay data.
+PlayerLab summary/ratings remain fixed; customization and developer PlayerEditor
+use vertical accordions with the preview and save/cancel controls outside the scroll.
+
+`PlayDiagram` is a read-only MaskableGraphic with an explicit CanvasRenderer dependency;
+it reads authored formation slots, routes and defensive jobs. PlayCallSelector keeps
+its existing category/play/confirmation input and adds mouse selection. GameHUD and
+TeamScorePanel use clean angular scorebug surfaces, native Barlow typography and
+preserved team-colored crests/rules/meters. A possession marker reads the existing
+possession event. GameAnnouncement observes post-play/team-meter events and animates
+only its overlay; PlayState still owns all resolution, delay and player presentation.
+
+No new assembly/package, gameplay state manager, input mapping or roster format.
+`UIThemeSetup` wires/rebuilds presentation assets only. Full inventory, palette table,
+font metadata, missing art and repair/build commands: UI_OVERHAUL.md / UI_FONT_INVENTORY.json.

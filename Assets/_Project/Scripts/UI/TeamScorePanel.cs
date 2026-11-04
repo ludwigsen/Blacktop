@@ -14,6 +14,7 @@ public class TeamScorePanel : MonoBehaviour
     TextMeshProUGUI teamNameText;
     TextMeshProUGUI scoreText;
     TextMeshProUGUI gamebreakerLabel;
+    TextMeshProUGUI possession;
     Image logoImage;
     Image backgroundImage;
     Image accentRule;
@@ -34,15 +35,11 @@ public class TeamScorePanel : MonoBehaviour
     {
         this.reverseFill = reverseFill;
 
-        if (backgroundSprite != null)
-        {
-            backgroundImage = CreateImage("PanelBackground", transform, Vector2.zero, Vector2.one);
-            backgroundImage.sprite = backgroundSprite;
-            // Neutral grunge art takes the team's primary color without changing source pixels.
-            if (flipBackground) backgroundImage.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
-        }
+        // A neutral clean surface is themed; the thin identity rule and meter retain team colors.
+        backgroundImage=CreateImage("Clean team surface",transform,Vector2.zero,Vector2.one);
+        ThemeableUI.Bind(backgroundImage,UIColorRole.SurfacePrimary);
 
-        accentRule = CreateImage("AccentRule", transform, new Vector2(0.08f, 0.08f), new Vector2(0.95f, 0.095f));
+        accentRule = CreateImage("AccentRule", transform, new Vector2(0.08f, 0.01f), new Vector2(0.95f, 0.025f));
         logoImage = CreateImage("Logo", transform, new Vector2(0f, 0.12f), new Vector2(0.175f, 0.90f));
         // Leave space outside the name for the larger crest; tilt its top toward the screen edge.
         logoImage.rectTransform.localScale = Vector3.one * logoScale;
@@ -63,12 +60,13 @@ public class TeamScorePanel : MonoBehaviour
         teamNameText.fontSizeMax = nameFontSize;
         scoreText = CreateText("Score", displayFont, scoreFontSize,
             new Vector2(0.48f - scoreShift, 0.10f), new Vector2(0.635f - scoreShift, 0.94f));
-        // Apply TMP's heavier SDF weight to identity only; Outfit meter copy keeps its weight.
-        teamNameText.fontStyle = FontStyles.Bold;
-        scoreText.fontStyle = FontStyles.Bold;
+        // Native ExtraBold carries identity weight without synthetic bolding.
+        teamNameText.fontStyle = FontStyles.Normal;
+        scoreText.fontStyle = FontStyles.Normal;
 
         // TMP's SDF outline stays crisp at different resolutions. Share one private
         // material between these two labels and release it with the panel.
+        displayFont=teamNameText.font;
         if (displayFont != null)
         {
             wordmarkMaterial = new Material(displayFont.material);
@@ -79,13 +77,16 @@ public class TeamScorePanel : MonoBehaviour
             teamNameText.UpdateMeshPadding();
             scoreText.UpdateMeshPadding();
         }
-        teamNameText.color = scoreText.color = textColor ?? new Color(0.94f, 0.93f, 0.89f);
+        ThemeableUI.Bind(teamNameText,UIColorRole.TextPrimary,UITypeRole.Heading);
+        ThemeableUI.Bind(scoreText,UIColorRole.TextPrimary,UITypeRole.Numeral);
 
         gamebreakerLabel = CreateText("GamebreakerLabel", legibleFont, labelFontSize,
             new Vector2(0.65f, 0.57f), new Vector2(0.96f, 0.82f));
         gamebreakerLabel.text = "GAMEBREAKER";
-        gamebreakerLabel.color = LabelColor;
+        ThemeableUI.Bind(gamebreakerLabel,UIColorRole.TextSecondary,UITypeRole.Navigation);
         BuildGamebreakerBar();
+        possession=CreateText("Possession",legibleFont,16,new Vector2(.21f,.02f),new Vector2(.36f,.16f));
+        possession.text="> BALL";possession.gameObject.SetActive(false);
     }
 
     // Pre-game branding is independent of roster selection and player GUIDs.
@@ -95,7 +96,7 @@ public class TeamScorePanel : MonoBehaviour
         Color secondary = identity != null ? identity.secondaryAccentColor : Color.white;
         readyColor = Color.Lerp(accent, Color.white, 0.6f);
         teamNameText.text = identity != null && !string.IsNullOrWhiteSpace(identity.teamName) ? identity.teamName : "Team";
-        if (backgroundImage != null) backgroundImage.color = accent;
+        // Background remains theme-owned; team identity is carried by crest, accent rule and meter.
         accentRule.color = secondary;
         meterFrame.effectColor = secondary;
         logoImage.sprite = identity != null ? identity.logo : null;
@@ -105,6 +106,7 @@ public class TeamScorePanel : MonoBehaviour
     }
 
     public void SetScore(int score) => scoreText.text = score.ToString();
+    public void SetPossession(bool value)=>possession.gameObject.SetActive(value);
 
     public void SetGamebreaker(float value, bool active = false)
     {
@@ -116,7 +118,7 @@ public class TeamScorePanel : MonoBehaviour
         for (int i = 0; i < SegmentCount; i++)
         {
             int slot = reverseFill ? SegmentCount - 1 - i : i;
-            segments[slot].color = i < lit ? litColor : EmptyColor;
+            segments[slot].color = i < lit ? litColor : UITheme.Color(UIColorRole.BackgroundSecondary);
         }
     }
 
@@ -144,7 +146,7 @@ public class TeamScorePanel : MonoBehaviour
 
     Image CreateImage(string objectName, Transform parent, Vector2 min, Vector2 max, bool mirror = true)
     {
-        var go = new GameObject(objectName, typeof(Image));
+        var go = new GameObject(objectName, typeof(AngularPanel));
         go.transform.SetParent(parent, false);
         var image = go.GetComponent<Image>();
         image.raycastTarget = false;
@@ -162,6 +164,7 @@ public class TeamScorePanel : MonoBehaviour
         text.fontStyle = FontStyles.Normal; // Supporting labels use their native font weight.
         text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
+        ThemeableUI.Bind(text,UIColorRole.TextPrimary,objectName=="Score"?UITypeRole.Numeral:objectName=="TeamName"?UITypeRole.Heading:UITypeRole.Navigation);
         text.enableWordWrapping = false;
         text.enableAutoSizing = true;
         text.fontSizeMin = fontSize * 0.55f;
@@ -181,6 +184,9 @@ public class TeamScorePanel : MonoBehaviour
         rt.offsetMax = Vector2.zero;
     }
 
+    void OnEnable(){UITheme.Changed+=RefreshTheme;}
+    void OnDisable()=>UITheme.Changed-=RefreshTheme;
+    void RefreshTheme(){if(segments!=null)SetGamebreaker(lastGamebreakerValue,lastActive);}
     void OnDestroy()
     {
         // Never modify or destroy the font asset's shared material.

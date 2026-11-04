@@ -17,4 +17,6 @@ public class PlayerAppearanceDefinition : ScriptableObject
     public string[] accessoryIds = System.Array.Empty<string>();
     [Tooltip("Reserved saved metadata; assembly never rerolls explicit preset IDs.")]
     public int appearanceSeed;
+    [Tooltip("Appearance-only pounds; zero derives weight from height and build. Does not affect gameplay.")]
+    public int weightPounds;
 }

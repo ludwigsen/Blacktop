@@ -1,0 +1,62 @@
+{
+  "unity": "6000.5.6f1",
+  "base": "a996585",
+  "tests": {
+    "ui-all": {
+      "total": "116",
+      "passed": "116",
+      "failed": "0",
+      "skipped": "0",
+      "duration": "130.7003152"
+    },
+    "ui-final": {
+      "total": "19",
+      "passed": "19",
+      "failed": "0",
+      "skipped": "0",
+      "duration": "84.317666"
+    },
+    "ui-release": {
+      "total": "117",
+      "passed": "117",
+      "failed": "0",
+      "skipped": "0",
+      "duration": "140.779226"
+    }
+  },
+  "resolutions": [
+    "1280x720",
+    "1920x1080",
+    "2560x1440",
+    "3840x2160"
+  ],
+  "manualGaps": [
+    "Windows",
+    "physical controller",
+    "human-played complete standalone match"
+  ],
+  "optionalMissingMasks": [
+    "AsphaltGrain",
+    "DryBrush",
+    "SprayScatter",
+    "EdgeWear"
+  ],
+  "finalTestRun": "ui-release",
+  "guidValidation": "All theme/font references resolve in Assets or the installed uGUI/TMP package",
+  "preservedFieldImageFiles": 11,
+  "macOSBuild": {
+    "errors": 0,
+    "warnings": 408,
+    "reportedBytes": 435525615,
+    "log": "Builds/Validation/ui-release-build.log"
+  },
+  "nativeChecks": [
+    "keyboard menu navigation",
+    "mouse menu navigation",
+    "live theme selection",
+    "After Dark after process restart",
+    "secondary wordmark clearance",
+    "background cycle/blur"
+  ],
+  "finalNativeState": "Street Classic / Main menu"
+}

@@ -25,7 +25,7 @@ public class RuntimePlayerPreview : MonoBehaviour,IDragHandler,IScrollHandler
         texture=new RenderTexture(1024,1024,24);texture.Create();GetComponent<RawImage>().texture=texture;
         var cameraObject=new GameObject("Preview camera",typeof(Camera));cameraObject.transform.SetParent(root.transform,false);
         previewCamera=cameraObject.GetComponent<Camera>();previewCamera.targetTexture=texture;
-        previewCamera.clearFlags=CameraClearFlags.SolidColor;previewCamera.backgroundColor=FrontEndUI.Ink;
+        previewCamera.clearFlags=CameraClearFlags.SolidColor;previewCamera.backgroundColor=Color.clear;
         previewCamera.cullingMask=1<<31;previewCamera.fieldOfView=30;previewCamera.nearClipPlane=.05f;previewCamera.farClipPlane=20f;
         Light("Key",Quaternion.Euler(35,-30,0),1.7f);Light("Rim",Quaternion.Euler(30,155,0),1.1f);
         assembler.rig.animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;

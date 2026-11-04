@@ -97,7 +97,9 @@ public class CharacterApplier : MonoBehaviour
         var text = textGO.GetComponent<TextMeshProUGUI>();
         text.text = $"#{record.jerseyNumber} {record.displayName}";
         text.fontSize = nameplateFontSize;
-        text.fontStyle = FontStyles.Bold;
+        text.fontStyle = FontStyles.Normal;
+        // Preserve player identity color while sharing the standard game UI typeface.
+        var typography=ThemeableUI.Bind(text,UIColorRole.TextPrimary,UITypeRole.Navigation);typography.tint=false;
         text.alignment = TextAlignmentOptions.Center;
         text.color = record.accentColor;
 

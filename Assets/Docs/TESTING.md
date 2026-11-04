@@ -360,3 +360,105 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 
 
 **Normal macOS build/startup:** Final development build succeeded with **0 errors / 438 warnings** (mostly existing shader/obsolete-API warnings), 13.917 seconds using the warm build cache. A graphics-enabled Metal startup at 1280×720 loaded MainMenu with the two canonical teams and no logged runtime exception, then was intentionally stopped. Output: ignored `Builds/macOS/Blacktop-Exhibition.app`; logs/summary retained as `Builds/Validation/exhibition-build.*` and `exhibition-startup.log`. This is a normal app build/startup smoke check, not a standalone test-player run or a human-played match. Physical controller, 720p visual acceptance, Windows and gameplay balance remain manual. Disposable build driver, performance-test resources and Unity import/build asset noise were removed from the change.
+
+
+## T-108: Main menu and fixed-page player lab prototype (2026-11-02)
+
+1. Open Assets/Scenes/MainMenu.unity. Verify centered Blacktop Pro Duo title, Barlow Condensed entries, and exactly New Game / Edit Players / Settings / Quit. Observe all eleven supplied 3840x2160 field images over a full cycle, including Warehouse returning to Alley. The Inspector defaults are a six-second hold and 2.4-second blend; crop must cover without stretching. Open and close submenus; background blur eases in and out while text stays sharp. Repeat this in the actual standalone overlay canvas: temporary ScreenSpaceCamera evidence does not validate additional shader-pass behavior in ScreenSpaceOverlay. The visible UI material must not contain the offline Gaussian filter pass. Rapid navigation must not leave extra preview cameras or active old controls.
+2. Enter Edit Players. Verify left player / right twelve ratings / bottom roster at 1920x1080 and 1280x720. All twelve 0–20 ratings must be visible without scrolling, including zero and twenty. Attributes accepts mouse dragging and keyboard/gamepad slider steps. Summary is read-only. Cold-to-hot square color supplements the numeric value. Test every Fit & Body tab at both resolutions. Page reserves with Previous 7 / Next 7; change teams; selected identity is GUID-based.
+3. Change a rating, body, height, explicit weight, face/skin, hair, fit and accessory selection. Saved changes must survive a restart and reach Head 2 Head / Pickup; unsaved changes must not reach the service. Back to Summary retains a draft; switching players/teams or leaving offers discard. Invalid weight/jersey text blocks Save and requires correction or explicit text discard before changing pages. Zero weight metadata means derive from build/height; explicit bounds are 120–450 lb. Changing build or height in derived mode must refresh both the weight textbox and summary without creating an override; invalid text must remain visible until corrected or discarded. Weight must not change ratings/capsule/shared skeleton.
+4. Set allowDevelopmentEditing=false in the settings asset (or run a non-development build). Ratings and identity/physique authoring must be locked; cosmetic fit choices stay available. No in-game setting enables authoring. Restore the asset after the check. The development build intentionally includes full authoring for the owner.
+5. Settings SFX: hear a quiet click, set zero and verify silence, restart and verify persistence, then restore the desired level. Version must come from Application.version. Quit cancel returns focus; confirm exits the standalone app (or stops Editor Play Mode).
+6. Continue through both existing exhibition modes, launch a match, return to MainMenu and rematch. Original roster GUIDs, independent lineups, match snapshots and player-count rules must remain intact.
+
+MenuPrototypeTests uses unique temporary roster saves, native canvas renders, access-gate checks, Save/Discard/persistence coverage and 1080p/720p control bounds. Existing FrontEndTests and ExhibitionTests cover editor CRUD and match binding. These automated checks do not establish physical-controller feel, Windows behavior, production art or a human-played full match. Use Blacktop > Front End > Build Menu Prototype (macOS) for the owner-test development app. Build output and rendered evidence belong under ignored Builds/.
+
+**Captured validation:** Unity 6000.5.6f1 graphics-enabled batchmode Play Mode full regression: **102 passed, 0 failed, 0 skipped**, 61.747 seconds. After the final SFX percentage/height and blur-downsampling adjustments, MenuPrototypeTests + FrontEndTests: **14 passed, 0 failed, 0 skipped**, 24.787 seconds. Native renders of Main, Settings and every lab page were inspected at 1920x1080 / 1280x720. The first capture helper excluded the UI layer and was corrected before visual inspection; the final helper rejects blank captures. macOS development build succeeded (352,128,663 bytes reported); the built executable initialized the front end and Metal device without a runtime error in a bounded startup smoke check. The Mac was locked, so visible standalone mouse/controller interaction was not performed. Evidence: ignored Builds/Validation/blacktop-menu-all.xml, blacktop-menu-final.xml, associated logs, blacktop-menu-build.log, blacktop-menu-standalone.log and Menu-*.png. The development app and ZIP are under Builds/MenuPrototype/. Windows, physical-controller feel and human-played standalone matches remain unperformed.
+
+
+**Unlocked standalone follow-up (2026-11-02):** Real mouse/keyboard checks at 1280x720 found an overlay-only rendering problem: the visible material also drew its opaque Gaussian filter pass, overriding submenu blur and crossfade alpha. The filter now has its own explicitly referenced shader. The rebuilt overlay visibly blurs submenus/dialogs and restores sharp fields on Main. Native editing also exposed a stale derived-weight textbox after changing build; Refresh now updates it without creating an override or erasing invalid text. The existing persistence test includes a real Build picker click and checks that textbox/derived mode.
+
+Final graphics-enabled full Play Mode regression after both corrections: **102 passed, 0 failed, 0 skipped**, 66.377 seconds. The final macOS development build succeeded. Actual UI checks exercised mouse rating changes, unsaved-discard protection, roster selection, body preview changes, face/fit pages, keyboard Back/Submit, SFX 65% -> 0% -> 65%, persistence of 65% after restart, Head 2 Head team/settings/review/start into gameplay and Escape return to Main, Pickup pool entry/Back, and confirmed Quit. The final build was reopened and both weight readouts changed from 190 to 220 with Athletic -> Thick; Discard restored 190/Athletic. No roster test changes were saved. The final app remains open on Main. Native screenshots are in the chat's computer-use record; Player logs and final test/build logs are under Builds/Validation/blacktop-menu-native-*. Physical controller, Windows, audible sound quality and a full human-played match remain unperformed. At 720p, overlapping gameplay nameplates/pass prompts were recorded in PROJECT_STATUS.md for the separate HUD readability pass.
+
+
+**4K backdrop replacement (2026-11-03):** The slideshow now uses the eleven supplied cinematic PNGs in the order documented in Art/MainMenu/README.md. Verify every image appears over one complete loop, the last returns to Alley, aspect ratios stay intact, and transitions remain continuous. Open Settings or Player Lab during rotation: the new image must crossfade while blurred, then return to a sharp field on Main. The existing MenuPrototypeTests also checks all eleven imports retain 3840x2160. Focused graphics-enabled MenuPrototypeTests: **5 passed, 0 failed, 0 skipped** (16.347 seconds), including all eleven 3840x2160 texture imports. All eleven project PNG SHA-256 hashes match the supplied originals and the serialized GUIDs match the documented order. The macOS development build succeeded (434,981,423 bytes reported). Native 1280x720 checks showed Alley on Main, a crossfade with Downtown, blurred Underpass in Settings, and sharp Shipyard after Escape returned to Main. The menu continues rotating while a submenu is open. No roster or SFX edits were saved. The app is left on Main. Logs, XML, source hashes and 1080p Main/Settings renders are under ignored Builds/Validation/blacktop-menu-4k-* and Menu-4K-*.png; native screenshots are in the chat computer-use record. This image-only follow-up did not repeat the prior full 102-test gameplay run, Windows or physical-controller checks.
+
+
+## T-109: UI themes, contrast and persistence (2026-11-04)
+
+Start MainMenu with no Blacktop.UITheme preference: Street Classic is the default.
+Settings → UI THEME selects After Dark using mouse, keyboard arrows/Submit and a
+controller. Open elements must recolor immediately; return to menus, enter gameplay,
+restart the app, and verify the selection persists. Repeat Street Classic. Bright
+selection/pressed surfaces use dark ink text and a shape/focus marker. Team crests,
+team accents, ratings, GUIDs, saves, input mappings and gameplay values stay unchanged.
+Repeatedly enter/leave pages and switch themes; no stale listeners or missing fonts.
+
+UIThemeTests uses disposable roster saves and restores the original theme preference.
+It exercises the actual Settings picker, immediate color/contrast roles, preference
+reload, newly built screens and source/team/roster isolation. Native Barlow font
+assignments are checked. The four optional mask slots are intentionally unassigned.
+
+## T-110: Logo safe margin, editor accordions and rating tiers
+
+At 1280x720, 1920x1080, 2560x1440 and 3840x2160, open Settings, New Game, both team
+screens, Pickup, roster tools and each Player Lab page in both themes. Confirm the
+Blacktop glyphs have clear space above them, the header/content do not collide,
+fixed controls are on screen, text stays legible and panel geometry stays crisp.
+The tunable submenuLogoTopPadding default is 54 reference pixels. Automated checks
+measure visible glyph bounds with at least 20 scaled pixels of top clearance.
+
+Summary/Attributes remain fixed. Fit/Body and developer Create/Edit use a vertical
+accordion; scroll its form with the mouse and move controller focus to the last
+header. Focus must reveal the entry while preview, save/discard and roster strip
+stay fixed. Rotate/zoom the model; edit a real field, save, restart, and discard a
+second edit. Existing save/access/derived-weight tests remain active. This supersedes
+the historical T-108 requirement that customization never scroll; the fixed summary
+and rating panes still do not scroll.
+
+All 12 attributes retain exact numbers and twenty discrete cells. At 0,4,5,8,9,12,
+13,16,17,20 check the precise filled count and constant tier color across both themes:
+red/orange/yellow/blue/light-blue. No green/purple/gradient. Appearance/ratings stay
+independent. Native captures and control/glyph bounds are checked at all four sizes.
+
+## T-111: Play selection, clean scorebug and announcement lifecycle
+
+Use both human sides through Head 2 Head and Pickup. Verify ALL/PASS/RUN/TRICK and
+ALL/BLITZ/ZONE/MAN categories, category/play keyboard/controller navigation, mouse
+selection and confirmation, crisp authored schematics, selected border and selection
+marker. Empty authored categories stay empty; no play data is manufactured. The
+custom Graphic must have CanvasRenderer and a nonempty mesh (regression for the
+initial blank schematic). Schematics illustrate authored routes/jobs, not exact
+execution trajectories or unavailable football animations.
+
+Check team crest orientation, original independent team accents/meters, names,
+scores, play clock, downs/distance/field spot and possession marker. No distressed
+scorebug sprite should cover important text. Trigger touchdown, first down, turnover,
+Gamebreaker and game over through normal gameplay. Existing post-play delay, AI
+reactions, input handoff, huddle, rematch and return-to-menu must remain unchanged.
+Both themes get the same compact geometry with palette-specific surfaces/accents.
+
+Actual final graphics-enabled Unity 6000.5.6f1 full Play Mode run: **117 passed,
+0 failed, 0 skipped**, **140.779226 seconds**. This includes a resolved-play test that
+scores a real held-ball touchdown and earns a real first down in both themes,
+ensuring the receiving-drive reset cannot relabel a touchdown. Earlier focused
+UIThemeTests + MenuPrototypeTests passed 19/19. Final evidence: ignored
+Builds/Validation/ui-release.xml and ui-release.log.
+
+Both themes have native canvas PNGs at 720p/1080p/1440p/4K; representative screens
+were rendered and inspected. Event-treatment captures are component visual fixtures;
+full existing gameplay regressions separately validate the event flow. They are not
+claims of a human-played match or physical-controller acceptance. Windows and a
+human-played/controller match remain unperformed. Legacy gameplay nameplate overlap
+and provisional character/play/venue art remain recorded limitations.
+
+
+Final macOS development build: **0 errors / 408 reported warnings**, 435,525,615
+bytes reported (the earlier build reported 438 warnings). Actual standalone native
+checks exercised keyboard and mouse navigation, immediate Street Classic/After Dark
+switching, background cycling/blur, secondary-logo clearance, and After Dark retained
+after a full app restart. Street Classic was restored and the app left on Main.
+No runtime exception was found in the captured startup/settings Player log. No roster
+edits were saved. This does not claim a physical-controller or human-played full match.
+Build and native evidence: ignored Builds/Validation/ui-release-build.log and
+ui-native-player.log; screenshots are in the chat computer-use record.

@@ -34,16 +34,7 @@ public class PlayerEditorView : MonoBehaviour
         FrontEndUI.Button(framing,"HEAD",()=>preview.SetHeadView(true),Settings,50);
         FrontEndUI.Button(framing,"RESET VIEW",preview.ResetCamera,Settings,50);
         dimensions=FrontEndUI.Text(controls,"",Settings,22,false,45);
-        var tabs=FrontEndUI.Vertical(transform,"Categories",0);FrontEndUI.Anchor(tabs,new Vector2(.46f,.75f),new Vector2(1,.9f));
-        string[] names={"IDENTITY","PHYSIQUE","FACE","HAIR","FACIAL HAIR","GEAR","ATTRIBUTES"};
-        categories=new Button[names.Length];
-        for(int row=0;row<2;row++)
-        {
-            var strip=FrontEndUI.Row(tabs,52);
-            for(int i=row*4;i<Mathf.Min(row*4+4,names.Length);i++)
-            {int category=i;categories[i]=FrontEndUI.Button(strip,names[i],()=>Category(category),Settings,52);}
-        }
-        formArea=FrontEndUI.Panel(transform,"Editor fields",new Vector2(.46f,.14f),new Vector2(1,.74f),new Color(.09f,.11f,.13f));
+        formArea=FrontEndUI.Panel(transform,"Editor fields",new Vector2(.46f,.14f),new Vector2(1,.90f),UIColorRole.SurfacePrimary);
         var bottom=FrontEndUI.Row(transform,68);FrontEndUI.Anchor(bottom,new Vector2(0,0),new Vector2(1,.085f));
         FrontEndUI.Button(bottom,"SAVE PLAYER",Save,Settings);
         FrontEndUI.Button(bottom,"CANCEL",menu.Back,Settings);
@@ -54,9 +45,21 @@ public class PlayerEditorView : MonoBehaviour
     }
     void Category(int category)
     {
-        for(int i=0;i<categories.Length;i++)categories[i].GetComponentInChildren<TextMeshProUGUI>().text=(i==category?"> ":"")+categories[i].name;
-        if(form!=null){form.parent.parent.gameObject.SetActive(false);Destroy(form.parent.parent.gameObject);}
+        if(form!=null){var old=form.GetComponentInParent<ScrollRect>();old.gameObject.SetActive(false);Destroy(old.gameObject);}
         form=FrontEndUI.Scroll(formArea,"Category scroll");
+        string[] names={"IDENTITY","PHYSIQUE","FACE","HAIR","FACIAL HAIR","GEAR","ATTRIBUTES"};
+        categories=new Button[names.Length];
+        for(int i=0;i<names.Length;i++)
+        {
+            int chosen=i;
+            categories[i]=FrontEndUI.Button(form,names[i],()=>Category(chosen),Settings,50);
+            categories[i].GetComponent<ThemeButton>().SetSelected(i==category);
+            if(i!=category)continue;
+            var fields=FrontEndUI.Vertical(form,"Expanded "+names[i],8);fields.gameObject.AddComponent<LayoutElement>();
+            var accordion=form;form=fields;BuildFields();form=accordion;
+        }
+        void BuildFields()
+        {
         switch(category)
         {
             case 0:Identity();break;
@@ -77,11 +80,13 @@ public class PlayerEditorView : MonoBehaviour
             case 6:
                 FrontEndUI.Text(form,"RATINGS 0–20 / INDEPENDENT OF APPEARANCE",Settings,24,false,60);
                 var ratings=RosterRatings.Get(session.Draft.record);
-                for(int i=0;i<12;i++){int index=i;FrontEndUI.Rating(form,RosterRatings.Names[i],ratings[i],v=>{
+                for(int i=0;i<12;i++){int index=i;FrontEndUI.SquareRating(form,RosterRatings.Names[i],ratings[i],v=>{
                     RosterRatings.Set(ref session.Draft.record,index,v);status.text="Unsaved rating changes.";},Settings);}
                 break;
         }
     }
+    }
+
     void Identity()
     {
         string name=session.Draft.record.displayName;int split=name.LastIndexOf(' ');
@@ -157,7 +162,7 @@ public class PlayerEditorView : MonoBehaviour
         if(preview==null)return;
         bool valid=preview.Apply(session.Draft,Settings.Team(session.TeamId).identity);
         var appearance=session.Draft.appearance;
-        dimensions.text=$"{RosterBrowserView.HeightLabel(appearance.height)} / {Settings.weights.Pounds(appearance.height,appearance.bodyArchetype)} LB / {appearance.bodyArchetype}";
+        dimensions.text=$"{RosterBrowserView.HeightLabel(appearance.height)} / {appearance.Pounds(Settings.weights)} LB / {appearance.bodyArchetype}";
         status.text=invalidNumber?"Enter a non-negative whole jersey number.":valid?"DRAFT • "+preview.Diagnostics:preview.Diagnostics;
     }
     void Save()

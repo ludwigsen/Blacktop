@@ -12,6 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68dd93daed0b84334bf4076405acce8f, type: 3}
   m_Name: FrontEndSettings
   m_EditorClassIdentifier: Blacktop::FrontEndSettings
+  submenuLogoTopPadding: 54
+  menuTitleFont: {fileID: 11400000, guid: 2e606136a830948a28e096b5a0ae9f10, type: 2}
+  menuFont: {fileID: 11400000, guid: abcba217e93ef4a029d3450276a4056c, type: 2}
+  menuFields:
+  - {fileID: 2800000, guid: cab161d91eac848f581470f3f913db76, type: 3}
+  - {fileID: 2800000, guid: 4c4d32ec9425149d390b00d0c1221dae, type: 3}
+  - {fileID: 2800000, guid: cb3728b25b9dd4f75819a1e926b3eade, type: 3}
+  - {fileID: 2800000, guid: d0261659b1dff4edf810e95bd81d20d2, type: 3}
+  - {fileID: 2800000, guid: 99eec722e77554befb876a0ca6fb3429, type: 3}
+  - {fileID: 2800000, guid: b582d42c8369c4571990e0e1bc6f68ec, type: 3}
+  - {fileID: 2800000, guid: c1cc6a44c98734b73a72c827aaedf093, type: 3}
+  - {fileID: 2800000, guid: f672bf60ee9d940008ea82cecd2f973a, type: 3}
+  - {fileID: 2800000, guid: c64a71a46bac9412ba3ee7fa7abbd4c0, type: 3}
+  - {fileID: 2800000, guid: ecadf2a66c0204e66957dffeb8ae0fd0, type: 3}
+  - {fileID: 2800000, guid: b769262fd9456485c82c772219a0e1f8, type: 3}
+  menuBlurShader: {fileID: 4800000, guid: 7c0adeb343a0a445882af42ccc22d819, type: 3}
+  menuBlurFilterShader: {fileID: 4800000, guid: 50117e12a67e24cd98cbb812ba856f76, type: 3}
+  fieldHoldSeconds: 6
+  fieldBlendSeconds: 2.4
+  submenuBlurPixels: 18
+  menuTransitionSeconds: 0.28
+  allowDevelopmentEditing: 1
   teams:
   - {fileID: 11400000, guid: c46b834288c884d8180d146b1b7922f9, type: 2}
   - {fileID: 11400000, guid: 56fb48951b43f4a0ba25ebd64bc50c18, type: 2}

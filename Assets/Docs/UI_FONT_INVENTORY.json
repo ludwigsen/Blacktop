@@ -1,0 +1,159 @@
+[
+  {
+    "family": "Blacktop Pro Duo Black Outline White Fill",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-BlackOutlineWhiteFill",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "Blacktop Pro Duo Black Outline White Fill.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Pro Duo White Outline Black Fill",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-WhiteOutlineBlackFill",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "Blacktop Pro Duo White Outline Black Fill.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop",
+    "style": "Regular",
+    "postscript": "Blacktop_Pro_Duo",
+    "colorTables": [],
+    "filename": "Blacktop Pro Duo.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Pro Duo Black Outline Transparent",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-BlackOutlineTransparent",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "Blacktop Pro Duo Black Outline Transparent.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop",
+    "style": "Regular",
+    "postscript": "Blacktop_Pro_Duo",
+    "colorTables": [],
+    "filename": "Blacktop Pro Duo Mac.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Pro Duo White on Black",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-WhiteOnBlack",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "BlacktopProDuo-WhiteOnBlack.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Pro Duo Fill",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-Fill",
+    "colorTables": [],
+    "filename": "BlacktopProDuo-Fill.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Pro Duo Paint",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-Paint",
+    "colorTables": [],
+    "filename": "BlacktopProDuo-Paint.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Pro Duo Black on White",
+    "style": "Regular",
+    "postscript": "BlacktopProDuo-BlackOnWhite",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "BlacktopProDuo-BlackOnWhite.ttf",
+    "origin": "local font library"
+  },
+  {
+    "family": "Blacktop Street White on Black",
+    "style": "Regular",
+    "postscript": "BlacktopStreetWhiteonBlack-Regular",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "WhiteOnBlack-roundtrip.ttf",
+    "origin": "project Assets"
+  },
+  {
+    "family": "Liberation Sans",
+    "style": "Regular",
+    "postscript": "LiberationSans",
+    "colorTables": [],
+    "filename": "LiberationSans.ttf",
+    "origin": "project Assets"
+  },
+  {
+    "family": "Blacktop Street Black on White",
+    "style": "Regular",
+    "postscript": "BlacktopStreetBlackonWhite-Regular",
+    "colorTables": [
+      "COLR",
+      "CPAL"
+    ],
+    "filename": "BlackOnWhite-roundtrip.ttf",
+    "origin": "project Assets"
+  },
+  {
+    "family": "Blacktop",
+    "style": "Regular",
+    "postscript": "Blacktop_Pro_Duo",
+    "colorTables": [],
+    "filename": "BlacktopProDuo.ttf",
+    "origin": "project Assets"
+  },
+  {
+    "family": "Barlow Condensed SemiBold",
+    "style": "Regular",
+    "postscript": "BarlowCondensed-SemiBold",
+    "colorTables": [],
+    "filename": "BarlowCondensed-SemiBold.ttf",
+    "origin": "project Assets"
+  },
+  {
+    "family": "Barlow Condensed",
+    "style": "Bold Italic",
+    "postscript": "BarlowCondensed-BoldItalic",
+    "colorTables": [],
+    "filename": "BarlowCondensed-BoldItalic.ttf",
+    "origin": "official Google Fonts download"
+  },
+  {
+    "family": "Barlow Condensed",
+    "style": "Regular",
+    "postscript": "BarlowCondensed-Regular",
+    "colorTables": [],
+    "filename": "BarlowCondensed-Regular.ttf",
+    "origin": "official Google Fonts download"
+  },
+  {
+    "family": "Barlow Condensed ExtraBold",
+    "style": "Regular",
+    "postscript": "BarlowCondensed-ExtraBold",
+    "colorTables": [],
+    "filename": "BarlowCondensed-ExtraBold.ttf",
+    "origin": "official Google Fonts download"
+  }
+]

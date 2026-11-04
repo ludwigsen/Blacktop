@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "GUID:65c5df9b515f84a68a706d742456e948",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

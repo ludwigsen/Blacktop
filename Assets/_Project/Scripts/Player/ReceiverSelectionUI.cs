@@ -122,7 +122,7 @@ public class ReceiverSelectionUI : MonoBehaviour
             button.sizeDelta = new Vector2(48f, 48f);
             var image = buttonObj.GetComponent<Image>();
             image.sprite = buttonSprite;
-            image.color = new Color(0.08f, 0.12f, 0.2f, 0.94f);
+            ThemeableUI.Bind(image,UIColorRole.SurfacePrimary,null,.94f);
 
             var labelObj = new GameObject("Number", typeof(RectTransform), typeof(TextMeshProUGUI));
             labelObj.transform.SetParent(buttonObj.transform, false);
@@ -132,8 +132,9 @@ public class ReceiverSelectionUI : MonoBehaviour
             label.text = $"{i + 1}";
             label.alignment = TextAlignmentOptions.Center;
             label.fontSize = 30;
-            label.fontStyle = FontStyles.Bold;
-            label.color = Color.white;
+            label.fontStyle = FontStyles.Normal;
+            ThemeableUI.Bind(label,UIColorRole.TextPrimary,UITypeRole.Navigation);
+            label.color = UITheme.Color(UIColorRole.TextPrimary);
             label.raycastTarget = false;
             var labelRect = label.GetComponent<RectTransform>();
             labelRect.anchorMin = Vector2.zero;
