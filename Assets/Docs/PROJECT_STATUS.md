@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-10-23
+Last updated: 2026-11-05
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -16,6 +16,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Transform-based player movement (no Rigidbody).
 - Juke, Hurdle, and StiffArm, attribute-driven, implemented through the `IPlayerMove` pattern and orchestrated by `PlayerStateMachine`.
 - All fourteen players inherit speed/direction-driven standard run, fast run and backward run through PlayerAnimationPresenter and the shared Animator Controller. Jump presents the existing hurdle, timed to its duration; no root motion or movement/attribute tuning changes.
+- Issue #2: current master's existing shared-prefab orientation is correct. Rendered Editor gameplay verifies model-to-root alignment on both human sides and in both attacking directions, including turns, routes, blocking, pursuit, huddles and backward locomotion. No additional rotation is needed. See T-72 in TESTING.md for the automated evidence and separate human/platform limits.
 
 ### Ball and possession
 - Passing and pitching with a parabolic arc; `BallState` enum.
@@ -53,7 +54,6 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - `PlayerAttributes` 12-stat system with `AttributeCurves` and `FieldModifiers`. **(verify how much of the 12-stat list below is wired versus planned.)**
 - Gamebreaker input is on the shared Player prefab. Human offense/defense activate with G or gamepad LB/L1; CPU spends its own full meter at the next live opportunity.
 - Both sides use the same flat all-attribute boost (Inspector-tunable 1.2 multiplier, existing attribute hard caps still apply), lasting until the possession ends. Team-owned runtime attributes cover AI and controlled players.
-- Issue #2: PlayerModel visual body rotated 180 degrees from its committed backwards orientation; gameplay roots, skeleton and collider stay intact. Manual running-direction review remains required.
 
 ### Character appearance foundation
 - Editable Blender source is now supplied for all current geometry: five bodies with integrated faces, fifteen garment meshes and four eyes, with shared rest rig/UVs/weights. Open `SourceAssets/Characters/BlacktopCharacters.blend`; per-build and head-focused snapshots are also supplied. The Editor bridge returns artist geometry edits to existing Unity mesh IDs/bind poses. Future character mesh authoring must retain `.blend` source. See SourceAssets/Characters/README.md.
