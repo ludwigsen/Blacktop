@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d31dd28571bc041798794c51d1ee8a28, type: 3}
+  m_Name: Roster_Ravens
+  m_EditorClassIdentifier:
+  teamName: Ravens
+  curves: {fileID: 11400000, guid: 583b794dd87ba405f8b69615de46cd60, type: 2}
+  players:
+  - id: 95e04539-054b-461c-8eb2-9e79d02b0163
+    previousId:
+    displayName: "Evan Mercer"
+    jerseyNumber: 6
+    archetypeLabel: "QB / S"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 18
+    speed: 11
+    blocking: 9
+    agility: 12
+    catching: 10
+    runPower: 7
+    carrying: 11
+    tackling: 13
+    coverage: 17
+    dMoves: 7
+    swagger: 12
+    routeRunning: 10
+  - id: 313c1398-a7c8-4d4d-82b8-b5394741ef0d
+    previousId:
+    displayName: "Kendrick Shaw"
+    jerseyNumber: 13
+    archetypeLabel: "WR / CB"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 5
+    speed: 19
+    blocking: 5
+    agility: 18
+    catching: 15
+    runPower: 5
+    carrying: 10
+    tackling: 8
+    coverage: 18
+    dMoves: 16
+    swagger: 16
+    routeRunning: 17
+  - id: 1579b8b8-f6b3-4c08-a9f2-c020bc9a9591
+    previousId:
+    displayName: "Raymond Ellis"
+    jerseyNumber: 27
+    archetypeLabel: "RB / LB"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 4
+    speed: 13
+    blocking: 13
+    agility: 11
+    catching: 9
+    runPower: 19
+    carrying: 18
+    tackling: 17
+    coverage: 9
+    dMoves: 10
+    swagger: 11
+    routeRunning: 6
+  - id: ffbcb73c-4f6e-4b09-8955-9590adbec554
+    previousId:
+    displayName: "Trevor Banks"
+    jerseyNumber: 44
+    archetypeLabel: "TE / LB"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 7
+    speed: 10
+    blocking: 19
+    agility: 8
+    catching: 16
+    runPower: 15
+    carrying: 12
+    tackling: 18
+    coverage: 10
+    dMoves: 6
+    swagger: 9
+    routeRunning: 11
+  - id: b3156d7e-fe3f-4db5-bfdc-9ae584fc965c
+    previousId:
+    displayName: "Damon Wright"
+    jerseyNumber: 58
+    archetypeLabel: "WR / S"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 6
+    speed: 15
+    blocking: 8
+    agility: 14
+    catching: 18
+    runPower: 7
+    carrying: 14
+    tackling: 12
+    coverage: 15
+    dMoves: 12
+    swagger: 18
+    routeRunning: 16
+  - id: 482f1ea3-848e-4d67-a5d0-d3531f7e7777
+    previousId:
+    displayName: "Colin Hayes"
+    jerseyNumber: 72
+    archetypeLabel: "RB / CB"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 4
+    speed: 16
+    blocking: 9
+    agility: 17
+    catching: 11
+    runPower: 16
+    carrying: 16
+    tackling: 10
+    coverage: 13
+    dMoves: 18
+    swagger: 14
+    routeRunning: 8
+  - id: 05b35f7c-2738-46a6-a6d2-bd18eef5380f
+    previousId:
+    displayName: "Reggie Foster"
+    jerseyNumber: 91
+    archetypeLabel: "QB / S"
+    accentColor: {r: 0.44, g: 0.34, b: 0.65, a: 1}
+    appearance: {fileID: 0}
+    passing: 15
+    speed: 14
+    blocking: 7
+    agility: 15
+    catching: 13
+    runPower: 10
+    carrying: 12
+    tackling: 14
+    coverage: 16
+    dMoves: 11
+    swagger: 19
+    routeRunning: 13

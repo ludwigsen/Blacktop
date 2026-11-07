@@ -31,12 +31,11 @@ public class AllyBlocker : MonoBehaviour
     // (the pushback distance is small relative to close speed), producing rapid
     // alternating win/loss outcomes on the same engagement. Set on ANY resolution
     // (win or loss), not just the loser's pushBackTimer.
+    [Tooltip("Contact recovery at neutral Blocking. Blocking alone scales this cadence; Run Power still owns the shove contest.")]
     [SerializeField] float contactCooldownDuration = 0.4f;
     float contactCooldownTimer;
 
-    // Attributes — assign the same PlayerAttributes asset as the ball carrier for now,
-    // or create ally-specific variants once blocking feel needs differentiation from
-    // the passer's stat line.
+    // CharacterApplier supplies this blocker's private, identity-bound attributes.
     [SerializeField] PlayerAttributes attributes;
     public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
 
@@ -175,7 +174,8 @@ public class AllyBlocker : MonoBehaviour
     // so neither side can ever hit 0% or 100% regardless of how lopsided the attributes get.
     void ResolveBlockContact(Transform defender, DefenderAI defenderAI)
     {
-        contactCooldownTimer = contactCooldownDuration;
+        // Blocking owns re-engagement cadence, independently of the power contest.
+        contactCooldownTimer = contactCooldownDuration / Mathf.Max(.01f, attributes.Blocking());
 
         float blockerPower = attributes.RunPower();
         float defenderResist = defenderAI.ResistMult;
@@ -185,7 +185,7 @@ public class AllyBlocker : MonoBehaviour
         {
             // Blocker wins — push the defender back and off their pursuit line for a beat.
             Vector3 pushDir = (defender.position - transform.position).normalized;
-            defenderAI.ApplyPushBack(pushDir, pushBackDistance);
+            defenderAI.ApplyBlockPushBack(pushDir, pushBackDistance);
         }
         else
         {

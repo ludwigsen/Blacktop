@@ -34,9 +34,14 @@ MonoBehaviour:
   submenuBlurPixels: 18
   menuTransitionSeconds: 0.28
   allowDevelopmentEditing: 1
+  rosterRevision: 1
   teams:
   - {fileID: 11400000, guid: c46b834288c884d8180d146b1b7922f9, type: 2}
   - {fileID: 11400000, guid: 56fb48951b43f4a0ba25ebd64bc50c18, type: 2}
+  - {fileID: 11400000, guid: 1092448a34ce515cae2150ccd0a03204, type: 2}
+  - {fileID: 11400000, guid: dbd53d401cbb5037ada64a143034069a, type: 2}
+  - {fileID: 11400000, guid: 199a890a092250759cbd412f6704d966, type: 2}
+  - {fileID: 11400000, guid: e49d544fa6e75e0e9d851bc431cf0327, type: 2}
   fields:
   - {fileID: 11400000, guid: 860ba7b5c82894438b7e42498ea7d6c4, type: 2}
   - {fileID: 11400000, guid: a28b8f237706747daa96f4b49768be6b, type: 2}

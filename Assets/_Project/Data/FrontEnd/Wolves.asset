@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c07a649ac824e92adaf57c8660e835, type: 3}
+  m_Name: Wolves
+  m_EditorClassIdentifier:
+  id: wolves
+  identity: {fileID: 11400000, guid: a7c2171ee92254159a50f36a1cc1ff8b, type: 2}
+  roster: {fileID: 11400000, guid: 45c00c986923553a88e3dee003c44a4c, type: 2}
+  activeLineup:
+  - playerId: 1eca67a4-f2bd-4d70-824c-c0ca853b96fc
+    offense: 0
+    defense: 1
+  - playerId: af7f2522-8bdf-4d4b-b998-db0b66aea486
+    offense: 1
+    defense: 0
+  - playerId: d81fdf0f-f23c-40c6-a328-deddfe3beac1
+    offense: 2
+    defense: 4
+  - playerId: ee539c62-e080-499f-aeb4-da92e8ca1c3c
+    offense: 3
+    defense: 6
+  - playerId: 0cf82686-8c60-47ae-8265-b85dd7e94194
+    offense: 4
+    defense: 5
+  - playerId: 486376e6-97f2-4205-a513-5ae9c5922ef6
+    offense: 5
+    defense: 2
+  - playerId: 343b9fe0-a3c6-471e-b2d9-cf04fb64feb6
+    offense: 6
+    defense: 3

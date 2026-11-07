@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c07a649ac824e92adaf57c8660e835, type: 3}
+  m_Name: Reapers
+  m_EditorClassIdentifier:
+  id: reapers
+  identity: {fileID: 11400000, guid: 36d283e3643b5061903ed16216cb53b5, type: 2}
+  roster: {fileID: 11400000, guid: 3e92e699e10f5e54830545e80a448f88, type: 2}
+  activeLineup:
+  - playerId: c930518f-526a-415b-8206-73e7f6343fc3
+    offense: 0
+    defense: 1
+  - playerId: bd930695-8516-4d6c-8379-1a1fc5a3d934
+    offense: 1
+    defense: 5
+  - playerId: 47f08346-468d-45ac-b4c8-3606e81e9bcd
+    offense: 2
+    defense: 4
+  - playerId: 2c8cfd4b-3aea-4475-8fed-d85406b8719b
+    offense: 3
+    defense: 6
+  - playerId: 79ada429-e600-4cda-a3ca-e3916e2f280d
+    offense: 4
+    defense: 0
+  - playerId: 23197418-408c-442d-a750-251cec568b95
+    offense: 5
+    defense: 3
+  - playerId: 318a97ba-e677-42c2-8a8c-72dd6e6edb0c
+    offense: 6
+    defense: 2

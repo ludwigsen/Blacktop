@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d31dd28571bc041798794c51d1ee8a28, type: 3}
+  m_Name: Roster_Wolves
+  m_EditorClassIdentifier:
+  teamName: Wolves
+  curves: {fileID: 11400000, guid: 583b794dd87ba405f8b69615de46cd60, type: 2}
+  players:
+  - id: 1eca67a4-f2bd-4d70-824c-c0ca853b96fc
+    previousId:
+    displayName: "Malcolm Pierce"
+    jerseyNumber: 2
+    archetypeLabel: "QB / LB"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 19
+    speed: 9
+    blocking: 10
+    agility: 9
+    catching: 9
+    runPower: 8
+    carrying: 10
+    tackling: 16
+    coverage: 12
+    dMoves: 6
+    swagger: 13
+    routeRunning: 8
+  - id: d81fdf0f-f23c-40c6-a328-deddfe3beac1
+    previousId:
+    displayName: "Tyrell Morgan"
+    jerseyNumber: 9
+    archetypeLabel: "WR / CB"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 5
+    speed: 18
+    blocking: 6
+    agility: 17
+    catching: 17
+    runPower: 6
+    carrying: 12
+    tackling: 9
+    coverage: 19
+    dMoves: 15
+    swagger: 16
+    routeRunning: 18
+  - id: af7f2522-8bdf-4d4b-b998-db0b66aea486
+    previousId:
+    displayName: "Brandon Fields"
+    jerseyNumber: 24
+    archetypeLabel: "RB / S"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 4
+    speed: 14
+    blocking: 11
+    agility: 13
+    catching: 10
+    runPower: 18
+    carrying: 17
+    tackling: 16
+    coverage: 14
+    dMoves: 12
+    swagger: 12
+    routeRunning: 7
+  - id: 486376e6-97f2-4205-a513-5ae9c5922ef6
+    previousId:
+    displayName: "Curtis Vaughn"
+    jerseyNumber: 35
+    archetypeLabel: "TE / LB"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 6
+    speed: 11
+    blocking: 18
+    agility: 9
+    catching: 14
+    runPower: 17
+    carrying: 13
+    tackling: 19
+    coverage: 9
+    dMoves: 7
+    swagger: 10
+    routeRunning: 9
+  - id: ee539c62-e080-499f-aeb4-da92e8ca1c3c
+    previousId:
+    displayName: "Leonard Price"
+    jerseyNumber: 47
+    archetypeLabel: "WR / S"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 7
+    speed: 16
+    blocking: 7
+    agility: 15
+    catching: 18
+    runPower: 8
+    carrying: 13
+    tackling: 11
+    coverage: 17
+    dMoves: 10
+    swagger: 17
+    routeRunning: 15
+  - id: 343b9fe0-a3c6-471e-b2d9-cf04fb64feb6
+    previousId:
+    displayName: "Marcus Holloway"
+    jerseyNumber: 66
+    archetypeLabel: "RB / LB"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 3
+    speed: 12
+    blocking: 16
+    agility: 10
+    catching: 8
+    runPower: 20
+    carrying: 19
+    tackling: 17
+    coverage: 8
+    dMoves: 9
+    swagger: 11
+    routeRunning: 5
+  - id: 0cf82686-8c60-47ae-8265-b85dd7e94194
+    previousId:
+    displayName: "Andre Wallace"
+    jerseyNumber: 83
+    archetypeLabel: "QB / CB"
+    accentColor: {r: 0.31, g: 0.55, b: 0.72, a: 1}
+    appearance: {fileID: 0}
+    passing: 16
+    speed: 17
+    blocking: 6
+    agility: 16
+    catching: 14
+    runPower: 9
+    carrying: 14
+    tackling: 10
+    coverage: 15
+    dMoves: 17
+    swagger: 18
+    routeRunning: 14

@@ -492,7 +492,7 @@ MonoBehaviour:
   roster: {fileID: 0}
   playerId:
   showNameplate: 1
-  nameplateHeight: 2.6
+  nameplateHeight: 1.45
   nameplateFontSize: 28
 --- !u!114 &7364829102648102351
 MonoBehaviour:

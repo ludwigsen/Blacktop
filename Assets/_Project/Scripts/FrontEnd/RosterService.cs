@@ -23,10 +23,12 @@ public sealed class RosterService
                 string json=store.Read(attempt==1);
                 if(string.IsNullOrEmpty(json)) continue;
                 var loaded=JsonUtility.FromJson<RosterSaveData>(json);
+                loaded=UpgradeCatalog(loaded,out string upgradeMessage);
                 string error=Validate(loaded);
                 if(error!=null) { LoadMessage="Saved rosters unavailable: "+error; continue; }
                 data=loaded;
                 LoadMessage=attempt==0?"Loaded saved rosters.":"Recovered previous save backup. Save again to repair the primary file.";
+                if(!string.IsNullOrEmpty(upgradeMessage)) LoadMessage+=" "+upgradeMessage;
                 return;
             }
             catch(Exception error) { LoadMessage="Save could not be read; defaults retained. "+error.Message; }
@@ -35,7 +37,7 @@ public sealed class RosterService
 
     RosterSaveData Defaults()
     {
-        var result=new RosterSaveData();
+        var result=new RosterSaveData {catalogRevision=Settings.rosterRevision};
         foreach(var source in Settings.teams)
         {
             var team=new SavedTeamRoster { teamId=source.id };
@@ -52,9 +54,61 @@ public sealed class RosterService
         return result;
     }
 
+    RosterSaveData UpgradeCatalog(RosterSaveData loaded,out string message)
+    {
+        message=null;
+        if(loaded==null || loaded.version!=1 || loaded.teams==null || loaded.catalogRevision>=Settings.rosterRevision) return loaded;
+        var expanded=loaded.Copy(); var defaults=Defaults();
+        // Adding installed teams must not discard an older valid save. Disk is only
+        // written by the normal explicit Save transaction, with its existing backup.
+        foreach(var team in defaults.teams)
+            if(!expanded.teams.Any(t=>t!=null && t.teamId==team.teamId)) expanded.teams.Add(team);
+        if(Validate(expanded)!=null) return loaded; // malformed/foreign saves retain the established rejection path
+        var next=expanded.Copy(); var aliases=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+        foreach(var definition in Settings.teams)
+        foreach(var canonical in definition.roster.players)
+        {
+            if(!string.IsNullOrEmpty(canonical.previousId)) aliases[canonical.previousId]=canonical.id;
+            var matches=next.teams.SelectMany(t=>t.players).Where(p=>p.record.id==canonical.id ||
+                (!string.IsNullOrEmpty(canonical.previousId) && p.record.id==canonical.previousId)).ToList();
+            var existing=matches.FirstOrDefault(p=>p.record.id==canonical.id)??matches.FirstOrDefault();
+            var source=defaults.teams.Single(t=>t.teamId==definition.id).players.Single(p=>p.record.id==canonical.id).Copy();
+            if(existing!=null) source.appearance=existing.appearance; // retain authored cosmetics while importing the requested identity/ratings
+            foreach(var team in next.teams) team.players.RemoveAll(p=>matches.Contains(p));
+            next.teams.Single(t=>t.teamId==definition.id).players.Add(source);
+        }
+        foreach(var team in next.teams)
+        {
+            foreach(var assignment in team.active)
+                if(aliases.TryGetValue(assignment.playerId,out var replacement)) assignment.playerId=replacement;
+            // Preserve valid custom lineup choices; repair only vacancies/retired IDs.
+            var seen=new HashSet<string>();
+            team.active.RemoveAll(a=>!team.players.Any(p=>p.record.id==a.playerId) || !seen.Add(a.playerId));
+            foreach(var slot in defaults.teams.Single(t=>t.teamId==team.teamId).active)
+            {
+                if(team.active.Count==7) break;
+                if(team.active.Any(a=>a.playerId==slot.playerId)) continue;
+                int offense=Enumerable.Range(0,7).First(n=>!team.active.Any(a=>(int)a.offense==n));
+                int defense=Enumerable.Range(0,7).First(n=>!team.active.Any(a=>a.defense==n));
+                team.active.Add(new LineupAssignment {playerId=slot.playerId,offense=(TeamMember.RosterSlot)offense,defense=defense});
+            }
+        }
+        next.catalogRevision=Settings.rosterRevision;
+        string error=Validate(next);
+        if(error!=null)
+        {
+            // Do not renumber/delete a custom player to conceal an import conflict.
+            message="New teams added; player update needs attention: "+error+" Existing players retained. Resolve the conflict in Players and reload.";
+            return expanded;
+        }
+        message="Updated installed players and teams; custom players, cosmetics and valid lineups retained. Save to retain this catalog revision.";
+        return next;
+    }
+
     public string Validate(RosterSaveData candidate)
     {
         if(candidate==null || candidate.version!=1 || candidate.teams==null) return "Unsupported roster save version.";
+        if(candidate.catalogRevision>Settings.rosterRevision) return "Saved roster catalog is newer than this build.";
         if(candidate.teams.Count!=Settings.teams.Length) return "Save team catalog differs from installed teams. Restore Defaults to migrate deliberately.";
         var catalogErrors=Settings.appearances.ValidateCatalog();
         if(catalogErrors.Count>0)return catalogErrors[0]; // Validate immutable art once per transaction, not per player.

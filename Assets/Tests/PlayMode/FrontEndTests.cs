@@ -59,7 +59,7 @@ public class FrontEndTests
         var saved=service.Team("kings").players.Single(p=>p.record.id==id);
         var duplicate=new PlayerEditorSession(saved,"kings",duplicate:true);duplicate.Draft.record.jerseyNumber=service.NextNumber("kings");
         Assert.That(duplicate.Save(service,out string other,out error),Is.True,error);Assert.That(other,Is.Not.EqualTo(id));
-        saved.record.jerseyNumber=42;saved.record.displayName="Renamed Player";
+        saved.record.jerseyNumber=service.NextNumber("kings");saved.record.displayName="Renamed Player";
         Assert.That(service.SavePlayer("kings",saved,-1,0,out var edited,out error),Is.True,error);Assert.That(edited,Is.EqualTo(id));
         Assert.That(service.Transfer(id,"vipers",out error),Is.True,error);
         Assert.That(service.Team("kings").players.Any(p=>p.record.id==id),Is.False);

@@ -13,6 +13,7 @@ public class TeamRoster : ScriptableObject
     {
         [Tooltip("Auto-generated GUID — do not edit by hand. Left blank on a freshly added row until OnValidate fills it.")]
         public string id;
+        [HideInInspector] public string previousId; // Explicit prototype GUID alias for one-time authored roster upgrades.
         public string displayName;
         public int jerseyNumber;
 

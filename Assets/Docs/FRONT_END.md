@@ -24,7 +24,13 @@
 
 Open `Assets/Scenes/MainMenu.unity` and enter Play Mode. MainMenu is enabled build index 0; SampleScene is enabled index 1. Both scenes and all referenced data are already generated and committed. No manual assembly is required. `Blacktop > Front End > Generate and Wire Front End` is an explicit repair/authoring utility: it opens and saves both scenes and resets their wiring, so save unrelated scene work before using it. Existing data assets are retained rather than overwritten.
 
-`Assets/_Project/Data/FrontEnd/FrontEndSettings.asset` references the team definitions, field choices, appearance catalog, default appearance, visual prefab, weight profile and existing HUD theme/paint. Kings/Vipers reuse their existing TeamIdentity assets and crests. Adding an installed team requires a unique TeamDefinition ID, branding, TeamRoster, valid GUID-based independent lineups, and a reference in settings. Changing the installed team set requires deliberately restoring defaults for version-1 local saves; it is not an automatic team-catalog migration.
+`Assets/_Project/Data/FrontEnd/FrontEndSettings.asset` references six team definitions,
+field choices, appearance catalog, default appearance, visual prefab, weight profile
+and existing HUD theme/paint. Kings/Vipers keep their TeamIdentity assets and crests;
+Ravens/Wolves/Outlaws/Reapers have named color identities with no custom crest yet.
+The supplied 42-player CSV owns the authored identifiers, names, numbers and ratings.
+Each team has seven explicit independent offense/defense assignments. Source roles
+are broad preferences, not a new position system; see SourceAssets/Rosters/README.md.
 
 MainMenu builds its reusable uGUI presentation at runtime. No new gameplay prefab or duplicated gameplay system was introduced. Preview clones `Assets/_Project/Prefabs/PlayerModel.prefab`, not Player.prefab. The existing shared Avatar/controller and PlayerVisualRig are retained.
 
@@ -42,7 +48,11 @@ MainMenu builds its reusable uGUI presentation at runtime. No new gameplay prefa
 
 `TeamRoster.PlayerRecord` still owns the name, number, GUID and twelve ratings. The runtime DTO wraps that same record and a portable appearance selection; it does not create a second authoritative rating array. The UI splits the existing displayName at its final space for first/last-name editing and combines it when edited. Existing names are unchanged merely by opening a session.
 
-Existing Kings GUIDs/ratings and source appearance references are unchanged. The legacy scene QB had both an inherited empty CharacterApplier and a scene-added bound one; setup consolidates them into the inherited component using the existing Marcus Reed GUID. Vipers receives a new explicit seven-player balanced development roster and its generated metadata (`Vipers QB`, `Vipers RB`, etc.). These are source defaults for the seven existing actors, not match-start autofill. Existing rows without appearance references import the front-end default appearance.
+The supplied CSV replaces the fourteen prototype records and adds four teams.
+All 42 GUIDs, numbers and twelve ratings match the file. Explicit previousId metadata
+maps the seven former Kings people and seven slot-named Vipers placeholders into
+the new catalog, rather than creating duplicate versions of the prototype players.
+Rows without authored appearance references still use the existing default appearance.
 
 Create and duplicate drafts have no GUID until a successful Save. Edits/transfers preserve the original GUID. Duplicate names are allowed. Jersey numbers must be non-negative whole numbers and unique within a team; there is no two-digit cap that would impose an artificial reserve limit. Transfers move the single record between teams, remove old active references and start in reserves unless explicitly assigned through the editor. Delete and transfer have confirmation dialogs.
 
@@ -54,7 +64,20 @@ Every operation clones the current state, validates all installed teams/membersh
 
 The save is `Path.Combine(Application.persistentDataPath, "rosters.v1.json")`; Unity chooses the platform-specific folder. Do not hardcode a developer machine path. The JSON contains schema `version: 1`, team IDs, existing PlayerRecord fields without Unity appearance references, appearance IDs/heights/builds and GUID-based lineups. It contains no Unity instance IDs or packaged asset paths.
 
-Writes go to a sibling `.tmp`, then `File.Replace` atomically replaces an existing file and retains `.bak`; the first write uses a same-directory move. Temporary files are cleaned up. Startup first validates the primary save, then a previous backup; otherwise it retains canonical defaults with a visible message. Unsupported versions/catalog mismatches are rejected rather than guessed at. Save after backup recovery to repair the primary. RESTORE DEFAULT ROSTERS deliberately replaces all local rosters with the current source defaults, including removing local-only players. Existing source records migrate through the default importer; no earlier runtime roster file format existed.
+Writes go to a sibling `.tmp`, then `File.Replace` atomically replaces an existing
+file and retains `.bak`; the first write uses a same-directory move. Startup tries
+primary then backup. Schema remains version 1 with an optional catalogRevision
+(missing means 0). Settings rosterRevision 1 applies the supplied source catalog
+once in memory: install new teams, remap explicit prototype aliases, import official
+identities/ratings into their supplied teams, preserve cosmetics/custom players and
+valid lineup choices, then repair vacancies. Loading never writes the disk file;
+normal Save retains the revision and backup. Later author edits are not reimported
+at each restart. A custom jersey conflict keeps existing players and reports that
+the update needs attention rather than renumbering/deleting them. Resolve the
+conflict in Players and reload. Malformed/foreign catalogs and unsupported versions
+retain the normal rejection path; a newer catalog is not silently downgraded.
+RESTORE DEFAULT ROSTERS remains the deliberate full replacement, including removal
+of local-only players. Source import never opens a developer's runtime save.
 
 Runtime saving never modifies packaged/source ScriptableObjects. Match start takes a detached validated snapshot, so further menu changes cannot mutate an active match. Rematch retains that snapshot; a new Head 2 Head uses the current saved state.
 
@@ -64,7 +87,10 @@ In Editor Play Mode, save player changes first, then use COMMIT TO SOURCE (EDITO
 
 Source commit does not erase/replace the separate local runtime save. Restore defaults deliberately when testing newly committed defaults. Ordinary Player Save, roster Save, preview and Cancel have no AssetDatabase dependency. `FrontEndSourceCommit` alone lives in Blacktop.Editor and installs runtime delegates; standalone code imports no UnityEditor namespace.
 
-Head 2 Head is the supported entry for edited lineups. Direct SampleScene launch keeps the original fixed GUID development bindings when no snapshot exists. After deleting/transferring those original players in canonical source, those legacy scene bindings may no longer resolve; launch via MainMenu for custom rosters. This PR does not add a second scene spawner or silently replace those GUIDs.
+Head 2 Head remains the entry for saved/custom rosters. Without a snapshot,
+MatchBootstrap binds the first two authored source TeamDefinitions and their
+independent assignments before CharacterApplier (-100); retired scene GUID overrides
+are no longer the direct-scene authority. The same fourteen gameplay roots are reused.
 
 ## Physique, weight and ratings
 
