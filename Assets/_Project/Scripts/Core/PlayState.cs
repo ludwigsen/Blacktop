@@ -682,16 +682,15 @@ public class PlayState : MonoBehaviour
         OnPlayReset?.Invoke();
     }
 
-    // Delay-of-game. Forces whatever step is in progress to complete INSTANTLY
-    // (no point animating a panic snap) and goes live immediately after.
-    // BreakToFormationRoutine(instant: true) has no yield in its instant path, so it
-    // runs fully to completion synchronously before StartCoroutine even returns —
-    // phase is already SetAtLOS by the time DoSnap() is called below, regardless of
-    // which phase we were stuck in when the clock hit zero.
+    // At the line, the clock starts play from the current positions. Before the
+    // line, complete formation setup synchronously before dispatching the snap.
     void ForceThroughPlayClock()
     {
-        StopAllCoroutines();
-        StartCoroutine(BreakToFormationRoutine(instant: true));
+        if (!IsSetAtLOS)
+        {
+            StopAllCoroutines();
+            StartCoroutine(BreakToFormationRoutine(instant: true));
+        }
         DoSnap();
     }
 
@@ -814,8 +813,7 @@ public class PlayState : MonoBehaviour
             members,
             targets,
             formationMoveSpeed,
-            formationArrivalTolerance,
-            instant: false);
+            formationArrivalTolerance);
 
         for (int i = 0; i < offense.Count; i++)
         {
@@ -879,7 +877,22 @@ public class PlayState : MonoBehaviour
                 : defensePlayers[i].position);
         }
 
-        yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance, instant);
+        if (instant)
+        {
+            // No nested yield in the play-clock path. OnSetAtLOS runs before DoSnap.
+            for (int i = 0; i < members.Count; i++)
+                if (members[i] != null) members[i].position = targets[i];
+        }
+        else
+        {
+            yield return MoveGroupTo(members, targets, formationMoveSpeed, formationArrivalTolerance);
+        }
+
+        // A completed formation starts fresh. A shove from the last down must
+        // never pull a manually placed defender toward an obsolete contact point.
+        foreach (var actor in members)
+            if (actor != null && actor.TryGetComponent<DefenderAI>(out var ai))
+                ai.ClearContactRecovery();
 
         // Offense faces the way it's driving; defense faces the offense. Set for both
         // sides so a team that was just on the other side of the ball doesn't come out
@@ -907,18 +920,9 @@ public class PlayState : MonoBehaviour
         OnSetAtLOS?.Invoke();
     }
 
-    // Shared walk helper. instant=true assigns final positions directly with zero
-    // yields, so a caller can StartCoroutine() it and rely on it being fully complete
-    // by the time StartCoroutine() returns (see ForceThroughPlayClock).
-    IEnumerator MoveGroupTo(List<Transform> members, List<Vector3> targets, float speed, float tolerance, bool instant)
+    // Shared walk helper for gathering and breaking the huddle.
+    IEnumerator MoveGroupTo(List<Transform> members, List<Vector3> targets, float speed, float tolerance)
     {
-        if (instant)
-        {
-            for (int i = 0; i < members.Count && i < targets.Count; i++)
-                if (members[i] != null) members[i].position = targets[i];
-            yield break;
-        }
-
         bool anyMoving = true;
         while (anyMoving)
         {

@@ -233,7 +233,7 @@ public sealed class GameplayLabelLayout : MonoBehaviour
     }
 
     // Restrict the line parameter to the portion inside one axis of an obstacle.
-    static bool ClipAxis(float start, float travel, float min, float max, ref float enter, ref float leave)
+    internal static bool ClipAxis(float start, float travel, float min, float max, ref float enter, ref float leave)
     {
         if (Mathf.Approximately(travel, 0f)) return start >= min && start <= max;
         float a = (min - start) / travel, b = (max - start) / travel;

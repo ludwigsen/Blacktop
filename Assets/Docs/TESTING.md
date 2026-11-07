@@ -184,6 +184,40 @@ captures and the macOS development app are delivered in the original checkout's
 ignored Builds/GameplayReadability directory. A physical-controller full match,
 Windows run and human balance acceptance are follow-ups (#13 and #14).
 
+## T-120: Set-at-LOS control, play art and clock (#10)
+
+In Head 2 Head call defense. Try movement and Q or RB/R1 during huddle, formation
+walk-in and post-play. At the line, cycle all seven slots and wrap once, holding
+one switch input through several frames. Move two defenders with WASD, arrows or
+left stick. Check that each stays put after switching and that the selected
+defender uses the usual highlight. Hold diagonal toward the LOS and a sideline.
+Check smooth lateral travel along the LOS, and repeat at the end line, after
+turnover, and with either human side. At play start both adjusted positions and
+the selection carry through. Check live switching by distance and the next
+formation resetting adjustments. Test the play clock expiring before and after
+the formation is set. CPU automatic start samples 2–8 seconds, capped by the
+play clock.
+
+On offense, hold movement and switch input once set. The QB keeps possession
+and every set player stays in place. Hold V or LT/L2 to compare Slants and Dive.
+Check route arrows, white block bars, and the gold run exchange. Call Zone,
+Man and Blitz on defense. Check zone rings, man links, hold bars, and rush arrows.
+Keep preview held while moving and cycling. The art should follow the relevant
+actors and stay out of the scorebug and identity cards. Release, start the play,
+then repeat through a turnover, rematch and menu exit. Art must clear on each
+exit from set. Run both themes at 1280×720 and 1920×1080. Start human offense with
+R. Physical controller and Windows acceptance remain tracked in #13.
+
+Unity 6000.5.6f1 on macOS passed 156 of 156 Play Mode tests, with no skips.
+The seven new cases use virtual keyboard and gamepad devices in the real match
+scene. They cover both clock-expiry paths, the automatic CPU delay, formation
+slot order, edge sliding after a turnover, offensive lock and preview cleanup.
+The normal match camera rendered five shipped plays into 720p and 1080p
+captures for both themes. The batch Editor reported a 640×480 Game view. In
+that view, the crowded Zone stroke centers stayed outside the actual projected
+nameplates. Display-mode acceptance remains #13. Evidence is under the original
+checkout's ignored Builds/PreSnap directory.
+
 ## Core loop
 
 ### T-01: Drive start position

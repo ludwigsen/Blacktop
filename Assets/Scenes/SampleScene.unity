@@ -2062,6 +2062,7 @@ GameObject:
   - component: {fileID: 1314477370}
   - component: {fileID: 1314477371}
   - component: {fileID: 1314477372}
+  - component: {fileID: 1314477373}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2183,6 +2184,22 @@ MonoBehaviour:
   promptSize: {x: 210, y: 38}
   identityFontSize: 26
   promptFontSize: 24
+--- !u!114 &1314477373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19a17b4bdce5457cb6317d7220931aa7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::PreSnapPlayPreview
+  labels: {fileID: 1314477372}
+  settings: {fileID: 11400000, guid: f454f03e2ba074a4fb13842706ee89e0, type: 2}
+  strokeWidth: 4
+  groundHeight: 0.05
 --- !u!114 &1314477361
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2321,7 +2338,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blacktop::CPUPlayCaller
   playCallSelector: {fileID: 1314477361}
-  snapDelayAfterSet: 1.5
+  snapDelayAfterSetRange: {x: 2, y: 8}
   runChanceStandard: 0.55
   runChanceShortYardage: 0.7
   runChanceLongYardage: 0.25

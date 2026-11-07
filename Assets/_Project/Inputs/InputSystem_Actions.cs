@@ -231,6 +231,16 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Preview Play"",
+                    ""type"": ""Button"",
+                    ""id"": ""eecdf68d-c32b-424c-b2e1-8a666faa375d"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -605,6 +615,28 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""Switch Player"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dd701b77-fdf1-4643-92b6-8f2a0dbc2445"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Preview Play"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d9c74cc3-cc8d-4d33-86dd-f872a3fcc255"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Preview Play"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1216,6 +1248,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Gamebreaker = m_Player.FindAction("Gamebreaker", throwIfNotFound: true);
         m_Player_Confirm = m_Player.FindAction("Confirm", throwIfNotFound: true);
         m_Player_SwitchPlayer = m_Player.FindAction("Switch Player", throwIfNotFound: true);
+        m_Player_PreviewPlay = m_Player.FindAction("Preview Play", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1323,6 +1356,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Gamebreaker;
     private readonly InputAction m_Player_Confirm;
     private readonly InputAction m_Player_SwitchPlayer;
+    private readonly InputAction m_Player_PreviewPlay;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1391,6 +1425,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @SwitchPlayer => m_Wrapper.m_Player_SwitchPlayer;
         /// <summary>
+        /// Provides access to the underlying input action "Player/PreviewPlay".
+        /// </summary>
+        public InputAction @PreviewPlay => m_Wrapper.m_Player_PreviewPlay;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -1458,6 +1496,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @SwitchPlayer.started += instance.OnSwitchPlayer;
             @SwitchPlayer.performed += instance.OnSwitchPlayer;
             @SwitchPlayer.canceled += instance.OnSwitchPlayer;
+            @PreviewPlay.started += instance.OnPreviewPlay;
+            @PreviewPlay.performed += instance.OnPreviewPlay;
+            @PreviewPlay.canceled += instance.OnPreviewPlay;
         }
 
         /// <summary>
@@ -1511,6 +1552,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @SwitchPlayer.started -= instance.OnSwitchPlayer;
             @SwitchPlayer.performed -= instance.OnSwitchPlayer;
             @SwitchPlayer.canceled -= instance.OnSwitchPlayer;
+            @PreviewPlay.started -= instance.OnPreviewPlay;
+            @PreviewPlay.performed -= instance.OnPreviewPlay;
+            @PreviewPlay.canceled -= instance.OnPreviewPlay;
         }
 
         /// <summary>
@@ -1909,6 +1953,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSwitchPlayer(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Preview Play" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPreviewPlay(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

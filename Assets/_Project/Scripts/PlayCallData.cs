@@ -49,14 +49,24 @@ public class PlayCallData : ScriptableObject
     public TeamMember.RosterSlot HandoffReceiverSlot => handoffReceiverSlot;
 
     public RoutePattern GetRouteForReceiver(int receiverIndex)
+        => TryGetAuthoredRoute(receiverIndex, out var authored) ? authored : RoutePattern.Go;
+
+    // Live play has a safety fallback for missing slots. Show only authored routes in the preview.
+    public bool TryGetAuthoredRoute(int receiverIndex, out RoutePattern authored)
     {
-        if (uniformRoute) return route;
+        if (uniformRoute)
+        {
+            authored = route;
+            return true;
+        }
 
         foreach (var assignment in routes)
         {
-            if (assignment.receiverIndex == receiverIndex)
-                return assignment.route; // explicit assignment, including an explicit None, respected as-is
+            if (assignment.receiverIndex != receiverIndex) continue;
+            authored = assignment.route;
+            return true;
         }
-        return RoutePattern.Go; // not listed at all — safety fallback, no longer conflated with explicit None
+        authored = RoutePattern.None;
+        return false;
     }
 }

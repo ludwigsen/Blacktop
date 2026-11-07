@@ -62,3 +62,14 @@ because it covers the missing controller actions and cross-platform acceptance.
   identities have colors; custom crests were not supplied.
 
 The #12 change does not complete those tickets' acceptance criteria.
+
+## Follow-up areas after #10
+
+- **#11** is next by impact. The run preview describes the called exchange.
+  Validate visible handoffs and grip against the actual ball owner and mesh point.
+- **#13** covers physical-controller timing for LT/L2 with left-stick movement and
+  RB/R1 cycling, the offensive start binding, and full Windows/macOS matches.
+- **#14** should include manually repositioned defenders, the variable CPU set
+  window, and the restored authored Zone, Blitz and Man jobs in balance checks.
+- **#18** can preview authored plays through the same route, block, exchange and
+  coverage data. Add drawing support when the playbook gains new assignment types.

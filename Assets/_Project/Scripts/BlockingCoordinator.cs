@@ -152,7 +152,7 @@ public class BlockingCoordinator : MonoBehaviour
     //          ReceiverAI ends the route on that same condition, and AllyBlocker waits on
     //          RouteComplete, so the two never drive the transform at once.
     //   Trick — falls under the Pass rules until trick plays get their own pass.
-    static bool IsEligibleBlocker(AllyBlocker blocker, PlayCallData playCall, bool carrierPastLOS)
+    internal static bool IsEligibleBlocker(AllyBlocker blocker, PlayCallData playCall, bool carrierPastLOS)
     {
         if (!blocker.TryGetComponent<TeamMember>(out var member)) return false;
 
