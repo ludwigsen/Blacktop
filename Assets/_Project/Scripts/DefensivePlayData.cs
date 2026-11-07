@@ -28,9 +28,15 @@ public class DefensivePlayData : ScriptableObject
 
     // Slots past the end of the list default to Spy — a short list degrades gracefully.
     public SlotAssignment GetAssignment(int slotIndex) =>
-        slotIndex >= 0 && slotIndex < assignments.Count
-            ? assignments[slotIndex]
-            : new SlotAssignment { job = DefenderJob.Spy };
+        TryGetAssignment(slotIndex, out var assignment) ? assignment : new SlotAssignment { job = DefenderJob.Spy };
+
+    // The preview omits missing rows even though the live defense has a Spy fallback.
+    public bool TryGetAssignment(int slotIndex, out SlotAssignment assignment)
+    {
+        bool authored = slotIndex >= 0 && slotIndex < assignments.Count;
+        assignment = authored ? assignments[slotIndex] : default;
+        return authored;
+    }
 
     // Used by CPUPlayCaller to pick situationally without hardcoding play names.
     public int RushCount => CountJobs(DefenderJob.Rush);

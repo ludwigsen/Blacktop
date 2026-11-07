@@ -19,7 +19,8 @@ public class CPUPlayCaller : MonoBehaviour
     [SerializeField] PlayCallSelector playCallSelector;
 
     [Header("Snap (CPU offense only)")]
-    [SerializeField] float snapDelayAfterSet = 1.5f;
+    [Tooltip("Random set-time window in seconds. The remaining play clock is the hard deadline.")]
+    [SerializeField] Vector2 snapDelayAfterSetRange = new(2f, 8f);
 
     [Header("Offense: chance of RUN by situation")]
     [SerializeField, Range(0f, 1f)] float runChanceStandard = 0.55f;
@@ -93,16 +94,25 @@ public class CPUPlayCaller : MonoBehaviour
 
     void HandleSetAtLOS()
     {
-        if (!CpuHasBall) return; // human on offense snaps their own ball
         StopAllCoroutines();
-        StartCoroutine(SnapAfterDelay());
+        if (!CpuHasBall) return; // human on offense starts their own play
+        var play = PlayState.Instance;
+        StartCoroutine(SnapAfterDelay(SampleSnapDelay(play.PlayClockRemaining)));
     }
 
-    IEnumerator SnapAfterDelay()
+    float SampleSnapDelay(float clockRemaining)
     {
-        yield return new WaitForSeconds(snapDelayAfterSet);
+        // A late huddle cannot extend the play clock. Leave the expiry path to PlayState.
+        float earliest = Mathf.Max(0f, snapDelayAfterSetRange.x);
+        float latest = Mathf.Min(Mathf.Max(earliest, snapDelayAfterSetRange.y), Mathf.Max(0f, clockRemaining));
+        return latest > earliest ? Random.Range(earliest, latest) : latest;
+    }
+
+    IEnumerator SnapAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
         var ps = PlayState.Instance;
-        if (ps != null && ps.IsSetAtLOS) ps.ResetPlay(); // no-op if the human already snapped
+        if (ps != null && ps.IsSetAtLOS && CpuHasBall) ps.ResetPlay();
     }
 
     // ---- Offense ------------------------------------------------------------

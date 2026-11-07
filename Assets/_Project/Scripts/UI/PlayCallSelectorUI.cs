@@ -180,9 +180,8 @@ public class PlayCallSelector : MonoBehaviour
 
     bool CanInteract()
     {
-        return PlayState.Instance != null &&
-               !PlayState.Instance.IsLive &&
-               !PlayState.Instance.IsPlayEnding;
+        var play = PlayState.Instance;
+        return play != null && play.IsInHuddle && !play.IsPlayEnding && !play.IsGameOver;
     }
 
     void CycleCategory(int direction)
@@ -337,12 +336,15 @@ public class PlayCallSelector : MonoBehaviour
         Refresh();
     }
 
+    // The huddle and formation coroutines can finish between the play events.
+    // Close the picker before movement input can change the called play.
+    void Update() => UpdateVisibility();
+
     void UpdateVisibility()
     {
         if (canvasGroup == null) return;
-        bool visible = PlayState.Instance != null &&
-                       !PlayState.Instance.IsLive &&
-                       !PlayState.Instance.IsPlayEnding;
+        bool visible = CanInteract();
+        if (canvasGroup.interactable == visible) return;
         canvasGroup.alpha = visible ? 1f : 0f;
         canvasGroup.interactable = visible;
         canvasGroup.blocksRaycasts = visible;
@@ -375,6 +377,8 @@ public class PlayCallSelector : MonoBehaviour
 
         canvasGroup = canvasGO.GetComponent<CanvasGroup>();
         canvasGroup.alpha = 0f;
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
 
         var panelGO = new GameObject("PlayCallPanel", typeof(AngularPanel));
         panelGO.transform.SetParent(canvasGO.transform, false);

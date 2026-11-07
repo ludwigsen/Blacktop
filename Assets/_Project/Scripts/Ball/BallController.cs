@@ -116,6 +116,7 @@ public class BallController : MonoBehaviour
         {
             PlayState.Instance.OnPlayReset += HandlePlayReset;
             PlayState.Instance.OnHuddleStarted += HandleHuddleStarted;
+            PlayState.Instance.OnSetAtLOS += HandleSetAtLOS;
             PlayState.Instance.OnPlayEnded += HandlePlayEnded;
 
             // PlayState owns possession, so it also decides who starts with the ball. The
@@ -130,6 +131,7 @@ public class BallController : MonoBehaviour
         {
             PlayState.Instance.OnPlayReset -= HandlePlayReset;
             PlayState.Instance.OnHuddleStarted -= HandleHuddleStarted;
+            PlayState.Instance.OnSetAtLOS -= HandleSetAtLOS;
             PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
         }
     }
@@ -150,6 +152,13 @@ public class BallController : MonoBehaviour
     // to sell here. PlayState resolves possession BEFORE firing OnHuddleStarted, so after
     // a turnover this is already the new offense's QB.
     void HandleHuddleStarted() => AttachToPossessionQuarterback();
+
+    void HandleSetAtLOS()
+    {
+        // A possession change between the initial huddle and formation must
+        // still leave the starting QB holding the ball before live play.
+        if (!IsHeld || Carrier != PlayState.Instance.Passer) AttachToPossessionQuarterback();
+    }
 
     void AttachToPossessionQuarterback()
     {

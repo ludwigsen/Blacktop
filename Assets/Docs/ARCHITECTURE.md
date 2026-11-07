@@ -59,7 +59,9 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 ### Play lifecycle
 
 1. **Pre-play / huddle.** Possession team is read from `PlayState.PossessionTeamId`. Formation and play selection operate against that team. Drives start at -10 / +10 relative to the possessing team's direction.
-2. **Play reset.** `BallController.HandlePlayReset()` places the ball in the QB's hand (Pistol or Shotgun). No snap.
+2. **Set at the LOS.** The QB holds the ball. Human defense can adjust its selected
+   player and both sides can hold their own play art. Starting play dispatches the
+   existing reset event from those positions. See the pre-snap controls below.
 3. **Live play.**
    - **Pass play:** receivers run routes to completion or until a ball carrier crosses the LOS. User selects a receiver via `ReceiverSelectionUI`.
    - **Run play:** WRs block. A visible handoff is required (handoff visuals are not built yet).
@@ -176,6 +178,35 @@ PossessionController ─► BallController
 
 - **MainMenu** (`Assets/Scenes/MainMenu.unity`) — enabled build index 0. Runtime uGUI navigation, roster authoring and visual-only character preview.
 - **SampleScene** (`Assets/Scenes/SampleScene.unity`) — enabled build index 1. Head 2 Head and Pickup bind a validated exhibition snapshot to the existing fourteen player roots before gameplay initialization. Escape / gamepad Start or the MENU button returns to MainMenu. Direct entry resolves the first two authored source TeamDefinitions and independent lineups rather than retired scene GUID overrides.
+
+## Pre-snap controls and play art (#10)
+
+`PlayState.IsSetAtLOS` is the phase gate. `DefenderControlManager` selects the
+first valid defending slot on set and advances once per Q or RB/R1 press in
+formation order. `PossessionController.ActivelyControlled` remains the authority
+for locomotion and the selection ring. `DefenderControl` uses normal screen-relative
+movement and clamps through `FieldBounds` and the possession-relative LOS. It
+removes the blocked velocity component to allow a slide along either edge.
+Pre-snap movement ends on the phase boundary. Adjusted transforms and the
+selection carry into live play, where nearest-other switching and ball-change
+selection resume. The next formation replaces the positions and clears stale
+contact recovery. The offensive stack retains the QB and keeps movement locked.
+
+The CPU samples between the Inspector's 2 and 8 second endpoints after set,
+shortening the upper bound to the remaining play clock. The play clock starts from
+current positions if already set, or finishes formation synchronously before live
+play if time expires earlier. First-to-21 uses the play clock as its time limit.
+
+`PreSnapPlayPreview` reads the Player map's Preview Play action (hold V or LT/L2).
+Its scene canvas projects the user's current assignments through the match camera
+and clips strokes to the `GameplayLabelLayout` safe area and around identity cards.
+Offense draws prepared authored route endpoints, blocking roles, and the run
+exchange from the existing handoff slot. Defense uses the authored slot jobs,
+zone anchors and the same current-position man matching used by
+`DefenderCoordinator` when play starts. Each defender receives live assignment
+metadata so it is ready when human control switches away. The preview clears
+on release and at phase exit. Its own canvas handles presentation and input
+state without changing the calls or starting play.
 
 ## Gameplay label layout and supplied roster (2026-11-06)
 

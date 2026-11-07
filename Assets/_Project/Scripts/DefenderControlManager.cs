@@ -7,10 +7,8 @@ using UnityEngine.InputSystem;
 // (PossessionController) handles that case.
 //
 // Selection rules:
-//   - PRE-SNAP (dead ball): the switch button loops the defense array in formation-slot
-//     order, 0 through 6 and back to 0. Each new dead ball starts at 0.
-//   - At the snap: the defender closest to the ball, unless the human already picked one
-//     pre-snap.
+//   - SET AT LOS: each press advances in formation-slot order. The first valid
+//     slot starts selected, and the selection carries into the live play.
 //   - POST-SNAP: the switch button toggles between the two defenders closest to the ball
 //     (the closest one that isn't the current guy — if you're not one of the two, you go
 //     to the closest).
@@ -43,13 +41,12 @@ public class DefenderControlManager : MonoBehaviour
     InputSystem_Actions controls;
     DefenderControl current;
 
-    bool pickedPreSnap;   // human chose a defender during the dead ball — don't overwrite it at the snap
     float lastSwitchTime = float.NegativeInfinity;
 
     // Ball-change detection for auto-switching.
     bool hasLastBall;
     BallController.BallState lastState;
-    Transform lastCarrier;
+    EntityId lastCarrierId;
 
     void Awake()
     {
@@ -66,6 +63,7 @@ public class DefenderControlManager : MonoBehaviour
     {
         if (PlayState.Instance == null) return;
         PlayState.Instance.OnPlayReset += HandlePlayReset;
+        PlayState.Instance.OnSetAtLOS += HandleSetAtLOS;
         PlayState.Instance.OnPlayEnded += HandlePlayEnded;
         PlayState.Instance.OnPossessionChanged += HandlePossessionChanged;
     }
@@ -82,6 +80,7 @@ public class DefenderControlManager : MonoBehaviour
         if (PlayState.Instance != null)
         {
             PlayState.Instance.OnPlayReset -= HandlePlayReset;
+            PlayState.Instance.OnSetAtLOS -= HandleSetAtLOS;
             PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
             PlayState.Instance.OnPossessionChanged -= HandlePossessionChanged;
         }
@@ -93,8 +92,8 @@ public class DefenderControlManager : MonoBehaviour
         var play = PlayState.Instance;
         if (play == null) return;
 
-        // User has the ball: normal carrier control applies, nobody on defense is ours.
-        if (!play.IsUserDefending)
+        // Huddle and presentation own their players. Only set/live defense can claim one.
+        if (play.IsGameOver || !play.IsUserDefending || (!play.IsLive && !play.IsSetAtLOS))
         {
             Release();
             return;
@@ -103,8 +102,11 @@ public class DefenderControlManager : MonoBehaviour
         // First frame of defense, a new dead ball, or the piloted guy became invalid
         // (possession change, destroyed) — pick a default: slot 0 of the defense array
         // pre-snap, closest to the ball once live.
-        if (!IsValid(current))
+        if (!(play.IsSetAtLOS ? IsValidSetDefender(current) : IsValid(current)))
+        {
+            Release();
             Select(play.IsLive ? ClosestUserDefenderTo(FocusPoint(), null) : NextInDefenseArray(null));
+        }
 
         if (play.IsLive) AutoSwitchOnBallChange();
     }
@@ -114,19 +116,25 @@ public class DefenderControlManager : MonoBehaviour
     void HandleSwitchPressed(InputAction.CallbackContext _)
     {
         var play = PlayState.Instance;
-        if (play == null || !play.IsUserDefending) return;
-        if (Time.time - lastSwitchTime < switchCooldown) return;
+        if (play == null || play.IsGameOver || !play.IsUserDefending) return;
+        if (!play.IsLive && !play.IsSetAtLOS) return;
+        if (play.IsLive && Time.time - lastSwitchTime < switchCooldown) return;
 
-        // Dead ball: step through the defense array. Live ball: the closest defender to the
+        // Set defense advances once for each Button performed event. Live ball uses the closest defender to the
         // ball that isn't the current one (= toggling between the two closest).
         var next = play.IsLive
             ? ClosestUserDefenderTo(FocusPoint(), current)
             : NextInDefenseArray(current);
         if (next == null) return;
 
-        lastSwitchTime = Time.time;
-        if (!play.IsLive) pickedPreSnap = true;
+        if (play.IsLive) lastSwitchTime = Time.time;
         Select(next);
+    }
+
+    void HandleSetAtLOS()
+    {
+        if (isActiveAndEnabled && PlayState.Instance.IsUserDefending)
+            Select(NextInDefenseArray(null));
     }
 
     void HandlePlayReset()
@@ -134,18 +142,15 @@ public class DefenderControlManager : MonoBehaviour
         // Ball-change tracking restarts at the snap so the first live frame doesn't read
         // "ball just went from huddle-QB to snap-QB" as a change worth switching for.
         hasLastBall = false;
+        lastSwitchTime = float.NegativeInfinity;
 
         var play = PlayState.Instance;
-        if (play == null || !play.IsUserDefending) return;
-        if (!pickedPreSnap) Select(ClosestUserDefenderTo(FocusPoint(), null));
+        if (!isActiveAndEnabled || play == null || !play.IsUserDefending) return;
+        if (!IsValid(current)) Select(ClosestUserDefenderTo(FocusPoint(), null));
     }
 
-    // New dead ball: forget last down's pick and drop control so Update() re-selects slot 0.
-    void HandlePlayEnded(PlayState.PlayEndReason _)
-    {
-        pickedPreSnap = false;
-        Release();
-    }
+    // The next completed formation claims a fresh first slot.
+    void HandlePlayEnded(PlayState.PlayEndReason _) => Release();
 
     void HandlePossessionChanged(int _) => Release(); // Update() re-selects if the user is now defending
 
@@ -153,19 +158,21 @@ public class DefenderControlManager : MonoBehaviour
     {
         var ball = BallController.Instance;
         if (ball == null) return;
+        // Remember an ID for change detection, never a cached carrier to act on.
+        EntityId carrierId = ball.Carrier != null ? ball.Carrier.GetEntityId() : default;
 
         if (!hasLastBall)
         {
             hasLastBall = true;
             lastState = ball.State;
-            lastCarrier = ball.Carrier;
+            lastCarrierId = carrierId;
             return;
         }
 
-        if (ball.State == lastState && ball.Carrier == lastCarrier) return;
+        if (ball.State == lastState && carrierId.Equals(lastCarrierId)) return;
 
         lastState = ball.State;
-        lastCarrier = ball.Carrier;
+        lastCarrierId = carrierId;
         Select(ClosestUserDefenderTo(FocusPoint(), null));
     }
 
@@ -175,6 +182,18 @@ public class DefenderControlManager : MonoBehaviour
     {
         if (c == null || !c.gameObject.activeInHierarchy) return false;
         return c.TryGetComponent<TeamMember>(out var member) && PlayState.Instance.IsUserTeam(member.teamId);
+    }
+
+    bool IsValidSetDefender(DefenderControl control) => IsValid(control) && control.isActiveAndEnabled &&
+        TryGetSetDefender(control.transform, out _);
+
+    static bool TryGetSetDefender(Transform actor, out DefenderAI ai)
+    {
+        ai = null;
+        return actor != null && actor.gameObject.activeInHierarchy &&
+            actor.TryGetComponent<TeamMember>(out var member) && member.isActiveAndEnabled &&
+            PlayState.Instance.IsUserTeam(member.teamId) &&
+            actor.TryGetComponent(out ai) && ai.isActiveAndEnabled;
     }
 
     void Select(DefenderAI ai)
@@ -220,7 +239,7 @@ public class DefenderControlManager : MonoBehaviour
         for (int step = 1; step <= count; step++)
         {
             int i = (start + step) % count; // start = -1 -> first probe is index 0
-            if (defense[i] != null && defense[i].TryGetComponent<DefenderAI>(out var ai)) return ai;
+            if (TryGetSetDefender(defense[i], out var ai)) return ai;
         }
 
         return null;

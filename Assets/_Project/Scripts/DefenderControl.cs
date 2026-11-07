@@ -20,6 +20,7 @@ public class DefenderControl : MonoBehaviour
     InputSystem_Actions controls;
     Vector2 moveInput;
     Vector3 velocity;
+    FieldBounds fieldBounds;
 
     void Awake()
     {
@@ -61,8 +62,13 @@ public class DefenderControl : MonoBehaviour
     {
         var play = PlayState.Instance;
 
-        // PlayState's canned presentation owns actor transforms after the whistle.
-        if (play != null && !play.IsLive) { velocity = Vector3.zero; return; }
+        // Formation and post-play movement still belong exclusively to PlayState.
+        bool isSet = play != null && play.IsSetAtLOS;
+        if (play != null && (play.IsGameOver || (!play.IsLive && !isSet)))
+        {
+            velocity = Vector3.zero;
+            return;
+        }
 
         // A live recovery can occur before the manager's next Update. Stop the old
         // defender locomotion immediately, even if its component is still enabled.
@@ -70,7 +76,7 @@ public class DefenderControl : MonoBehaviour
         if (PossessionController.ActivelyControlled != transform) { velocity = Vector3.zero; return; }
 
         // Stiff-armed / shed: DefenderAI is animating the shove, so input is locked out.
-        if (ai.IsStunned) { velocity = Vector3.zero; return; }
+        if (!isSet && ai.IsStunned) { velocity = Vector3.zero; return; }
 
         var tuning = DefenderControlManager.Instance;
         float maxSpeed = (tuning != null ? tuning.MaxSpeed : 7f) * ai.SpeedMult;
@@ -85,12 +91,33 @@ public class DefenderControl : MonoBehaviour
         Vector3 targetVelocity = moveDir * maxSpeed;
         float rate = moveDir.magnitude > 0.1f ? accel : decel;
         velocity = Vector3.MoveTowards(velocity, targetVelocity, rate * Time.deltaTime);
-        transform.position += velocity * Time.deltaTime;
+        Vector3 destination = transform.position + velocity * Time.deltaTime;
+        transform.position = isSet ? ClampSetPosition(play, destination) : destination;
 
         if (moveDir.magnitude > 0.1f)
         {
             Quaternion targetRot = Quaternion.LookRotation(moveDir);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, turnRate * Time.deltaTime);
         }
+    }
+
+    Vector3 ClampSetPosition(PlayState play, Vector3 destination)
+    {
+        if (fieldBounds == null) fieldBounds = FindAnyObjectByType<FieldBounds>();
+        Vector3 position = fieldBounds != null ? fieldBounds.GetClosestPlayablePoint(destination) : destination;
+        if (fieldBounds == null)
+        {
+            // Same world-space fallback as PlayState in scenes without an authored field.
+            position.x = Mathf.Clamp(position.x, -FieldConstants.HalfWidth, FieldConstants.HalfWidth);
+            float halfLength = FieldConstants.PlayLength * .5f;
+            position.z = Mathf.Clamp(position.z, -halfLength, halfLength);
+        }
+        if (play.YardsPastLineOfScrimmage(position.z) < 0f)
+            position.z = play.CurrentLineOfScrimmageZ;
+
+        // Remove only the blocked velocity component so sustained diagonal input can slide.
+        if (position.x != destination.x) velocity.x = 0f;
+        if (position.z != destination.z) velocity.z = 0f;
+        return position;
     }
 }

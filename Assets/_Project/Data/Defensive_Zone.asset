@@ -15,17 +15,17 @@ MonoBehaviour:
   displayName: Zone
   defensiveFormation: {fileID: 11400000, guid: e18cb3b13471343dda697de3d4565545, type: 2}
   assignments:
-  - job: Zone
+  - job: 1
     zoneOffsetFromLOS: {x: -7, y: 0, z: 5}
-  - job: Zone
+  - job: 1
     zoneOffsetFromLOS: {x: 7, y: 0, z: 5}
-  - job: Zone
+  - job: 1
     zoneOffsetFromLOS: {x: -3, y: 0, z: 4}
-  - job: Zone
+  - job: 1
     zoneOffsetFromLOS: {x: 3, y: 0, z: 4}
-  - job: Zone
+  - job: 1
     zoneOffsetFromLOS: {x: -7, y: 0, z: 8}
-  - job: Zone
+  - job: 1
     zoneOffsetFromLOS: {x: 7, y: 0, z: 8}
-  - job: Spy
+  - job: 3
     zoneOffsetFromLOS: {x: 0, y: 0, z: 6}

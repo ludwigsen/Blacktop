@@ -45,6 +45,9 @@ public class ReceiverAI : MonoBehaviour
 
     public bool RouteComplete => routeComplete;
 
+    // Read the endpoint already prepared by PlayState for this formation.
+    internal Vector3 SetRouteEndpoint => targetPosition;
+
     void Awake() => teamMember = GetComponent<TeamMember>();
 
     // Called by PlayState once everyone is standing at the line, every snap. This is the ONLY

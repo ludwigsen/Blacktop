@@ -41,6 +41,10 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Tackle / play-state system and touchdown detection.
 - Loose-ball movement ownership: drive offense uses AllyBlocker, defense uses DefenderAI, selected defenders retain human input, and shove recovery advances under the same owner.
 - Route/block rule: on Pass plays receivers run their route to completion or until a ball carrier crosses the LOS; on Run plays WRs block. Trick plays are deferred.
+- #10: Once formations set, defense can move and cycle by formation slot.
+  Adjustments and selection carry into live play. Offense stays set with the QB.
+  Hold V or LT/L2 for your side's play art. The CPU waits a variable 2–8 seconds
+  after set, bounded by the play clock.
 
 ### Game flow
 - Drives start at -10 / +10 on the receiving team's own side. Scorer/receiving-drive regression tests pass for offensive and defensive touchdowns.
@@ -85,7 +89,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Ball carry pose provisional | Scene carryOffset is fitted to the smaller football; hand-bone grip and a carry animation remain to align it precisely with the fingers. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
 | Blocking / D-Moves feel (#14) | Previously unused ratings now own block-contact recovery cadence and recovery from block knockback respectively. Neutral timers and the existing power/resistance contest are retained; manual engagement/balance acceptance is still needed. |
-| Gamepad action bindings (#13) | Master has no gamepad Pass/Pitch binding. The owner explicitly deferred input changes to #13 during the #12 fix. Existing 1–4 receiver keys remain unchanged; no fake controller-button glyphs are shown. |
+| Gamepad action bindings (#13) | Pass, Pitch and the human offensive start-play action still need controller bindings. #10 adds LT/L2 for play art and reuses RB/R1 for defensive cycling. |
 | New-team branding | Ravens, Wolves, Outlaws and Reapers have installed identities/colors and seven supplied players each. Custom crests are not provided; the scorebug handles an absent crest. Production character art remains #15. |
 | Gamebreaker balance/readability | Wiring and possession lifetime implemented; redesigned scorebug shows READY / ACTIVE. Manual balance/readability playtest remains. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |

@@ -77,7 +77,15 @@ public class DefenderAI : MonoBehaviour
 
     public bool IsUserControlled { get; private set; }
     public bool IsStunned => pushBackTimer > 0f || shedTimer > 0f;
+    internal float ZoneReadRadius => zoneReactRadius * Difficulty.ZoneAwarenessScale;
     public void SetUserControlled(bool controlled) => IsUserControlled = controlled;
+
+    // The next formation supersedes every contact from the previous play.
+    public void ClearContactRecovery()
+    {
+        pushBackTimer = 0f;
+        shedTimer = 0f;
+    }
 
     void Awake() => teamMember = GetComponent<TeamMember>();
 
@@ -238,7 +246,7 @@ public class DefenderAI : MonoBehaviour
     Transform FindReceiverInZone()
     {
         Transform best = null;
-        float bestDist = zoneReactRadius * Difficulty.ZoneAwarenessScale;
+        float bestDist = ZoneReadRadius;
 
         foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {

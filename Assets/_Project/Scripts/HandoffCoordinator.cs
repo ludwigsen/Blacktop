@@ -87,7 +87,7 @@ public class HandoffCoordinator : MonoBehaviour
         }
     }
 
-    static Transform FindReceiver(int teamId, TeamMember.RosterSlot slot)
+    internal static Transform FindReceiver(int teamId, TeamMember.RosterSlot slot)
     {
         foreach (var member in FindObjectsByType<TeamMember>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {

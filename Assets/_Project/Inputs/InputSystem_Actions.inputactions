@@ -145,6 +145,16 @@
                     "interactions": "",
                     "initialStateCheck": false,
                     "priority": 0
+                },
+                {
+                    "name": "Preview Play",
+                    "type": "Button",
+                    "id": "eecdf68d-c32b-424c-b2e1-8a666faa375d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -519,6 +529,28 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Switch Player",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "dd701b77-fdf1-4643-92b6-8f2a0dbc2445",
+                    "path": "<Keyboard>/v",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Preview Play",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d9c74cc3-cc8d-4d33-86dd-f872a3fcc255",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Preview Play",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

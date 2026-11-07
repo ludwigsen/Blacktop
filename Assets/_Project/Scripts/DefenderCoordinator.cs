@@ -40,14 +40,14 @@ public class DefenderCoordinator : MonoBehaviour
         var play = ps.CurrentDefensivePlay;
         if (play == null) return; // fallback scheme runs per-frame in Update()
 
-        FieldDirection dir = ps.AttackDirection;
-        Vector3 losOrigin = new(0f, 0f, ps.CurrentLineOfScrimmageZ);
-        var menToMatch = new List<DefenderAI>();
+        var manTargets = GetManTargets(ps, play);
 
         for (int i = 0; i < defense.Count; i++)
         {
-            if (defense[i] == null || !defense[i].TryGetComponent<DefenderAI>(out var ai) || ai.IsUserControlled) continue;
+            if (defense[i] == null || !defense[i].TryGetComponent<DefenderAI>(out var ai)) continue;
 
+            // Give the selected player a job too. Human locomotion still owns
+            // that actor until the player switches away.
             var assignment = play.GetAssignment(i);
             switch (assignment.job)
             {
@@ -58,32 +58,50 @@ public class DefenderCoordinator : MonoBehaviour
                     ai.SetRole(DefenderAI.Role.Contain);
                     break;
                 case DefenderJob.Zone:
-                    Vector3 anchor = losOrigin + dir.ToWorldVector(assignment.zoneOffsetFromLOS);
+                    Vector3 anchor = ZoneAnchor(ps, assignment);
                     anchor.y = ai.transform.position.y;
                     ai.SetZoneAnchor(anchor);
                     ai.SetRole(DefenderAI.Role.Zone);
                     break;
                 case DefenderJob.Man:
-                    menToMatch.Add(ai);
+                    if (manTargets.TryGetValue(ai, out var receiver))
+                    {
+                        ai.SetRole(DefenderAI.Role.Cover);
+                        ai.SetCoverTarget(receiver);
+                    }
+                    else ai.SetRole(DefenderAI.Role.Contain);
                     break;
             }
         }
-
-        MatchMenToReceivers(menToMatch, ps);
     }
 
-    static void MatchMenToReceivers(List<DefenderAI> men, PlayState ps)
+    internal static Vector3 ZoneAnchor(PlayState play, DefensivePlayData.SlotAssignment assignment)
+        => new Vector3(0f, 0f, play.CurrentLineOfScrimmageZ) +
+            play.AttackDirection.ToWorldVector(assignment.zoneOffsetFromLOS);
+
+    // The preview reads the same distance cascade used at the snap without
+    // installing roles or exposing any of the offense's play data.
+    internal static Dictionary<DefenderAI, Transform> GetManTargets(PlayState ps, DefensivePlayData play)
     {
-        if (men.Count == 0) return;
+        var targets = new Dictionary<DefenderAI, Transform>();
+        var available = new List<DefenderAI>();
+        for (int i = 0; i < ps.DefensePlayers.Count; i++)
+        {
+            var actor = ps.DefensePlayers[i];
+            if (play.GetAssignment(i).job == DefenderJob.Man && actor != null &&
+                actor.gameObject.activeInHierarchy && actor.TryGetComponent<DefenderAI>(out var ai))
+                available.Add(ai);
+        }
+        if (available.Count == 0) return targets;
 
         var receivers = ReceiverTargeting.GetEligibleReceivers(ps.OffensivePlayers);
+        receivers.RemoveAll(receiver => !receiver.gameObject.activeInHierarchy);
         var qb = ps.Passer;
 
         // Most dangerous (closest to the ball) receiver picks first — same cascade idea BlockingCoordinator uses.
         if (qb != null)
             receivers.Sort((a, b) => Vector3.Distance(qb.position, a.position).CompareTo(Vector3.Distance(qb.position, b.position)));
 
-        var available = new List<DefenderAI>(men);
         foreach (var receiver in receivers)
         {
             DefenderAI best = null;
@@ -95,12 +113,10 @@ public class DefenderCoordinator : MonoBehaviour
             }
             if (best == null) break;
 
-            best.SetRole(DefenderAI.Role.Cover);
-            best.SetCoverTarget(receiver);
+            targets.Add(best, receiver);
             available.Remove(best);
         }
-
-        foreach (var ai in available) ai.SetRole(DefenderAI.Role.Contain); // more men than receivers — spy
+        return targets;
     }
 
     void Update()

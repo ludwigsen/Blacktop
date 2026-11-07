@@ -15,17 +15,17 @@ MonoBehaviour:
   displayName: Blitz
   defensiveFormation: {fileID: 11400000, guid: e18cb3b13471343dda697de3d4565545, type: 2}
   assignments:
-  - job: Rush
+  - job: 2
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
-  - job: Rush
+  - job: 2
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
-  - job: Rush
+  - job: 2
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
-  - job: Rush
+  - job: 2
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
-  - job: Man
+  - job: 0
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
-  - job: Man
+  - job: 0
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
-  - job: Spy
+  - job: 3
     zoneOffsetFromLOS: {x: 0, y: 0, z: 0}
