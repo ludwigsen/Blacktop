@@ -42,4 +42,23 @@ evidence, not reproduced bugs. No issue labels or scope were changed by this aud
 - **#10/#18:** Pre-snap previews must clear when live ball markers take over. Playbook
   content continues using the existing Throw target/time contract and no-snap flow.
 
-The other tickets remain open; this change does not claim their acceptance criteria.
+## Immediate follow-up areas after #12
+
+With #3 merged and #12 in review, the remaining issues in impact order are
+#10, #11, #13, #14, #15, #17, #18, and #16. #13 is the immediate playtest gate
+because it covers the missing controller actions and cross-platform acceptance.
+
+- **[#13](https://github.com/ludwigsen/Blacktop/issues/13):** Add the missing
+  gamepad Pass/Pitch bindings there. Run full physical-controller matches on
+  macOS and Windows, including route reads, catch/recovery identity, and defender
+  cycling at 720p and 1080p. Keyboard receiver keys remain 1–4.
+- **[#14](https://github.com/ludwigsen/Blacktop/issues/14):** Play the six-team
+  roster across different fields and Gamebreaker states. Compare the feel of
+  Blocking contact cadence and D-Moves block recovery alongside loose-ball scrums.
+- **[#10](https://github.com/ludwigsen/Blacktop/issues/10):** Keep future pre-snap
+  previews inside the gameplay label safe area and clear them when play starts.
+- **[#15](https://github.com/ludwigsen/Blacktop/issues/15):** Check that new bodies
+  preserve the nameplate anchor through height changes. The four new team
+  identities have colors; custom crests were not supplied.
+
+The #12 change does not complete those tickets' acceptance criteria.

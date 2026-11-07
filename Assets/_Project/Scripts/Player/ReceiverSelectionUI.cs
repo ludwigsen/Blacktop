@@ -1,268 +1,152 @@
-using UnityEngine;
-using TMPro;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// Runtime UI for receiver selection. Displays 1-4 labels above eligible receivers (RB, WR1-3).
-// Pressing 1-4 selects a receiver, queues a Pass input, and sets selectedReceiverIndex
-// so PassMove knows which receiver to target.
-// Labels fade out when pass is thrown, fade in on play reset.
+// Presentation and the existing 1=WR1, 2=WR2, 3=WR3, 4=RB keyboard targeting.
+// Layout shares one collision/safe-area pass with controlled-player nameplates.
 public class ReceiverSelectionUI : MonoBehaviour
 {
     public static ReceiverSelectionUI Instance { get; private set; }
-
     [SerializeField] Canvas uiCanvas;
     [SerializeField] PlayState playState;
-
     [SerializeField] HUDTheme theme;
-
-    int selectedReceiverIndex = -1;
+    [SerializeField] GameplayLabelLayout labelLayout;
     readonly List<Transform> receivers = new();
     RectTransform[] receiverButtons;
-    TextMeshProUGUI[] receiverLabels;
-    CanvasGroup canvasGroup;
-    float shownAt;
+    int selectedReceiverIndex = -1;
+    bool suppressed;
+
+    public GameplayLabelLayout LabelLayout => labelLayout;
+    public IReadOnlyList<Transform> Receivers => receivers;
+    public RectTransform PromptAt(int index) => receiverButtons != null && index >= 0 && index < receiverButtons.Length ? receiverButtons[index] : null;
 
     void Awake()
     {
         Instance = this;
-        if (playState == null)
-            playState = FindAnyObjectByType<PlayState>();
+        if (playState == null) playState = FindAnyObjectByType<PlayState>();
+        if (labelLayout == null) labelLayout = GetComponent<GameplayLabelLayout>() ?? gameObject.AddComponent<GameplayLabelLayout>();
+        labelLayout.Configure(uiCanvas, playState);
     }
 
     void Start()
     {
-        Debug.Log("[ReceiverSelectionUI] Start()");
-        if (playState == null)
-        {
-            Debug.LogError("[ReceiverSelectionUI] PlayState is NULL");
-            return;
-        }
-
-        // Add CanvasGroup for fade in/out
-        canvasGroup = uiCanvas.GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-            canvasGroup = uiCanvas.gameObject.AddComponent<CanvasGroup>();
-
-        Debug.Log($"[ReceiverSelectionUI] PlayState found. offensivePlayers count: {playState.OffensivePlayers.Count}");
+        if (playState == null || uiCanvas == null) return;
+        // The old canvas-wide fade also hid links/identity. Each card now owns visibility.
+        var group = uiCanvas.GetComponent<CanvasGroup>();
+        if (group != null) group.alpha = 1f;
         CreateReceiverButtons();
-        UpdateLabelPositions();
-
-        // Subscribe to play state events
-        if (playState != null)
-        {
-            playState.OnPlayReset += ShowLabels;
-            playState.OnPlayEnded += HideLabels;
-            playState.OnPossessionChanged += HandlePossessionChanged;
-        }
+        playState.OnPlayReset += ShowLabels;
+        playState.OnPlayEnded += HideLabels;
+        playState.OnHuddleStarted += HideLabels;
+        playState.OnPossessionChanged += HandlePossessionChanged;
     }
 
+    void OnEnable() { if (labelLayout != null) labelLayout.enabled = true; }
+    void OnDisable() { if (labelLayout != null) labelLayout.enabled = false; }
     void OnDestroy()
     {
+        if (Instance == this) Instance = null;
         if (playState != null)
         {
             playState.OnPlayReset -= ShowLabels;
             playState.OnPlayEnded -= HideLabels;
+            playState.OnHuddleStarted -= HideLabels;
             playState.OnPossessionChanged -= HandlePossessionChanged;
         }
+        DestroyPrompts();
     }
 
-    // Pass targets belong to whichever team has the ball — after a possession change the
-    // prompts built at Start() point at the wrong team's receivers, so rebuild them.
     void HandlePossessionChanged(int _)
     {
-        if (receiverButtons != null)
-            foreach (var button in receiverButtons)
-                if (button != null) Destroy(button.gameObject);
-
+        DestroyPrompts(); selectedReceiverIndex = -1; suppressed = false;
         CreateReceiverButtons();
-        UpdateLabelPositions();
     }
 
     void Update()
     {
-        // Listen for 1, 2, 3, 4 key presses to select receiver and pass directly
-        if (Input.GetKeyDown(KeyCode.Alpha1)) TryPassToReceiver(0);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) TryPassToReceiver(1);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) TryPassToReceiver(2);
-        if (Input.GetKeyDown(KeyCode.Alpha4)) TryPassToReceiver(3);
+        // Same physical keys, using the project's Input System rather than legacy Input.
+        var keyboard = Keyboard.current;
+        if (keyboard == null) return;
+        if (keyboard.digit1Key.wasPressedThisFrame) TryPassToReceiver(0);
+        if (keyboard.digit2Key.wasPressedThisFrame) TryPassToReceiver(1);
+        if (keyboard.digit3Key.wasPressedThisFrame) TryPassToReceiver(2);
+        if (keyboard.digit4Key.wasPressedThisFrame) TryPassToReceiver(3);
     }
 
     void LateUpdate()
     {
-        if (playState == null || !playState.IsLive) return;
-        UpdateLabelPositions();
-
-        // A short scale-in makes the prompt feel like it pops above the receiver.
-        float scale = Mathf.Lerp(0.72f, 1f, Mathf.Clamp01((Time.unscaledTime - shownAt) / 0.12f));
-        if (receiverButtons != null)
-        {
-            foreach (RectTransform button in receiverButtons)
-                if (button != null) button.localScale = Vector3.one * scale;
-        }
+        if (labelLayout != null) labelLayout.SetReceiverVisibility(!suppressed && CanOfferReceivers());
     }
 
-    // Create sprite-backed 1-4 prompts. The buttons are generated at runtime so the
-    // scene needs no hand-authored UI children or per-receiver setup.
+    bool CanOfferReceivers()
+    {
+        var ball = BallController.Instance;
+        return playState != null && playState.IsLive && !playState.IsUserDefending &&
+            !playState.HasPasserCrossedLOS && ball != null && ball.IsHeld && ball.Carrier != null &&
+            ball.Carrier.TryGetComponent<TeamMember>(out var member) && member.slot == TeamMember.RosterSlot.QB;
+    }
+
     void CreateReceiverButtons()
     {
-        if (playState.OffensivePlayers == null) return;
-
-        receivers.Clear();
-        receivers.AddRange(ReceiverTargeting.GetEligibleReceivers(playState.OffensivePlayers));
+        if (playState == null || uiCanvas == null) return;
+        receivers.Clear(); receivers.AddRange(ReceiverTargeting.GetEligibleReceivers(playState.OffensivePlayers));
         receiverButtons = new RectTransform[receivers.Count];
-        receiverLabels = new TextMeshProUGUI[receivers.Count];
-        Sprite buttonSprite = CreateButtonSprite();
-
         for (int i = 0; i < receivers.Count; i++)
         {
-            var buttonObj = new GameObject($"PassPrompt_{i + 1}", typeof(RectTransform), typeof(Image));
-            buttonObj.transform.SetParent(uiCanvas.transform, false);
-            var button = buttonObj.GetComponent<RectTransform>();
-            button.sizeDelta = new Vector2(48f, 48f);
-            var image = buttonObj.GetComponent<Image>();
-            image.sprite = buttonSprite;
-            ThemeableUI.Bind(image,UIColorRole.SurfacePrimary,null,.94f);
-
-            var labelObj = new GameObject("Number", typeof(RectTransform), typeof(TextMeshProUGUI));
-            labelObj.transform.SetParent(buttonObj.transform, false);
-
-            var label = labelObj.GetComponent<TextMeshProUGUI>();
-            if (theme != null && theme.legibleFont != null) label.font = theme.legibleFont; // on-court player labels — "legible font" case
-            label.text = $"{i + 1}";
-            label.alignment = TextAlignmentOptions.Center;
-            label.fontSize = 30;
-            label.fontStyle = FontStyles.Normal;
-            ThemeableUI.Bind(label,UIColorRole.TextPrimary,UITypeRole.Navigation);
-            label.color = UITheme.Color(UIColorRole.TextPrimary);
-            label.raycastTarget = false;
-            var labelRect = label.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            receiverButtons[i] = button;
-            receiverLabels[i] = label;
-            Debug.Log($"[ReceiverSelectionUI] Created pass prompt {i + 1} for {receivers[i].name}");
-        }
-
-        shownAt = Time.unscaledTime;
-    }
-
-    // Move labels to screen space above each receiver's head
-    void UpdateLabelPositions()
-    {
-        if (receiverLabels == null) return;
-
-        Camera mainCam = Camera.main;
-        if (mainCam == null) return;
-
-        for (int i = 0; i < receivers.Count; i++)
-        {
-            if (receivers[i] == null) continue;
-
-            Vector3 worldPos = receivers[i].position + Vector3.up * 2.4f;
-            Vector3 screenPos = mainCam.WorldToScreenPoint(worldPos);
-
-            // Only show if on-screen and in front of camera
-            if (screenPos.z > 0 && screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height)
-            {
-                receiverButtons[i].position = screenPos;
-                receiverLabels[i].color = Color.white;
-                receiverButtons[i].gameObject.SetActive(true);
-            }
-            else
-            {
-                receiverButtons[i].gameObject.SetActive(false);
-            }
+            var go = new GameObject($"PassPrompt_{i + 1}", typeof(RectTransform), typeof(AngularPanel));
+            go.transform.SetParent(uiCanvas.transform, false);
+            var rect = go.GetComponent<RectTransform>(); rect.sizeDelta = labelLayout.PromptSize;
+            var image = go.GetComponent<Image>(); image.raycastTarget = false;
+            ThemeableUI.Bind(image, UIColorRole.SurfacePrimary, null, .96f);
+            var textObject = new GameObject("Receiver key and identity", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textObject.transform.SetParent(go.transform, false);
+            var text = textObject.GetComponent<TextMeshProUGUI>();
+            if (theme != null && theme.legibleFont != null) text.font = theme.legibleFont;
+            text.text = $"[{i + 1}]  {ShortIdentity(receivers[i])}";
+            text.alignment = TextAlignmentOptions.Center; text.fontSize = 24f; text.richText = false;
+            text.textWrappingMode = TextWrappingModes.NoWrap; text.overflowMode = TextOverflowModes.Ellipsis;
+            text.raycastTarget = false;
+            ThemeableUI.Bind(text, UIColorRole.TextPrimary, UITypeRole.Navigation);
+            var textRect = text.rectTransform; textRect.anchorMin = Vector2.zero; textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(6f, 0f); textRect.offsetMax = new Vector2(-6f, 0f);
+            receiverButtons[i] = rect; labelLayout.AddPrompt(receivers[i], rect, text, i);
+            go.SetActive(false);
         }
     }
 
-    // Pressing 1-4 triggers this: set selected receiver and queue Pass
-    void TryPassToReceiver(int uiIndex)
+    public static string ShortIdentity(Transform actor)
     {
-        if (playState == null || playState.OffensivePlayers == null) return;
-        if (!playState.IsLive) return;
-        if (playState.IsUserDefending) return; // these keys throw the OTHER team's ball
-        if (BallController.Instance == null || BallController.Instance.Carrier == null) return;
-
-        int receiverCount = 0;
-        for (int i = 0; i < playState.OffensivePlayers.Count; i++)
-        {
-            if (playState.OffensivePlayers[i] == null) continue;
-            if (playState.OffensivePlayers[i].GetComponent<ReceiverAI>() == null) continue;
-
-            if (receiverCount == uiIndex)
-            {
-                selectedReceiverIndex = uiIndex;
-                Debug.Log($"[ReceiverSelectionUI] Selected receiver #{uiIndex}");
-
-                // Resolve live — queue the Pass on the CARRIER's own InputBuffer, not a
-                // cached/global one. Only the carrier's buffer is enabled right now
-                // (PossessionController), so this has to target that specific instance.
-                var carrierBuffer = BallController.Instance.Carrier.GetComponent<InputBuffer>();
-                if (carrierBuffer != null)
-                {
-                    carrierBuffer.QueueInput("Pass");
-                }
-                else
-                {
-                    Debug.LogError("[ReceiverSelectionUI] Carrier has no InputBuffer!");
-                }
-
-                HideLabels();
-                return;
-            }
-            receiverCount++;
-        }
+        var record = actor != null ? actor.GetComponent<CharacterApplier>()?.Record : null;
+        if (!record.HasValue) return actor != null ? actor.name : "";
+        string name = record.Value.displayName.Trim(); int lastSpace = name.LastIndexOf(' ');
+        string shortName = lastSpace > 0 ? name[0] + ". " + name.Substring(lastSpace + 1) : name;
+        return $"#{record.Value.jerseyNumber} {shortName}";
     }
 
-    // Fade out labels when pass is thrown
-    void HideLabels(PlayState.PlayEndReason reason)
+    void DestroyPrompts()
     {
-        if (canvasGroup != null)
-            canvasGroup.alpha = 0f;
+        if (receiverButtons != null)
+            foreach (var rect in receiverButtons)
+                if (rect != null) { rect.gameObject.SetActive(false); Destroy(rect.gameObject); }
+        if (labelLayout != null) labelLayout.ClearPrompts();
+        receiverButtons = null;
     }
 
-    // Overload: fade out without reason parameter (called from TryPassToReceiver)
-    void HideLabels()
+    void TryPassToReceiver(int index)
     {
-        if (canvasGroup != null)
-            canvasGroup.alpha = 0f;
+        if (!CanOfferReceivers() || index < 0 || index >= receivers.Count || !ReceiverTargeting.IsEligible(receivers[index])) return;
+        selectedReceiverIndex = index;
+        // Resolve the current carrier at the action, preserving the sole possession authority.
+        var buffer = BallController.Instance.Carrier.GetComponent<InputBuffer>();
+        if (buffer != null) buffer.QueueInput("Pass");
+        HideLabels();
     }
 
-    // Fade in labels on play reset
-    void ShowLabels()
-    {
-        if (canvasGroup != null)
-            canvasGroup.alpha = (playState != null && playState.IsUserDefending) ? 0f : 1f; // no pass prompts while defending
-        shownAt = Time.unscaledTime;
-    }
-
-    // Public getters for PassMove
+    void HideLabels(PlayState.PlayEndReason _) => HideLabels();
+    void HideLabels() { suppressed = true; if (labelLayout != null) labelLayout.SetReceiverVisibility(false); }
+    void ShowLabels() { suppressed = false; selectedReceiverIndex = -1; }
     public int GetSelectedReceiverIndex() => selectedReceiverIndex;
-
     public void ResetSelection() => selectedReceiverIndex = -1;
-
-    Sprite CreateButtonSprite()
-    {
-        const int size = 64;
-        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        texture.name = "PassPromptButtonSprite";
-        texture.hideFlags = HideFlags.HideAndDontSave;
-        Vector2 center = new((size - 1) * 0.5f, (size - 1) * 0.5f);
-        float radius = size * 0.48f;
-
-        for (int y = 0; y < size; y++)
-        for (int x = 0; x < size; x++)
-        {
-            float distance = Vector2.Distance(new Vector2(x, y), center);
-            float alpha = Mathf.InverseLerp(radius + 1f, radius - 1f, distance);
-            texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-        }
-
-        texture.Apply();
-        return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f));
-    }
 }

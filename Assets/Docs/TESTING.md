@@ -107,6 +107,83 @@ are delivered under the original checkout's ignored Builds/BallFlight directory.
 Unity-generated font/settings noise and all disposable capture/build helpers are
 excluded from the change. Related-ticket follow-ups are in ISSUE_PRIORITIES.md.
 
+## T-116: Gameplay labels, actor mapping and lifecycle (#12)
+
+Use Head 2 Head in both human sides/possession directions at 1280x720 and 1920x1080,
+Street Classic/After Dark. Observe actual routes, force a clustered formation, throw
+to each numbered receiver, catch/recover, switch defenders and leave gameplay.
+Expect exactly the same 1=WR1 / 2=WR2 / 3=WR3 / 4=RB mapping, correctly named cards,
+one highlighted controlled identity, no duplicate receiver nameplate, and labels
+outside scorebug/menu/ball bounds. Offscreen/invalid actors, post-play/huddle/game
+over, disable and scene exit must hide the appropriate cards. Actor links must make
+displaced cards understandable without crossing other cards or the ball. Physical
+gamepad Pass/Pitch remains #13; no new binding or invented face-button prompt is
+part of this change.
+
+GameplayReadabilityTests compares actual projected RectTransform bounds (not only
+layout's planned rectangles), both themes/resolutions/directions, direct queued
+target mapping, catch/control changes, defender identity cycling, invalid/offscreen
+actors, rebuild/disable and phase cleanup. The disposable capture driver records
+the normal camera, actual early routes, staged crowded positions and defender
+switching in both directions. Captures are visual evidence, not a human full match.
+
+## T-117: Supplied six-team roster and real rating consumers
+
+Compare the committed CSV and all canonical records: 42 unique supplied GUIDs,
+names/jerseys, six teams of seven, and all 504 rating values unchanged. Every team
+must be ready, selectable in Head 2 Head and present in Pickup's saved-player pool.
+Source broad positions remain recorded preferences; inspect the explicit independent
+starting assignments in SourceAssets/Rosters/README.md. New-team crests are optional
+missing art, not another team's logo. Regenerate source from its documented command
+and verify deterministic data/GUIDs without touching any runtime save.
+
+SuppliedRosterTests compares source parity, legal lineups/highest-Passing QB, and
+loads all six teams on both physical match sides. It checks all twelve raw runtime
+ratings and the same private PlayerAttributes instance reaching every gameplay
+consumer, plus displayed names/numbers. Real movement, committed CPU throw duration
+and tackle fumble resistance compare actual supplied player profiles under fixed
+conditions. Appearance and height must remain cosmetic, without a rating override.
+
+## T-118: Existing save upgrade, conflicts and persistence
+
+Use disposable old two-team saves. Add a custom player and edited canonical
+cosmetics/lineup, then open with rosterRevision 1. New teams and official source
+values appear, retired aliases remap, custom people/appearance and valid lineups
+remain, and the disk file stays byte-for-byte unchanged until Save. Save/restart;
+later player edits must remain edited rather than reimporting source every launch.
+Introduce a custom jersey collision with the new official numbers: show the
+needs-attention message and keep existing people instead of deleting/renumbering
+them. Resolve in Players, Save and reload to finish the upgrade. Retest backup,
+unsupported/newer/foreign/malformed data and normal CRUD/transfer/reserve behavior.
+Never use the owner's real roster as a disposable test fixture.
+
+## T-119: Blocking and D-Moves single-owner effects
+
+These two ratings previously had no live consumers. Compare the supplied high/low
+Blocking players on an otherwise identical block contact: higher Blocking shortens
+AllyBlocker's recovery between contact rolls. Compare high/low D-Moves defenders
+after block knockback: higher D-Moves releases the existing knockback state sooner.
+Neutral values keep the existing 0.4s contact / 0.15s block recovery defaults. The
+Run Power/Tackling contact contest, shove distance and ordinary/stiff-arm pushback
+remain separate. Inspector base durations and existing curves/caps provide tuning;
+conditions and team Gamebreaker must be applied once through PlayerAttributes.
+Automated tests exercise actual contact/recovery paths at controlled 120 Hz.
+For a human playtest, start Outlaws vs. Reapers. Compare Outlaws' Marcus Vaughn
+(19 Blocking, 8 D-Moves) and Dante Holloway (5 Blocking, 18 D-Moves) in the same
+offensive and defensive assignments on successive runs. Dante also has 20 Speed
+versus Marcus's 12. Manual engagement readability and balance remain #14.
+
+### #12 and roster verification (2026-11-06)
+
+Unity 6000.5.6f1 on macOS: 149 of 149 committed Play Mode cases passed, with no
+skips. The final roster check loaded all 42 players on both match sides. The
+disposable camera run recorded 32 final views across both themes, resolutions,
+directions and route/cluster/defense/cycle states, plus four pre-fix comparisons.
+The source generator reproduces the committed assets byte for byte. Logs,
+captures and the macOS development app are delivered in the original checkout's
+ignored Builds/GameplayReadability directory. A physical-controller full match,
+Windows run and human balance acceptance are follow-ups (#13 and #14).
+
 ## Core loop
 
 ### T-01: Drive start position

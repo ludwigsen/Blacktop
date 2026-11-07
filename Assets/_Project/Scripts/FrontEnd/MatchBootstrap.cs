@@ -15,7 +15,19 @@ public class MatchBootstrap : MonoBehaviour
     void Awake()
     {
         var match=FrontEndRuntime.Match;
-        if(match==null)return; // Direct SampleScene launch retains its established development defaults.
+        if(match==null)
+        {
+            // Direct development entry follows the same authored canonical lineups;
+            // retired prototype GUID scene overrides cannot shadow the supplied roster.
+            foreach(var actor in players)
+            {
+                var definition=settings.teams[actor.teamId];
+                var assignment=definition.activeLineup.Single(a=>a.offense==actor.slot);
+                actor.defensiveLineupSlot=assignment.defense;
+                actor.GetComponent<CharacterApplier>().Configure(definition.roster,assignment.playerId);
+            }
+            return;
+        }
         var snapshot=match.Snapshot;
         var identities=new TeamIdentity[2];
         for(int side=0;side<2;side++)

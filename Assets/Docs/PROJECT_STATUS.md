@@ -54,12 +54,18 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - `ReceiverSelectionUI`, play-call UI, unified `GameHUD` scorebug and winner/rematch overlay (scene-wired).
 - Scorebug retains the horizontal crest/name/score/meter composition with clean angular geometry, Barlow Condensed ExtraBold names/scores and SemiBold supporting copy. TeamIdentity still supplies matching Kings/Vipers crests and independent accent/meter colors; both UI themes share this geometry. Live score, play clock, downs, field position, possession marker and Gamebreaker are bound to existing state. See UI_OVERHAUL.md and TESTING.md.
 - `CarrierHighlight`.
+- #12: GameplayLabelLayout coordinates four actionable receiver cards with controlled,
+  held and inbound-player identity. Actual screen bounds are packed below the
+  scorebug, above menu controls and away from the ball; displaced cards link to their
+  actors. Duplicate receiver names and non-actionable live nameplates are suppressed.
 - `FieldLines.cs`: procedural LOS, first-down, and goal lines.
 
 ### Attributes
 - Exhibition conditions now affect both teams through one immutable match snapshot: percentage-point conversion once, bounded additive effects, existing hard caps, no duplicate Gamebreaker. Acceleration remains Agility-owned with a separate condition boundary.
 - Match difficulty changes CPU decisions/execution rather than roster ratings; Normal retains baseline decision multipliers.
-- `PlayerAttributes` 12-stat system with `AttributeCurves` and `FieldModifiers`. **(verify how much of the 12-stat list below is wired versus planned.)**
+- All twelve ratings on the supplied 42 players reach live gameplay through private
+  `PlayerAttributes` and the existing curves/modifiers. Blocking and D-Moves now
+  affect distinct recovery timers; #14 tracks manual balance.
 - Gamebreaker input is on the shared Player prefab. Human offense/defense activate with G or gamepad LB/L1; CPU spends its own full meter at the next live opportunity.
 - Both sides use the same flat all-attribute boost (Inspector-tunable 1.2 multiplier, existing attribute hard caps still apply), lasting until the possession ends. Team-owned runtime attributes cover AI and controlled players.
 
@@ -78,13 +84,16 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Downs and first-down marker | Automated match cases verify first downs, incompletions, OOB gains and fourth-down possession changes; visual line placement still needs manual review. |
 | Ball carry pose provisional | Scene carryOffset is fitted to the smaller football; hand-bone grip and a carry animation remain to align it precisely with the fingers. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
+| Blocking / D-Moves feel (#14) | Previously unused ratings now own block-contact recovery cadence and recovery from block knockback respectively. Neutral timers and the existing power/resistance contest are retained; manual engagement/balance acceptance is still needed. |
+| Gamepad action bindings (#13) | Master has no gamepad Pass/Pitch binding. The owner explicitly deferred input changes to #13 during the #12 fix. Existing 1–4 receiver keys remain unchanged; no fake controller-button glyphs are shown. |
+| New-team branding | Ravens, Wolves, Outlaws and Reapers have installed identities/colors and seven supplied players each. Custom crests are not provided; the scorebug handles an absent crest. Production character art remains #15. |
 | Gamebreaker balance/readability | Wiring and possession lifetime implemented; redesigned scorebug shows READY / ACTIVE. Manual balance/readability playtest remains. |
 | Score / clock | ScoreBoard and play-clock HUD exist; no match clock. |
 | Football style picker | Style assets and selection API exist; player-facing pre-game UI and saved selection are not built. |
 | Modular character art | Five temporary bodies and fifteen temporary garment shells work. Integrated prototype head/eye skins remain; no distinct face geometry, hairstyle/beard art, authored production garments or LOD meshes. Additional gear slots are labelled missing. Garment numbers have no renderer; match nameplates show the saved number. Production anatomy, deformation, fit and prototype model provenance/licence require art review. |
 | Exhibition tuning/manual follow-up | Complete controller-played Head 2 Head and Pickup matches, inspect 720p/gamepad focus and same-source mixed squad colors, balance condition feel and CPU tiers. CPU drafting is deferred until final review so it uses the resolved difficulty; review exposes both lineups before launch. No production art or platform validation is implied. |
 | Front-end platform/performance follow-up | Editor UI and normal macOS startup are validated; physical controller feel and Windows remain manual. Temporary garments raise the selected fourteen-player sample from 70 to 112 skinned renderers. No frame-rate budget is claimed. |
-| Direct SampleScene development entry | Head 2 Head is the supported entry for edited active lineups. Direct SampleScene retains original fixed GUID bindings; deleting/transferring those canonical players can invalidate that legacy fixture after an explicit source commit. Use MainMenu to play custom rosters. |
+| Direct SampleScene development entry | Direct entry now binds the first two authored TeamDefinitions and independent lineups before CharacterApplier runs, so retired prototype GUID overrides cannot shadow the CSV. Use MainMenu for saved/custom rosters and all six teams. |
 | Ball-change follow-up across open issues | See ISSUE_PRIORITIES.md: #12 crowded labels/ground glyphs; #14 airborne scrum timing, initial release-volume clearance and control feel; #17 authored wall/fence colliders on gameplay roots; #11 hand-grip/release presentation; #13 physical-controller/Windows/macOS acceptance. These tickets remain open. |
 | Standalone shutdown resource warning | The #3 build's bounded MainMenu startup passed, but intentional shutdown logged FrontEndBackdrop.OnDestroy releasing an active RenderTexture. That unchanged front-end cleanup path needs a separate exit/scene-teardown check during #13; no ball scene was entered in this smoke run. |
 
@@ -96,7 +105,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 4. **Football animation readability** — running/backpedaling/fast-run and hurdle clips are wired. Carry grip, throwing, catching and tackle reactions remain unfinished; controller feel, foot sliding and transition tuning still need manual playtesting.
 5. **Front-end manual acceptance** — finish a physical-controller match with an edited roster, confirm all gameplay actions and restart persistence on Windows. MainMenu, roster editing and both exhibition modes are implemented; automated integration includes both human sides, rematch and return to menu.
 6. **Roster authoring** — identity/ratings deliberately remain in the existing GUID-keyed PlayerRecord. Runtime appearance DTOs omit Unity asset references; explicit source commit creates per-GUID appearance assets. New-team creation is deferred.
-7. **Exhibition balance/acceptance** — ConditionData now feeds bounded match-scoped effects through PlayerAttributes, with independent Accel handling. Four data-driven difficulties affect real CPU pursuit, coverage, offensive decisions and draft ranking. Conditions/difficulty/pickup balance and physical-controller acceptance remain manual; source roster data remains unchanged.
+7. **Exhibition balance/acceptance** — ConditionData now feeds bounded match-scoped effects through PlayerAttributes, with independent Accel handling. Four data-driven difficulties affect real CPU pursuit, coverage, offensive decisions and draft ranking. Conditions, difficulty, the six-team draft pool and physical controller play still need manual acceptance.
 
 8. **Character vertical slice art** — author a headless Athletic body, three distinct faces, one cropped hairstyle and one beard on the documented rig. Measure height/profile anatomy and validate missing football-action clips before growing the catalog.
 
@@ -105,7 +114,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 ### Player attributes (12)
 Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Coverage, D-Moves, Route Running, Swagger.
 - Single-owner rule: every gameplay effect maps to exactly one stat.
-- Route Running is deferred until the passing system is mature.
+- Route Running owns the receiver's adjustment radius for an incoming throw.
 - Swagger drives Gamebreaker meter fill rate (name is final).
 
 ### Per-slot characters

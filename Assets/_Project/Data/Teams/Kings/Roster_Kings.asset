@@ -11,126 +11,140 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d31dd28571bc041798794c51d1ee8a28, type: 3}
   m_Name: Roster_Kings
-  m_EditorClassIdentifier: Blacktop::TeamRoster
+  m_EditorClassIdentifier:
   teamName: Kings
   curves: {fileID: 11400000, guid: 583b794dd87ba405f8b69615de46cd60, type: 2}
   players:
-  - id: 4a35f6b3-a871-477e-a512-639b3cc9e40e
-    displayName: Marcus Reed
-    jerseyNumber: 0
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
-    passing: 18
-    speed: 15
-    blocking: 2
-    agility: 10
-    catching: 2
-    runPower: 5
-    carrying: 11
-    tackling: 1
-    coverage: 2
-    dMoves: 1
+  - id: 87a90c6f-3e64-42c0-a6af-0f0bf31ed467
+    previousId: 4a35f6b3-a871-477e-a512-639b3cc9e40e
+    displayName: "Marcus Reed"
+    jerseyNumber: 7
+    archetypeLabel: "QB / S"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
+    passing: 17
+    speed: 13
+    blocking: 10
+    agility: 12
+    catching: 11
+    runPower: 9
+    carrying: 12
+    tackling: 11
+    coverage: 15
+    dMoves: 9
     swagger: 14
-    routeRunning: 2
-  - id: 7a7a2f07-319f-4507-9b48-8d40a50e079f
-    displayName: Jalen Brooks
-    jerseyNumber: 32
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
-    passing: 4
+    routeRunning: 11
+  - id: f2c54504-cc32-4739-a259-44f9d9cf1fb9
+    previousId: 7a7a2f07-319f-4507-9b48-8d40a50e079f
+    displayName: "Jalen Brooks"
+    jerseyNumber: 21
+    archetypeLabel: "WR / CB"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
+    passing: 7
     speed: 18
-    blocking: 10
-    agility: 19
-    catching: 14
-    runPower: 17
-    carrying: 20
-    tackling: 5
-    coverage: 3
-    dMoves: 1
-    swagger: 16
-    routeRunning: 9
-  - id: 5918034b-ec24-4afd-a1d6-30168e74ebaa
-    displayName: Andre Mitchell
-    jerseyNumber: 65
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
-    passing: 2
-    speed: 2
-    blocking: 19
-    agility: 3
-    catching: 3
-    runPower: 13
+    blocking: 5
+    agility: 17
+    catching: 16
+    runPower: 6
     carrying: 11
-    tackling: 13
-    coverage: 3
-    dMoves: 10
-    swagger: 8
-    routeRunning: 1
-  - id: efc16a80-61bb-4884-8c47-8526031333b5
-    displayName: Darius Cole
-    jerseyNumber: 99
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
-    passing: 4
-    speed: 18
-    blocking: 10
-    agility: 19
-    catching: 14
+    tackling: 8
+    coverage: 14
+    dMoves: 17
+    swagger: 15
+    routeRunning: 16
+  - id: 28548f45-1b31-425d-89a9-f25041616fe8
+    previousId: 5918034b-ec24-4afd-a1d6-30168e74ebaa
+    displayName: "Andre Mitchell"
+    jerseyNumber: 34
+    archetypeLabel: "RB / LB"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
+    passing: 6
+    speed: 15
+    blocking: 12
+    agility: 14
+    catching: 10
     runPower: 17
-    carrying: 20
-    tackling: 5
-    coverage: 3
-    dMoves: 1
-    swagger: 16
-    routeRunning: 9
-  - id: bb44b754-0cda-43db-b161-e9b9facf9ef8
-    displayName: Malik Turner
-    jerseyNumber: 15
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
-    passing: 4
-    speed: 18
-    blocking: 10
-    agility: 19
-    catching: 14
-    runPower: 17
-    carrying: 20
-    tackling: 5
-    coverage: 3
-    dMoves: 1
-    swagger: 16
-    routeRunning: 9
-  - id: 05c35e3b-1ee5-4e22-aedc-e4ea8110b2e3
-    displayName: Devon Hayes
+    carrying: 15
+    tackling: 16
+    coverage: 10
+    dMoves: 12
+    swagger: 11
+    routeRunning: 8
+  - id: 2cb965d4-487d-49df-902c-4759a741ffa0
+    previousId: efc16a80-61bb-4884-8c47-8526031333b5
+    displayName: "Darius Cole"
     jerseyNumber: 88
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
-    passing: 4
-    speed: 18
-    blocking: 10
-    agility: 19
+    archetypeLabel: "WR / S"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
+    passing: 5
+    speed: 14
+    blocking: 7
+    agility: 13
+    catching: 18
+    runPower: 8
+    carrying: 13
+    tackling: 10
+    coverage: 16
+    dMoves: 11
+    swagger: 17
+    routeRunning: 15
+  - id: 82126ea0-67e2-464e-bf3d-44be536a95a4
+    previousId: bb44b754-0cda-43db-b161-e9b9facf9ef8
+    displayName: "Malik Turner"
+    jerseyNumber: 55
+    archetypeLabel: "TE / LB"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
+    passing: 8
+    speed: 11
+    blocking: 17
+    agility: 9
+    catching: 13
+    runPower: 15
+    carrying: 12
+    tackling: 17
+    coverage: 11
+    dMoves: 7
+    swagger: 10
+    routeRunning: 10
+  - id: 62bd7dab-75fb-4bb9-a25f-fac306b0bda5
+    previousId: 05c35e3b-1ee5-4e22-aedc-e4ea8110b2e3
+    displayName: "Devon Hayes"
+    jerseyNumber: 11
+    archetypeLabel: "QB / CB"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
+    passing: 15
+    speed: 16
+    blocking: 6
+    agility: 15
     catching: 14
-    runPower: 17
-    carrying: 20
-    tackling: 5
-    coverage: 3
-    dMoves: 1
-    swagger: 16
-    routeRunning: 9
-  - id: 6fa2b391-dd99-49ab-88f1-7f42396188e0
-    displayName: Isaiah Grant
-    jerseyNumber: 86
-    archetypeLabel: 
-    accentColor: {r: 0, g: 0, b: 0, a: 0}
+    runPower: 8
+    carrying: 14
+    tackling: 9
+    coverage: 13
+    dMoves: 14
+    swagger: 18
+    routeRunning: 13
+  - id: 226703c8-d395-4c44-8a79-80b45b9bea67
+    previousId: 6fa2b391-dd99-49ab-88f1-7f42396188e0
+    displayName: "Isaiah Grant"
+    jerseyNumber: 42
+    archetypeLabel: "RB / LB"
+    accentColor: {r: 1, g: 0.5917661, b: 0, a: 1}
+    appearance: {fileID: 0}
     passing: 4
-    speed: 18
-    blocking: 10
-    agility: 19
-    catching: 14
-    runPower: 17
-    carrying: 20
-    tackling: 5
-    coverage: 3
-    dMoves: 1
-    swagger: 16
-    routeRunning: 9
+    speed: 12
+    blocking: 14
+    agility: 10
+    catching: 8
+    runPower: 18
+    carrying: 17
+    tackling: 15
+    coverage: 8
+    dMoves: 8
+    swagger: 12
+    routeRunning: 7

@@ -21,6 +21,7 @@ public class FrontEndSettings : ScriptableObject
     public bool allowDevelopmentEditing = true;
     public bool CanAuthorPlayers => allowDevelopmentEditing && (Application.isEditor || Debug.isDebugBuild);
 
+    [Min(0)] public int rosterRevision;
     public TeamDefinition[] teams = Array.Empty<TeamDefinition>();
     public FieldDefinition[] fields = Array.Empty<FieldDefinition>();
     public ConditionData[] conditions = Array.Empty<ConditionData>();

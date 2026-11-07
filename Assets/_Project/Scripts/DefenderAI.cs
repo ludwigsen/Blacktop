@@ -71,6 +71,8 @@ public class DefenderAI : MonoBehaviour
     Vector3 pushBackTarget;
     float pushBackTimer;
     const float pushBackDuration = 0.15f;
+    [Tooltip("Block knockback recovery at neutral D-Moves; D-Moves alone scales this duration.")]
+    [SerializeField, Min(.01f)] float blockRecoveryDuration = 0.15f;
     float shedTimer;
 
     public bool IsUserControlled { get; private set; }
@@ -318,6 +320,14 @@ public class DefenderAI : MonoBehaviour
         pushBackTarget = transform.position + direction * distance;
         pushBackTimer = pushBackDuration;
  
+    }
+
+    public void ApplyBlockPushBack(Vector3 direction, float distance)
+    {
+        // D-Moves owns block recovery speed only. Power/resistance still owns the
+        // contact roll, and stiff-arm pushback keeps its existing timing/path.
+        ApplyPushBack(direction, distance);
+        pushBackTimer = blockRecoveryDuration / Mathf.Max(.01f, attributes != null ? attributes.DMoves() : 1f);
     }
 
     public void ApplyShed(float duration) => shedTimer = duration;

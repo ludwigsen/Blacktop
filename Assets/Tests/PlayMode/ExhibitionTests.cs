@@ -96,7 +96,7 @@ public class ExhibitionTests
         var reserve=PlayerEditorSession.New(settings,service.NextNumber("kings"));reserve.record.displayName="ZZZ Reserve";
         reserve.record.speed=20;Assert.That(service.SavePlayer("kings",reserve,-1,0,out var id,out var error),Is.True,error);
         var pool=new PickupDraft(service);
-        Assert.That(pool.Pool.Count,Is.EqualTo(15));Assert.That(pool.Browse("ZZZ","kings",PickupSort.Name).Single().Id,Is.EqualTo(id));
+        Assert.That(pool.Pool.Count,Is.EqualTo(service.Snapshot.teams.Sum(t=>t.players.Count)));Assert.That(pool.Browse("ZZZ","kings",PickupSort.Name).Single().Id,Is.EqualTo(id));
         Assert.That(pool.Browse("ZZZ","vipers",PickupSort.Role),Is.Empty);
         Assert.That(pool.Browse("",null,PickupSort.Rating).Select(p=>p.Overall),Is.Ordered.Descending);
         Assert.That(pool.Pool.Single(p=>p.Id==id).Role,Is.EqualTo("RESERVE"));
@@ -109,6 +109,9 @@ public class ExhibitionTests
         Assert.That(draft.Add(draft.Pool.First(p=>!draft.Selected.Contains(p.Id)).Id,out _),Is.False);
         var duplicate=draft.Selected.ToArray();duplicate[1]=duplicate[0];
         Assert.That(QuickPlayMatch.TryPickup(service,duplicate,draft.SuggestHuman(),0,new MatchOptions(),new SeededMatchRandom(0),out _,out _),Is.False);
+        // Keep the insufficient-pool fixture at two squads as the installed catalog grows.
+        foreach(var team in service.Snapshot.teams.Where(t=>t.teamId!="kings"&&t.teamId!="vipers"))
+            foreach(var player in team.players) Assert.That(service.Delete(player.record.id,out _),Is.True);
         Assert.That(service.Delete(service.Team("vipers").players[0].record.id,out var error),Is.True,error);
         var shortPool=new PickupDraft(service);Assert.That(shortPool.PoolError,Does.Contain("14 unique"));
         Assert.That(shortPool.Add(shortPool.Pool[0].Id,out _),Is.False);

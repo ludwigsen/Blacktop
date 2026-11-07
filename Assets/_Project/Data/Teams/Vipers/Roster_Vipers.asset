@@ -11,133 +11,140 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d31dd28571bc041798794c51d1ee8a28, type: 3}
   m_Name: Roster_Vipers
-  m_EditorClassIdentifier: Blacktop::TeamRoster
+  m_EditorClassIdentifier:
   teamName: Vipers
   curves: {fileID: 11400000, guid: 583b794dd87ba405f8b69615de46cd60, type: 2}
   players:
-  - id: 0456f958-9ee8-4512-a7ac-5e985056cb49
-    displayName: Vipers QB
-    jerseyNumber: 0
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+  - id: e1632f1a-3d30-4f96-bd47-364a0f2bd299
+    previousId: 0456f958-9ee8-4512-a7ac-5e985056cb49
+    displayName: "Jordan Bennett"
+    jerseyNumber: 8
+    archetypeLabel: "QB / S"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
-    speed: 10
-    blocking: 10
-    agility: 10
+    passing: 18
+    speed: 12
+    blocking: 9
+    agility: 11
     catching: 10
-    runPower: 10
-    carrying: 10
-    tackling: 10
-    coverage: 10
-    dMoves: 10
-    swagger: 10
+    runPower: 8
+    carrying: 11
+    tackling: 12
+    coverage: 15
+    dMoves: 8
+    swagger: 13
     routeRunning: 10
-  - id: 1298724e-0132-4cf9-9c46-2f61da2d2142
-    displayName: Vipers RB
-    jerseyNumber: 1
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+  - id: 6a928dcd-dbd7-406c-88ee-771e9f68c6b3
+    previousId: 1298724e-0132-4cf9-9c46-2f61da2d2142
+    displayName: "Xavier Foster"
+    jerseyNumber: 22
+    archetypeLabel: "RB / LB"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
-    speed: 10
+    passing: 5
+    speed: 17
     blocking: 10
-    agility: 10
-    catching: 10
-    runPower: 10
-    carrying: 10
-    tackling: 10
-    coverage: 10
-    dMoves: 10
-    swagger: 10
-    routeRunning: 10
-  - id: ab354517-1bb7-4590-97d5-d468e263535a
-    displayName: Vipers WR1
-    jerseyNumber: 2
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    agility: 16
+    catching: 12
+    runPower: 15
+    carrying: 16
+    tackling: 13
+    coverage: 9
+    dMoves: 16
+    swagger: 14
+    routeRunning: 9
+  - id: a9825a61-afc3-49be-9d73-41cfc1e95b99
+    previousId: ab354517-1bb7-4590-97d5-d468e263535a
+    displayName: "Nate Sullivan"
+    jerseyNumber: 31
+    archetypeLabel: "WR / CB"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
-    speed: 10
-    blocking: 10
-    agility: 10
-    catching: 10
-    runPower: 10
+    passing: 4
+    speed: 19
+    blocking: 6
+    agility: 15
+    catching: 15
+    runPower: 5
     carrying: 10
-    tackling: 10
-    coverage: 10
-    dMoves: 10
-    swagger: 10
-    routeRunning: 10
-  - id: 36988f22-c216-4261-9760-a272c4e53478
-    displayName: Vipers WR2
-    jerseyNumber: 3
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    tackling: 9
+    coverage: 17
+    dMoves: 15
+    swagger: 12
+    routeRunning: 18
+  - id: 599ac478-a53b-4774-95cd-a3b4970fad1c
+    previousId: bc5f4f7a-1e86-49c5-868b-1cc31018a4d0
+    displayName: "Chris Dalton"
+    jerseyNumber: 50
+    archetypeLabel: "TE / LB"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
+    passing: 7
     speed: 10
-    blocking: 10
-    agility: 10
-    catching: 10
-    runPower: 10
-    carrying: 10
-    tackling: 10
+    blocking: 18
+    agility: 8
+    catching: 14
+    runPower: 16
+    carrying: 11
+    tackling: 18
     coverage: 10
-    dMoves: 10
-    swagger: 10
-    routeRunning: 10
-  - id: e0e2299e-aea9-451c-9739-4e9dc7624d09
-    displayName: Vipers WR3
-    jerseyNumber: 4
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    dMoves: 6
+    swagger: 9
+    routeRunning: 11
+  - id: 02a78088-335f-4854-8e37-181c9349552b
+    previousId: d9590a53-cabe-4f1e-9e66-4dc7250724c5
+    displayName: "DeShawn Carter"
+    jerseyNumber: 63
+    archetypeLabel: "RB / S"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
-    speed: 10
-    blocking: 10
-    agility: 10
-    catching: 10
-    runPower: 10
-    carrying: 10
-    tackling: 10
-    coverage: 10
-    dMoves: 10
-    swagger: 10
-    routeRunning: 10
-  - id: bc5f4f7a-1e86-49c5-868b-1cc31018a4d0
-    displayName: Vipers OL1
-    jerseyNumber: 5
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    passing: 6
+    speed: 14
+    blocking: 11
+    agility: 13
+    catching: 11
+    runPower: 19
+    carrying: 18
+    tackling: 16
+    coverage: 12
+    dMoves: 13
+    swagger: 17
+    routeRunning: 8
+  - id: d584c3b9-63ce-4468-bb29-5d55846db1fd
+    previousId: e0e2299e-aea9-451c-9739-4e9dc7624d09
+    displayName: "Terrence Walker"
+    jerseyNumber: 90
+    archetypeLabel: "QB / CB"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
-    speed: 10
-    blocking: 10
-    agility: 10
-    catching: 10
-    runPower: 10
-    carrying: 10
-    tackling: 10
-    coverage: 10
-    dMoves: 10
-    swagger: 10
-    routeRunning: 10
-  - id: d9590a53-cabe-4f1e-9e66-4dc7250724c5
-    displayName: Vipers OL2
-    jerseyNumber: 6
-    archetypeLabel:
-    accentColor: {r: 1, g: 1, b: 1, a: 1}
+    passing: 16
+    speed: 15
+    blocking: 7
+    agility: 17
+    catching: 13
+    runPower: 9
+    carrying: 13
+    tackling: 8
+    coverage: 14
+    dMoves: 18
+    swagger: 19
+    routeRunning: 14
+  - id: 625a6d8c-1e84-4f92-ae74-e7759962cf28
+    previousId: 36988f22-c216-4261-9760-a272c4e53478
+    displayName: "Cameron Price"
+    jerseyNumber: 17
+    archetypeLabel: "WR / S"
+    accentColor: {r: 0.15, g: 0.8, b: 0.3, a: 1}
     appearance: {fileID: 0}
-    passing: 10
-    speed: 10
-    blocking: 10
-    agility: 10
-    catching: 10
-    runPower: 10
-    carrying: 10
-    tackling: 10
-    coverage: 10
-    dMoves: 10
-    swagger: 10
-    routeRunning: 10
+    passing: 6
+    speed: 16
+    blocking: 8
+    agility: 14
+    catching: 16
+    runPower: 7
+    carrying: 12
+    tackling: 11
+    coverage: 15
+    dMoves: 13
+    swagger: 14
+    routeRunning: 17

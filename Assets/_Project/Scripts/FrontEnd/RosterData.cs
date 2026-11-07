@@ -53,6 +53,7 @@ public class SavedTeamRoster
 public class RosterSaveData
 {
     public int version = 1;
+    public int catalogRevision; // Missing in older v1 saves; source updates are applied once, not at every restart.
     public List<SavedTeamRoster> teams = new();
     public RosterSaveData Copy() => JsonUtility.FromJson<RosterSaveData>(JsonUtility.ToJson(this));
 }

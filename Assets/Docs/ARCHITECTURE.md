@@ -139,12 +139,16 @@ and meshes are disposed. These glyphs do not own targeting, physics, input or na
 
 ## Attributes and modifiers
 
-- `PlayerAttributes`: 12 stats (Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Coverage, D-Moves, Route Running, Swagger). Defense uses `DefenderAttributes`.
+- `PlayerAttributes`: 12 stats (Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Coverage, D-Moves, Route Running, Swagger). CharacterApplier supplies a private instance from the same player record to offensive and defensive consumers.
 - `AttributeCurves`: maps stat values to gameplay effect via `AnimationCurve`s so ranges feel meaningful rather than linear.
 - `FieldModifiers`: legacy optional additive data. Exhibition matches bind an immutable MatchModifiers snapshot adapted from ConditionData, with aggregate bounds before the existing final attribute caps. Venue visuals apply no stats. See FIELD_SURFACES.md and FRONT_END.md for the active condition pipeline and acceleration ownership.
 - Gamebreaker: a temporary multiplier applied on top of attributes for the current possession.
 - **Effect stacking order (intended):** base attribute → curve → additive field modifier (clamped) → Gamebreaker multiplier. Keep it in one place so stacking can't run away.
 - **Single-owner rule:** every gameplay effect is driven by exactly one stat.
+- Blocking now owns AllyBlocker's recovery time between contact rolls; D-Moves owns
+  DefenderAI's recovery time after block knockback. Both use the bound attribute
+  path once. Neutral values preserve 0.4s / 0.15s. The existing Run Power versus
+  Tackling shove contest and ordinary/stiff-arm pushback timing remain separate.
 
 ## Dependency map
 
@@ -171,7 +175,47 @@ PossessionController ─► BallController
 ## Scenes
 
 - **MainMenu** (`Assets/Scenes/MainMenu.unity`) — enabled build index 0. Runtime uGUI navigation, roster authoring and visual-only character preview.
-- **SampleScene** (`Assets/Scenes/SampleScene.unity`) — enabled build index 1. Head 2 Head and Pickup bind a validated exhibition snapshot to the existing fourteen player roots before gameplay initialization. Escape / gamepad Start or the MENU button returns to MainMenu. Direct scene launch retains the legacy development roster bindings.
+- **SampleScene** (`Assets/Scenes/SampleScene.unity`) — enabled build index 1. Head 2 Head and Pickup bind a validated exhibition snapshot to the existing fourteen player roots before gameplay initialization. Escape / gamepad Start or the MENU button returns to MainMenu. Direct entry resolves the first two authored source TeamDefinitions and independent lineups rather than retired scene GUID overrides.
+
+## Gameplay label layout and supplied roster (2026-11-06)
+
+ReceiverSelectionUI still owns the same four direct keyboard keys in
+ReceiverTargeting order: 1=WR1, 2=WR2, 3=WR3, 4=RB. Its cards now include the actor's
+jersey and short name. Keyboard polling uses the Input System; no binding/action
+was added. Pass/Pitch gamepad bindings are absent on master and remain #13 by the
+owner's explicit choice. No unsupported controller glyph is presented as a binding.
+
+GameplayLabelLayout is one scene component, with no singleton or control authority.
+Its late presentation pass reads current ball state and ActivelyControlled, combines
+receiver cards with relevant controlled/held/inbound identities, removes duplicate
+nameplates, and packs actual pixel-sized rectangles inside tunable scorebug/menu
+margins while reserving the ball projection. Displaced cards have actor links
+that stop before another card or the ball.
+World nameplate roots stay under their players for existing appearance/height and
+identity consumers; projection-derived scale makes their text readable at 720p/1080p.
+Only relevant names render during live/set play. Phase exit, invalid/offscreen actors,
+disable and scene teardown hide them. Receiver canvas uses the existing 1920x1080
+reference convention. Scene Inspector fields own spacing, dimensions, font sizes
+and prompt anchor height; Player.prefab lowers the old excessive nameplate anchor.
+
+The committed owner CSV is authoring input, never a second runtime stat authority.
+SourceAssets/Rosters/import_roster.py validates the complete six-team / 42-record
+packet and generates TeamRoster/TeamDefinition assets with stable asset GUIDs,
+explicit source GUIDs and independent lineups. Broad source roles remain flavor
+metadata; the existing seven offense/defense slots remain the game contract.
+Kings/Vipers keep branding identities; four added teams have color identities and
+optional absent crests. All teams share the existing AttributeCurves asset.
+
+FrontEndSettings.rosterRevision and schema-1 RosterSaveData.catalogRevision provide
+one-time source updates. Explicit previousId aliases identify retired prototype
+people/slot placeholders. RosterService upgrades a detached validated copy, adds
+installed teams, imports official values/membership, keeps custom people/cosmetics
+and valid assignments, and fills vacancies. Loading performs no disk writes. An
+unresolved custom jersey conflict retains the existing players and reports a message;
+normal Save keeps the revision/backup. Newer/foreign/malformed saves retain explicit
+rejection. After the revision is saved, subsequent player authoring is preserved.
+MatchBootstrap's existing early initialization supplies every actor's private
+attributes to movement, moves, receivers, defenders, blockers, CPU and Gamebreaker.
 
 ## Assemblies
 
@@ -280,7 +324,7 @@ The reference rig is the existing PlayerBody FBX behind a replaceable contract. 
 
 MatchBootstrap runs at -2000 before CharacterApplier (-100), configures the fourteen existing actors by offensive slot, creates disposable roster/appearance/identity objects, preserves each selected player's source curve reference, installs independent defense slots, and configures PlayState branding/user team plus FieldLoader selection. It binds one MatchModifiers object into each private PlayerAttributes instance. Effective combines the base curve, one bounded condition addition and one live Gamebreaker boost, then the existing hard caps. Acceleration is an Agility-owned curve with a separate condition effect boundary, not a new stat. AI movement/passing uses that same attribute path. Match-owned DifficultyTuning is consumed by DefenderAI, CPUCarrierAI and CPUPlayCaller only for the CPU team; Normal preserves decision multipliers. No gameplay manager, additional spawner or scene is added.
 
-Existing movement ownership, polled contacts, control authority, rules and dimensions remain. GameHUD rematch reloads the snapshot without rerolling; entering MainMenu clears it and keeps saved rosters. Direct SampleScene with no snapshot retains legacy bindings, zero match conditions and Normal CPU decisions. Full flows/calculations/profile values and authoring instructions are in FRONT_END.md.
+Existing movement ownership, polled contacts, control authority, rules and dimensions remain. GameHUD rematch reloads the snapshot without rerolling; entering MainMenu clears it and keeps saved rosters. Direct SampleScene with no snapshot binds the first two catalog teams, with zero match conditions and Normal CPU decisions. Full flows/calculations/profile values and authoring instructions are in FRONT_END.md.
 
 `CharacterPartDefinition.skinnedMeshOverride` permits compatible body/garment meshes using existing source bones/materials; skeleton validation checks the supplied mesh bind poses/submeshes. `temporaryVisual` is distinct from missing-art `placeholder`; `variantFamilyId` selects body-compatible garment variants. Catalog validation supports independently installed catalogs, while individual selections still validate against their chosen catalog. FrontEndTemporaryArt authoring never changes model importer readability or the canonical rig.
 
