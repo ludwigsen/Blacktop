@@ -80,8 +80,8 @@ public class TackleContact : MonoBehaviour
                     BallController.Instance.Fumble(transform.position, hit.transform.position); // was: Drop()
                     PlayState.Instance.AddTeamPoints(otherTeam.teamId, styleAward);
                     // A fumble remains a live ball. BallController's recovery pass runs in
-                    // LateUpdate once the pop-arc lands, so ending the play here would prevent
-                    // any recovery.
+                    // LateUpdate throughout the airborne pop and ground motion, so ending
+                    // the play here would prevent recovery.
                     return;
                 }
             }

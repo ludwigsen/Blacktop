@@ -13,6 +13,100 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 
 **How to read each scenario:** Steps → Expected → What to watch for.
 
+## Issue #3: Ball flight, live fumbles and ground glyphs (2026-11-06)
+
+### T-112: Ballistic passes and spiral
+
+Throw short and long passes from each possession direction, including a receiver
+selected behind the LOS. Compare the committed destination with the diamond/cross
+ground glyph. The flight has constant downward acceleration and points along its
+velocity while its long axis spirals. The same Passing-owned lead/scatter/airtime
+reaches the target; no animation or marker estimates a separate landing point.
+Retest complete passes, failed catches/deflections, interceptions and runner-tracking
+pitches. A dead incomplete/deflection never shows a live loose-ball ring or becomes
+recoverable. The old human/CPU arc-height tuning has been replaced by BallController's
+passGravity; speed/minimum duration/accuracy/attribute defaults are unchanged.
+
+### T-113: Live airborne recovery and exclusive control
+
+Force fumbles from both teams and attempt recovery before first ground contact,
+after bouncing, while rolling and after settling. Both teams can recover; a fumble
+is `Loose` immediately, so AllyBlocker/DefenderAI keep their existing exclusive
+movement roles throughout the pop. Check a selected human defender and a CPU
+carrier recovery, then the correct scorer, possession direction, Gamebreaker
+lifetime and next drive. Crowded simultaneous candidates and child colliders must
+produce one root-transform carrier and one canonical control outcome. Initial
+release overlaps must separate or let the ball travel its configured release
+clearance: no immediate attachment from the tackle volume that released the ball,
+no permanent exclusion if a player chases, and no timed immunity afterward.
+
+### T-114: Contacts, energy loss and boundary precedence
+
+Use solid test walls/fences on the gameplay field root (never in FieldLoader's
+collider-free surface/detail art). Test thin walls, players and the shared Y=0
+ground plane at slow/normal/fast frame rates. The moving ball must not tunnel;
+contacts redirect and lose energy, tip orientation influences the bounce, and
+rolling eventually stops without persistent jitter. Both settled and airborne
+fumbles stay recoverable; the scoop radius cannot reach through a solid wall/fence.
+Verify configured scatter still describes first-contact distance; pop height and
+gravity now determine airtime instead of the former preset fumble duration.
+Preserve the existing outer boundary/safety-band policy:
+an uncontained live loose-ball crossing is whistled before recovery, while forward
+passes/pitches keep their existing in-flight rule. No loose/airborne ball scores
+without a holder. Player wall stumbling is still #17, not implemented here.
+
+### T-115: Marker visibility and lifecycle
+
+Inspect 1280x720 and 1920x1080 at gameplay distance in both possession directions,
+in Street Classic/After Dark, on crowded formations/routes. Yellow ring: the moving
+live fumble's current ground projection, including its airborne pop. Cyan diamond
+and cross: the forward pass's actual committed destination. The shapes must work
+without color cues, retain their dark outlines against field markings, and stay
+flat while the football rotates. Catch, recovery, deflection, whistle, game over,
+reset, component disable, rematch and scene exit clear the relevant marker.
+SampleScene's BallGroundMarkers exposes radius, stroke, lift and colors for tuning.
+
+**Actual final validation:** Graphics-enabled Unity 6000.5.6f1 Play Mode:
+**137 passed / 0 failed / 0 skipped**, **142.827 seconds**. All 117
+previous regressions remain enabled; the 20 new BallFlightTests cover short/long
+and reversed ballistic passes, constant acceleration/spiral/endpoint, airborne
+and settled recovery on either team, deterministic simultaneous ownership,
+canonical control, multiple colliders, release/continued-chase clearance, thin-wall
+and player contact, solid-wall recovery occlusion, preserved first-contact scatter,
+30/120 Hz bounce/settle, OOB precedence, dead deflection exclusion, Street pitch
+tracking and marker lifecycle. Production synchronization is exercised after player
+transforms move without a separate test-side physics sync. Final focused run also
+passed **20/20**, **5.757 seconds**.
+
+**Visual evidence:** Inspected staged actual-scene camera renders of the ring and
+diamond/cross at 720p/1080p in both directions, plus four close football spiral poses.
+This caught and replaced the first edge-on/thin LineRenderer version with outlined
+flat meshes. The disposable capture driver reduced recovery radius only in its
+fixture to keep the staged ball visible, and is excluded from the PR. Captures do
+not establish physical-controller feel, crowded gameplay HUD acceptance, or natural
+match balance. Source marker geometry and colors are independent of UI theme;
+normal crowded-label/theme integration remains #12. Evidence: ignored
+Builds/Validation/BallVisuals and the copied Builds/BallFlight/Visuals delivery.
+
+**Normal macOS build/startup:** Development app build succeeded with **0 errors /
+438 warnings**, **435,537,820 bytes**, **79.894 seconds**. Metal startup at 1280x720
+initialized the front end and both canonical teams without a runtime exception;
+the task-owned process was intentionally stopped after 12 seconds. Shutdown logged
+the unchanged FrontEndBackdrop.OnDestroy active-RenderTexture release warning,
+recorded separately in PROJECT_STATUS.md for #13. The app never entered a ball scene
+in this bounded smoke check. Physical controller, Windows, human-played full matches,
+and sustained standalone ball/gameplay performance remain unperformed acceptance.
+
+**Reproduction/artifacts:** Run Unity with -batchmode -projectPath <checkout>
+-runTests -testPlatform PlayMode -testResults <results.xml> -logFile <log> using a
+graphics device (do not add -nographics). Add -testFilter BallFlightTests for focused
+coverage. Final results: ignored Builds/Validation/ball-release-full.xml and .log;
+focused results: ball-release-focused.xml; build summary/log and startup log use
+ball-build* and ball-standalone.log. Normal app and complete-source review packet
+are delivered under the original checkout's ignored Builds/BallFlight directory.
+Unity-generated font/settings noise and all disposable capture/build helpers are
+excluded from the change. Related-ticket follow-ups are in ISSUE_PRIORITIES.md.
+
 ## Core loop
 
 ### T-01: Drive start position

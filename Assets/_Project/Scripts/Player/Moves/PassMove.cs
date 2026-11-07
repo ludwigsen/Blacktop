@@ -12,14 +12,6 @@ public class PassMove : IPlayerMove
     [SerializeField] float maxReceiverSearchRadius = 45f;
     [SerializeField] float receiverSearchConeAngle = 70f;
 
-    // Arc now scales with distance instead of a flat value — short screens should read
-    // as bullets, deep balls need real air under them. arcHeightPerDistance is the ratio
-    // (roughly: for every unit of throw distance, add this much peak height). Passing
-    // attribute flattens the arc at the top end (a gunslinger drives it in tighter) —
-    // inverse of the speed relationship, since velocity and touch are the tradeoff here.
-    [SerializeField] float baseArcHeight = 0.5f;         // floor — even the shortest pass has SOME loft
-    [SerializeField] float arcHeightPerDistance = 0.12f; // tune this to taste
-
     // Velocity-based flight time instead of a flat duration. A fixed 0.6s regardless of
     // distance meant bombs implicitly traveled faster than short hitches (same time,
     // more ground covered) — backwards feel. baseThrowSpeed is units/sec at Passing
@@ -106,13 +98,9 @@ public class PassMove : IPlayerMove
         float throwSpeed = baseThrowSpeed * ctx.attributes.Passing();
         float duration = Mathf.Max(distance / throwSpeed, minFlightDuration);
 
-        // Arc grows with distance (more air time needed to cover ground), but a
-        // higher Passing rating flattens it back down — an elite arm can drive a
-        // 30-yard throw tighter than an average one.
-        float distanceArc = baseArcHeight + distance * arcHeightPerDistance;
-        float arc = distanceArc / Mathf.Lerp(1.3f, 0.8f, skill);
-
-        BallController.Instance.Throw(actualTarget, target, isPitch: false, arcHeight: arc, duration: duration);
+        // BallController derives a ballistic arc from this unchanged target/time.
+        // The legacy arcHeight argument remains for pitches and external callers.
+        BallController.Instance.Throw(actualTarget, target, isPitch: false, arcHeight: 0f, duration: duration);
     }
 
     // Passing() typically ranges ~0.6–1.3 per AttributeCurves. Remap to 0-1 for the Lerp

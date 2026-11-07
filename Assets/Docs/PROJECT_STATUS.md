@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-11-05
+Last updated: 2026-11-06
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -19,7 +19,15 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Issue #2: current master's existing shared-prefab orientation is correct. Rendered Editor gameplay verifies model-to-root alignment on both human sides and in both attacking directions, including turns, routes, blocking, pursuit, huddles and backward locomotion. No additional rotation is needed. See T-72 in TESTING.md for the automated evidence and separate human/platform limits.
 
 ### Ball and possession
-- Passing and pitching with a parabolic arc; `BallState` enum.
+- Forward passes use constant-gravity ballistic motion and a velocity-aligned spiral,
+  preserving caller-owned targets, Passing effects and arrival times. Street pitches
+  retain their runner-tracking authored arc and guaranteed completion.
+- Live fumbles pop from the current held position and immediately enter `Loose`:
+  both teams can recover in the air or on the ground. Swept transform contacts handle
+  players, solid environment colliders and ground; bounce/tumble/roll lose energy
+  until settling. BallController remains the only attachment/recovery authority.
+- Distinct ground glyphs track the live loose ball (ring) and committed pass target
+  (diamond/cross), clearing on resolution/phase exit. No Rigidbody or trigger callback.
 - Possession transfer.
 - `PossessionController` with `ActivelyControlled` as the user-control authority.
 - `PlayState.PossessionTeamId` owns drive direction; live carrier ownership drives return control/direction before the whistle.
@@ -77,11 +85,13 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Exhibition tuning/manual follow-up | Complete controller-played Head 2 Head and Pickup matches, inspect 720p/gamepad focus and same-source mixed squad colors, balance condition feel and CPU tiers. CPU drafting is deferred until final review so it uses the resolved difficulty; review exposes both lineups before launch. No production art or platform validation is implied. |
 | Front-end platform/performance follow-up | Editor UI and normal macOS startup are validated; physical controller feel and Windows remain manual. Temporary garments raise the selected fourteen-player sample from 70 to 112 skinned renderers. No frame-rate budget is claimed. |
 | Direct SampleScene development entry | Head 2 Head is the supported entry for edited active lineups. Direct SampleScene retains original fixed GUID bindings; deleting/transferring those canonical players can invalidate that legacy fixture after an explicit source commit. Use MainMenu to play custom rosters. |
+| Ball-change follow-up across open issues | See ISSUE_PRIORITIES.md: #12 crowded labels/ground glyphs; #14 airborne scrum timing, initial release-volume clearance and control feel; #17 authored wall/fence colliders on gameplay roots; #11 hand-grip/release presentation; #13 physical-controller/Windows/macOS acceptance. These tickets remain open. |
+| Standalone shutdown resource warning | The #3 build's bounded MainMenu startup passed, but intentional shutdown logged FrontEndBackdrop.OnDestroy releasing an active RenderTexture. That unchanged front-end cleanup path needs a separate exit/scene-teardown check during #13; no ball scene was entered in this smoke run. |
 
 ## Incomplete (next up, in order)
 
 1. **Normal standalone gameplay pass** — owner verified the prior four-fix Editor gameplay. The expanded 39-case suite passes in both Editor and a macOS standalone player, including matches to 21 and rematches. Manual controller/graphics checks of the normal app remain.
-2. **Loose-ball gameplay feel** — ownership is now exclusive; manually verify scrum readability and recovery/control transfer.
+2. **Loose-ball gameplay feel (#14)** — ownership is exclusive; #3 adds moving/airborne fumbles and ground glyphs. Recheck scrum readability, release-contact clearance and recovery/control transfer with physical input.
 3. **Visible handoff** — football mesh is integrated; proximity transfer still needs an observable QB-to-back exchange.
 4. **Football animation readability** — running/backpedaling/fast-run and hurdle clips are wired. Carry grip, throwing, catching and tackle reactions remain unfinished; controller feel, foot sliding and transition tuning still need manual playtesting.
 5. **Front-end manual acceptance** — finish a physical-controller match with an edited roster, confirm all gameplay actions and restart persistence on Windows. MainMenu, roster editing and both exhibition modes are implemented; automated integration includes both human sides, rematch and return to menu.
@@ -246,3 +256,24 @@ No runtime exception was found in the captured startup/settings Player log. No r
 edits were saved. This does not claim a physical-controller or human-played full match.
 Build and native evidence: ignored Builds/Validation/ui-release-build.log and
 ui-native-player.log; screenshots are in the chat computer-use record.
+
+
+## Ball flight, live fumbles and issue ranking (2026-11-06)
+
+- Issue #3 adds ballistic forward passes/spiral, swept live fumble contacts,
+  airborne/ground recovery and distinct ground glyphs. The public Throw signature,
+  caller-owned targets/Passing/time, pitch convention, catch/interception chances,
+  canonical control and match rules remain. Old independent pass arc-height and
+  preset fumble-duration controls are retired; gravity/pop height determine loft/time.
+- Full graphics-enabled Unity 6000.5.6f1 Play Mode: **137/137 passed**, zero
+  failures/skips, **142.827s**. Focused ball suite **20/20**. Staged 720p/1080p
+  marker renders in both directions and close spiral poses inspected.
+- Normal macOS development build succeeds: **0 errors / 438 warnings**. Bounded
+  Metal MainMenu startup initializes both teams without a runtime exception. The
+  separate shutdown resource warning is listed above. No Windows, physical-controller,
+  human-played full-match or standalone ball-feel acceptance is claimed.
+- ISSUE_PRIORITIES.md ranks all ten open issues and identifies immediate follow-up
+  areas. #12 is next; #14 scrum feel, #17 hazard colliders, #11 grip/handoffs and #13
+  platform acceptance must account for the ball change. No other issue is completed.
+- App, complete-source packet and copied evidence: ignored Builds/BallFlight in
+  the original checkout. Detailed scenarios/results/limits: TESTING.md T-112–T-115.

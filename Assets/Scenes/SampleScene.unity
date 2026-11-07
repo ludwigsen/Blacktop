@@ -919,6 +919,7 @@ GameObject:
   - component: {fileID: 801123493}
   - component: {fileID: 801123492}
   - component: {fileID: 801123491}
+  - component: {fileID: 801123489}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -980,12 +981,29 @@ MonoBehaviour:
   fumbleMinDistance: 1
   fumbleMaxDistance: 3
   fumblePopHeight: 0.9
-  fumbleFlightDuration: 0.35
   fumbleScatterAngle: 70
   deflectionMinDistance: 0.5
   deflectionMaxDistance: 1.5
   deflectionHeight: 0.5
   deflectionDuration: 0.25
+--- !u!114 &801123489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 801123490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc44c5f2f5e7c4fd48be3f4c40eaa02d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Blacktop::BallGroundMarkers
+  looseRadius: 0.65
+  targetRadius: 0.8
+  lineWidth: 0.12
+  groundOffset: 0.035
+  looseColor: {r: 1, g: 0.83, b: 0.15, a: 1}
+  targetColor: {r: 0.4, g: 0.95, b: 1, a: 1}
 --- !u!135 &801123492
 SphereCollider:
   m_ObjectHideFlags: 0

@@ -27,8 +27,6 @@ public class CPUCarrierAI : MonoBehaviour
     [Header("Throw Physics (effective Passing scales flight speed)")]
     [SerializeField] float baseThrowSpeed = 30f;
     [SerializeField] float minFlightDuration = 0.15f;
-    [SerializeField] float baseArcHeight = 0.5f;
-    [SerializeField] float arcHeightPerDistance = 0.12f;
 
     [Header("Runner")]
     [SerializeField] float runSpeed = 7f;
@@ -98,8 +96,8 @@ public class CPUCarrierAI : MonoBehaviour
     {
         float distance = Vector3.Distance(transform.position, target.position);
         float duration = Mathf.Max(distance / (baseThrowSpeed * PassingBoost), minFlightDuration);
-        float arc = baseArcHeight + distance * arcHeightPerDistance;
-        BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: arc, duration: duration);
+        // The ball derives loft from gravity; CPU target, timing and Passing stay here.
+        BallController.Instance.Throw(target.position, target, isPitch: false, arcHeight: 0f, duration: duration);
         readTimer = 0f;
     }
 

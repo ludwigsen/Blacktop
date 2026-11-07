@@ -64,13 +64,54 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
    - **Pass play:** receivers run routes to completion or until a ball carrier crosses the LOS. User selects a receiver via `ReceiverSelectionUI`.
    - **Run play:** WRs block. A visible handoff is required (handoff visuals are not built yet).
    - Defense engages: the closest defender engages the carrier, others contain, with an override once the carrier breaks the LOS.
-4. **Resolution.** Play ends by tackle, touchdown, incomplete pass, out of bounds, or safety. Held/loose-ball OOB is polled automatically; airborne balls finish flight before a ruling. `PlayState` validates held-ball touchdowns inside the legal rectangle, with the same boundary checks used before contact/fumble rolls.
+4. **Resolution.** Play ends by tackle, touchdown, incomplete pass, out of bounds, or safety. Held/loose-ball OOB is polled automatically; forward passes/pitches finish flight before a ruling. Airborne fumbles are live loose balls. `PlayState` validates held-ball touchdowns inside the legal rectangle, with the same boundary checks used before contact/fumble rolls.
 5. **Play ended.** `PlayState.OnPlayEnded` fires after score-team, next possession, and whistle spot are resolved. Player moves cancel through `IPlayerMove.Cancel`, independently of successful `Exit` (which releases passes/pitches). The existing three-second presentation then gathers the next huddle. Gamebreaker persists across these ordinary whistles; scores and changes of possession end both teams' active boosts.
 6. **Next play or possession change.** Drive/score/win check runs; first team to 21 wins.
 
 ### Ball states
 
-`BallState` describes the ball's condition: in carrier's hands, in flight (pass or pitch, parabolic arc), loose. Possession transfer and fumble recovery key off it. Recovery selects the nearest eligible player, with an entity-ID tie-break. Actual enum members are `BallController.BallState.Held`, `InFlight`, and `Loose`; the existing nested enum is unchanged.
+`BallState` describes ownership: `Held`, `InFlight` (forward pass, special pitch or
+dead cosmetic deflection), and `Loose` (a live fumble, including its airborne pop).
+The existing nested public enum stays source-compatible. `BallController` owns all
+attachments and recovery decisions. Recovery polls the swept travel volume, selects
+the nearest eligible player with an entity-ID tie-break, and stops free motion on
+the single winning attachment. Players already overlapping the release are excluded
+until they separate or the ball travels the Inspector-tunable release clearance
+from its release point. Chasing cannot exclude them forever; there is no timed
+recovery immunity. Physics transforms synchronize once before the live ball's
+polled queries, since player roots move in Update and auto-sync is disabled.
+Solid environment occlusion prevents the generous recovery radius scooping through
+a wall/fence. Fumble airtime is derived from pop height and gravity; the existing
+min/max scatter values continue describing distance to first ground contact. The
+old preset fumble duration is retired because it conflicts with ballistic airtime.
+
+Forward passes use constant-gravity kinematics. Passing still owns target/scatter,
+lead and arrival time; the ball solves initial velocity from that target and time.
+The former PassMove/CPU arc-height controls are removed because loft follows gravity
+and airtime. The public `Throw` signature is unchanged; `arcHeight` and the authored
+curve still serve the always-completing, runner-tracking Street pitch. Forward-pass
+orientation follows velocity with a local-Z spiral, without changing trajectory.
+
+`BallLooseMotion` is a serialized helper on BallController, not another component,
+singleton or ownership authority. It integrates explicit velocity/gravity with
+bounded substeps, swept sphere contacts, initial-overlap handling, energy-losing
+bounce, ellipsoid-orientation tip deflection, tumble and rolling friction. The
+shared ground plane is Y=0; solid player/environment colliders are queried with
+no Rigidbody or callbacks. Wall/fence authoring belongs on the gameplay field
+root; FieldLoader's surface/detail children remain collider-free. No player
+stumble behavior is supplied here. Existing scrum movement owners now operate
+during the airborne fumble because it is immediately `Loose`. In-flight pass/pitch
+OOB behavior is preserved; live fumbles use the existing loose-ball boundary rule.
+
+`BallGroundMarkers` is read-only presentation, wired on SampleScene's ball so its
+radius/stroke/colors can be tuned in the Inspector, and added if absent by
+BallController's Awake for other scenes. It draws a dark-bordered ring at the live loose ball's
+ground projection and a diamond/cross at the actual committed forward-pass target.
+Flat generated meshes use one owned URP Unlit material and per-renderer color
+property blocks. World rotation is kept flat despite ball spin. A late presentation
+order observes the resolved ball state. Catch/recovery, deflection, whistle, game
+over, reset, disable and scene teardown hide/clear presentation; owned materials
+and meshes are disposed. These glyphs do not own targeting, physics, input or nameplate layout.
 
 ### Player move states
 
@@ -81,7 +122,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
 | Component | Responsibility | Notes |
 |---|---|---|
 | `PlayState` | Phase of the play, `PossessionTeamId`, `OnPlayEnded` event | Central game-flow hub. Possession-relative direction depends on it. |
-| `BallController` | Ball state, carrier, passing/pitching arc, play reset | `Instance` singleton. `Carrier` is the only source of truth for who has the ball. Street-inspired football visuals are supplied by FootballVisual/FootballAppearance; gameplay stays on the original ball root. |
+| `BallController` | Ball state, carrier, ballistic passes, free-ball motion/recovery, pitches, play reset | `Instance` singleton. `Carrier` is the only source of truth for who has the ball. Street-inspired football visuals are supplied by FootballVisual/FootballAppearance; gameplay stays on the original ball root. |
 | `PossessionController` | Enables/disables per-player control behavior; exposes `ActivelyControlled` | Canonical for "which player does the user control." Because it toggles per-object behavior, those behaviors can't be global singletons. |
 | `PlayerStateMachine` | Runs the current `IPlayerMove` per player | One per player. Whistle subscription occurs in `Start`; both whistle and component disable cancel temporary move effects. |
 | `IPlayerMove` | Interface for moves (Juke, Hurdle, StiffArm, future StumbleMove) | |
