@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// One persistent gameplay root; replace only collider-free visual children between plays.
+// One persistent gameplay root; swap the venue art and authored boundaries between plays.
 [DefaultExecutionOrder(-1000)]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(FieldBounds))]
@@ -14,6 +14,7 @@ public sealed class FieldLoader : MonoBehaviour
     [SerializeField] Renderer legacyGroundRenderer;
     [SerializeField, HideInInspector] FieldSurface activeSurface;
     [SerializeField, HideInInspector] GameObject activeDetails;
+    [SerializeField, HideInInspector] GameObject activeBoundary;
     [SerializeField, HideInInspector] FieldDefinition loadedField;
 
     public FieldDefinition SelectedField => selectedField != null ? selectedField : defaultField;
@@ -63,21 +64,29 @@ public sealed class FieldLoader : MonoBehaviour
             return false;
         }
         if (definition.surfacePrefab.SurfaceRenderer == null) return false;
+        if (definition.boundaryPrefab != null && !IsBoundaryPrefab(definition.boundaryPrefab))
+        {
+            Debug.LogError("Field boundary prefabs may only contain visual components and marked solid walls.", this);
+            return false;
+        }
 
         // Reuse a serialized editor preview on startup; no duplicated surfaces or materials.
         if (!rebuild && loadedField == definition && activeSurface != null)
         {
             activeSurface.Apply(definition);
+            if (activeBoundary == null) LoadBoundary(definition);
             if (legacyGroundRenderer != null) legacyGroundRenderer.enabled = false;
             return true;
         }
 
         RemoveVisual(activeSurface != null ? activeSurface.gameObject : null);
         RemoveVisual(activeDetails);
+        RemoveVisual(activeBoundary);
         activeSurface = Instantiate(definition.surfacePrefab, transform, false);
         activeSurface.name = definition.displayName + " Surface";
         activeSurface.Apply(definition);
         activeDetails = definition.detailPrefab != null ? Instantiate(definition.detailPrefab, transform, false) : null;
+        LoadBoundary(definition);
         loadedField = definition;
         if (legacyGroundRenderer != null) legacyGroundRenderer.enabled = false;
         return true;
@@ -86,7 +95,29 @@ public sealed class FieldLoader : MonoBehaviour
     public static bool IsPlayable(FieldDefinition definition) => definition != null && definition.playable &&
         !string.IsNullOrWhiteSpace(definition.venueId) && definition.surfacePrefab != null &&
         definition.surfacePrefab.SurfaceRenderer != null && IsVisualOnly(definition.surfacePrefab.gameObject) &&
-        (definition.detailPrefab == null || IsVisualOnly(definition.detailPrefab));
+        (definition.detailPrefab == null || IsVisualOnly(definition.detailPrefab)) &&
+        (definition.boundaryPrefab == null || IsBoundaryPrefab(definition.boundaryPrefab));
+
+    void LoadBoundary(FieldDefinition definition)
+    {
+        activeBoundary = definition.boundaryPrefab != null ? Instantiate(definition.boundaryPrefab, transform, false) : null;
+        // The new static colliders must be visible to queries in this frame even
+        // though the project leaves auto-sync off for moving player transforms.
+        Physics.SyncTransforms();
+    }
+
+    static bool IsBoundaryPrefab(GameObject root)
+    {
+        if (root.GetComponentInChildren<Rigidbody>(true) != null) return false;
+        foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true))
+            if (behaviour is not FieldBoundaryWall) return false;
+        foreach (var collider in root.GetComponentsInChildren<Collider>(true))
+        {
+            if (collider.isTrigger || !collider.TryGetComponent<FieldBoundaryWall>(out _) ||
+                collider.GetComponents<Collider>().Length != 1) return false;
+        }
+        return true;
+    }
 
     static bool IsVisualOnly(GameObject root)
     {

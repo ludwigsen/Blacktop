@@ -21,5 +21,5 @@ MonoBehaviour:
   tint: {r: 1, g: 1, b: 1, a: 1}
   textureTiling: {x: 15, y: 30}
   detailPrefab: {fileID: 434324879867710638, guid: 553180de198794ff5990f42e14d5db51, type: 3}
-  boundaryPrefab: {fileID: 0}
+  boundaryPrefab: {fileID: 3988557264399477686, guid: b772b5754eca14f17b9284ee30e26d71, type: 3}
   environmentRootPrefab: {fileID: 0}

@@ -79,6 +79,9 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        // Wall recoil temporarily owns displacement and discards built-up velocity.
+        if (PlayerStateMachine.IsMovementLocked(transform)) { currentVelocity = Vector3.zero; return; }
+
         Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
 
         // Input is screen-relative: stick-up = up on screen, whichever way the camera is
@@ -91,7 +94,11 @@ public class PlayerMovement : MonoBehaviour
         float rate = moveDir.magnitude > 0.1f ? Acceleration : deceleration;
         currentVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, rate * Time.deltaTime);
 
-        transform.position += currentVelocity * Time.deltaTime;
+        if (!PlayerStateMachine.MoveActor(transform, transform.position + currentVelocity * Time.deltaTime))
+        {
+            currentVelocity = Vector3.zero;
+            return;
+        }
 
         // Only rotate when there's meaningful input — prevents jittery snapping to a
         // "forward" direction when input magnitude is near zero (dead zone noise).

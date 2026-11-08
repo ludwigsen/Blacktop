@@ -7,5 +7,6 @@ public enum PlayerState
     Hurdle,
     StiffArm,
     Pitch,
-    Pass
+    Pass,
+    Stumble
 }

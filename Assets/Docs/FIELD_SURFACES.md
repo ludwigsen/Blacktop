@@ -29,14 +29,41 @@ The scene is already wired; no setup action is required after pulling the featur
 3. To add a venue, use Create > Blacktop > Field Definition. Supply a stable ID/name, assign SharedSurface and a URP Lit **Base Material**. No geometry or football logic belongs in a definition. Only two functional definitions ship; the other nine venues have no placeholder environments.
 4. Edit a material's Base Map, Normal Map, smoothness and texture slots in the material Inspector. Enable **Use Tint** in the definition for an optional color multiplier. **Texture Tiling** multiplies the base material's scale, including its normal-map scale. Defaults repeat a two-unit tile (15×30 repetitions). Renderer overrides use MaterialPropertyBlock; they neither clone nor modify the shared material. Unity may retain the prefab material when an optional base material is absent.
 5. For local decorative marks, create a prefab of MeshFilters/MeshRenderers only; assign it as **Detail Prefab**. Duplicate/edit the provided detail prefabs for a starting point. Place meshes under Y=0.02 and above Y=0. Use transparent Lit materials with ZWrite off and render queue 2990. Assign optional wear masks in the detail material's Base Map/alpha slot. Never add colliders, Rigidbody, or gameplay components to decorative prefabs; the loader rejects them.
-6. Boundary and environment prefab fields are reserved references only in Phase 1; they are not instantiated. Later physical boundaries belong under the persistent FieldBounds root, with FieldBoundaryWall registering there. Scenery can be introduced separately without copying gameplay managers. Do not put FieldBounds inside a surface prefab.
+6. Assign a **Boundary Prefab** for optional venue-specific hazards. FieldLoader instantiates it under the persistent FieldBounds root. Every solid segment needs one collider and one FieldBoundaryWall on the same GameObject. Set **Boundary Side** in field-local coordinates. Visual-only children can include meshes for the obstacle and its surroundings. Environment Root Prefab remains reserved for scenery.
 7. Blacktop > Fields > **Generate Missing Phase 1 Assets** creates missing placeholders through Unity APIs. Existing assets and their Inspector edits are preserved. **Wire SampleScene (Save Scene)** explicitly opens/saves the shipped scene, chooses The Lot, finds its existing ground by footprint/collider rather than name and wires references. Use this only for initial wiring/recovery, after saving other work. It refuses ambiguous ground or pre-existing unmanaged bounds. It is not an automatic scene replacement.
 
 Missing optional detail/material references are supported. Missing required surface prefab or invalid art leaves the current venue intact and returns false. If neither selected nor default definition exists, the legacy Plane remains the initial fallback. The loader rejects duplicate active bounds; it does not silently delete another system's root.
 
+## Walls and fences
+
+The Lot uses alternating concrete barriers along both sidelines with open end
+lines. Downtown uses a chain-link fence along the negative-X sideline with a
+3.5-unit gap at midfield. Its opposite sideline and end lines are open. The
+inner obstacle faces sit 0.55 units outside the legal rectangle. The visual
+apron extends through the shared safety band on both venues. All eleven
+cinematics still belong to the menu slideshow. Both playable layouts are
+derived from their corresponding concepts.
+
+`LotBoundaries.prefab` and `DowntownBoundaries.prefab` each keep two editable
+BoxCollider segments. The corresponding baked geometry and shared materials
+live in Art/Fields/Generated. Use **Blacktop > Fields > Generate Missing Venue
+Boundaries** to restore missing assignments or prefabs. The generator
+preserves existing assignments and derives footprints from FieldConstants.
+
+The Player prefab exposes **Stumble Move** on PlayerStateMachine. **Duration**
+defaults to 0.32 seconds and **Knockback Distance** to 0.85 world units. The
+presenter's **Stumble Lean Angle** defaults to 24 degrees. Recoil eases out,
+stops at adjacent hazards and does not scale with player stats. The wall's
+**Containment Grace** is the existing ball-rule tolerance. It does not
+change player sweep size. Choose **Apply Selected Field** on FieldRoot to
+preview a venue or swap between plays. A successful swap immediately
+unregisters and deactivates the old segments before installing the new ones.
+Surface and detail prefabs remain collider-free. The standard safety-band and
+scoring rules continue to use the same shared dimensions.
+
 ## Conditions: independent match integration
 
-FieldDefinition remains venue art/identity only. Head 2 Head and Pickup independently select conditions through FrontEndSettings' committed ConditionData catalog. See FRONT_END.md for the complete calculation, acceleration ownership, profiles and lifecycle.
+FieldDefinition describes the venue and its boundary assets. Head 2 Head and Pickup independently select conditions through FrontEndSettings' committed ConditionData catalog. See FRONT_END.md for the complete calculation, acceleration ownership, profiles and lifecycle.
 
 | Condition | Regular severity |
 |---|---|

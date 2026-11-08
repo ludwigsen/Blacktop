@@ -31,7 +31,7 @@ public class FieldSurfaceTests
     [UnityTest]
     public IEnumerator BothVenuesKeepBoundsCollidersCoordinatesAndMaterialAssets()
     {
-        int colliders = Object.FindObjectsByType<Collider>().Length;
+        int colliders = Object.FindObjectsByType<Collider>().Length - loader.Bounds.BoundaryWalls.Count;
         var ball = BallController.Instance;
         Transform holder = ball.Carrier;
         var rootPosition = holder != null ? holder.position : Vector3.zero;
@@ -44,7 +44,11 @@ public class FieldSurfaceTests
             Assert.That(loader.LoadedField, Is.SameAs(field));
             Assert.That(Object.FindObjectsByType<FieldSurface>().Length, Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<FieldBounds>().Length, Is.EqualTo(1));
-            Assert.That(Object.FindObjectsByType<Collider>().Length, Is.EqualTo(colliders));
+            int venueWalls = field.boundaryPrefab.GetComponentsInChildren<FieldBoundaryWall>().Length;
+            Assert.That(loader.Bounds.BoundaryWalls.Count, Is.EqualTo(venueWalls));
+            Assert.That(Object.FindObjectsByType<Collider>().Length, Is.EqualTo(colliders + venueWalls));
+            foreach (var wall in loader.Bounds.BoundaryWalls)
+                Assert.That(wall.FieldBounds, Is.SameAs(loader.Bounds));
             Assert.That(loader.ActiveSurface.GetComponentsInChildren<Collider>(true), Is.Empty);
             Assert.That(loader.ActiveSurface.SurfaceRenderer.sharedMaterial, Is.SameAs(field.baseMaterial));
             Assert.That(field.baseMaterial.GetColor("_BaseColor"), Is.EqualTo(savedColor));
@@ -194,7 +198,8 @@ public class FieldSurfaceTests
             Assert.That(los.GetComponent<MeshRenderer>().sharedMaterial.shader.isSupported, Is.True);
             foreach (var renderer in loader.GetComponentsInChildren<MeshRenderer>())
             {
-                if (renderer.transform == los || renderer.transform == first || renderer.name.Contains("Goal Line")) continue;
+                if (renderer.transform == los || renderer.transform == first || renderer.name.Contains("Goal Line") ||
+                    renderer.GetComponentInChildren<FieldBoundaryWall>() != null) continue;
                 Assert.That(renderer.bounds.max.y, Is.LessThan(los.position.y));
             }
         }

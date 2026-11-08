@@ -39,7 +39,7 @@ See `AGENTS.md` for the full rule table.
 ┌───────────────┴──────────────────────────────────────────┐
 │ Player layer                                             │
 │  PlayerStateMachine → IPlayerMove                        │
-│    Juke · Hurdle · StiffArm · (StumbleMove, planned)     │
+│    Juke · Hurdle · StiffArm · StumbleMove                │
 │  PlayerAttributes / DefenderAttributes                   │
 │  AttributeCurves · FieldModifiers                        │
 └───────────────▲──────────────────────────────────────────┘
@@ -100,8 +100,8 @@ bounded substeps, swept sphere contacts, initial-overlap handling, energy-losing
 bounce, ellipsoid-orientation tip deflection, tumble and rolling friction. The
 shared ground plane is Y=0; solid player/environment colliders are queried with
 no Rigidbody or callbacks. Wall/fence authoring belongs on the gameplay field
-root; FieldLoader's surface/detail children remain collider-free. No player
-stumble behavior is supplied here. Existing scrum movement owners now operate
+root; FieldLoader's surface/detail children remain collider-free. Existing scrum
+movement owners now operate
 during the airborne fumble because it is immediately `Loose`. In-flight pass/pitch
 OOB behavior is preserved; live fumbles use the existing loose-ball boundary rule.
 
@@ -117,7 +117,30 @@ and meshes are disposed. These glyphs do not own targeting, physics, input or na
 
 ### Player move states
 
-`PlayerStateMachine` owns the active move and delegates to an `IPlayerMove`. Moves are attribute-driven. Adding a move means implementing `IPlayerMove` and registering it with the state machine, not touching existing moves.
+`PlayerStateMachine` owns the active `IPlayerMove` on every actor.
+`PossessionController` still toggles carrier input/locomotion and cancels stale
+carrier moves. Input-triggered moves require the current ball holder and
+`ActivelyControlled` to agree. A wall impact stays with the actor through a
+change in control or ball ownership.
+
+Human carrier/defender movement, CPU carrier, routes, blocking, defensive
+pursuit/shoves, handoff autopath and committed moves submit destinations to the
+same wall sweep. Each keeps its existing movement rules. The sweep uses the
+capsule's ground footprint against the solid `FieldBoundaryWall` colliders
+registered with the current `FieldBounds`. It stops short at contact and
+handles initial overlaps. A player cannot hurdle over a low barrier. At impact
+the previous move cancels, momentum clears, and only `StumbleMove` can displace
+the actor during recoil. Recoil is swept against adjacent walls and grants no
+tackle immunity. Repeated pressure on that wall clips and can slide along it.
+Voluntarily leaving the contact area rearms the stumble. Whistle, play reset
+and component disable clear the move and latched contacts. Established
+touchdown and held-ball OOB rulings take precedence. Dead-ball reaction and
+set-at-LOS steering can clip at a wall without starting a stumble.
+
+The shared animation presenter tilts the existing visual wrapper away from
+the contact normal and returns it upright over the move's duration. The
+gameplay root and collider remain upright. See FIELD_SURFACES.md for venue
+authoring and tunables.
 
 ## Managers and key components
 
@@ -126,8 +149,8 @@ and meshes are disposed. These glyphs do not own targeting, physics, input or na
 | `PlayState` | Phase of the play, `PossessionTeamId`, `OnPlayEnded` event | Central game-flow hub. Possession-relative direction depends on it. |
 | `BallController` | Ball state, carrier, ballistic passes, free-ball motion/recovery, pitches, play reset | `Instance` singleton. `Carrier` is the only source of truth for who has the ball. Street-inspired football visuals are supplied by FootballVisual/FootballAppearance; gameplay stays on the original ball root. |
 | `PossessionController` | Enables/disables per-player control behavior; exposes `ActivelyControlled` | Canonical for "which player does the user control." Because it toggles per-object behavior, those behaviors can't be global singletons. |
-| `PlayerStateMachine` | Runs the current `IPlayerMove` per player | One per player. Whistle subscription occurs in `Start`; both whistle and component disable cancel temporary move effects. |
-| `IPlayerMove` | Interface for moves (Juke, Hurdle, StiffArm, future StumbleMove) | |
+| `PlayerStateMachine` | Runs the current `IPlayerMove` per player | One always-on machine per player. It subscribes to whistle and play reset in `Start`. Component disable also cancels temporary effects. |
+| `IPlayerMove` | Interface for moves (Juke, Hurdle, StiffArm, StumbleMove) | |
 | `BlockingCoordinator` / `AllyBlocker` | Assigns and runs blocking for offensive players | Untested in observed play. |
 | Defender coordination | Closest engages, others contain, LOS-break override | Loose-ball defense uses DefenderAI; offense uses AllyBlocker; selected defender movement stays with human control. |
 | `GamebreakerController` / `GamebreakerHUD` | Gamebreaker meter, activation, HUD | PlayState owns team meters and possession-long boosts; every Player prefab listens for activation through canonical control. GameHUD displays ready/active state. |
@@ -257,14 +280,13 @@ attributes to movement, moves, receivers, defenders, blockers, CPU and Gamebreak
 
 - **New move:** implement `IPlayerMove`; read its tuning from attributes via `AttributeCurves`; expose tunables in the Inspector.
 - **New formation or play:** data-driven via `FormationData` / play definitions. Don't hardcode positions.
-- **New venue:** author a FieldDefinition and collider-free surface/detail prefabs. FieldConstants alone owns common geometry. Conditions/severity belong to independent match settings, with integration deferred.
+- **New venue:** author a FieldDefinition and collider-free surface/detail prefabs. Add a separate boundary prefab for visible solid walls and fences. FieldConstants owns common geometry. Conditions and severity are independent match settings.
 - **New possession-scoped effect:** clear on `PlayState.OnPlayEnded`.
 - **New contact check:** polled `Overlap*` or a short raycast. No triggers.
 - **New enum:** top-level, not nested.
 
 ## Planned architecture (not built)
 
-- **StumbleMove:** an `IPlayerMove` triggered by wall/fence contact; zero velocity, apply knockback, no evasion window.
 - **Downs/yardage tracker:** already implemented as `DownsTracker` and scene-wired; listed here previously as planned.
 - **Create-a-Team / progression:** new-team creation, trading rules, free agency and career systems remain deferred. Development roster transfers between installed teams are implemented.
 - **Production appearance art:** five authored bodies, pooled distinct faces / hair / facial hair and fitted garments. Shared-rig assembly, height profiles and temporary body/garment variants are implemented.

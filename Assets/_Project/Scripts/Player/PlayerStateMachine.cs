@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 [RequireComponent(typeof(PlayerMovement))]
@@ -15,6 +16,7 @@ public class PlayerStateMachine : MonoBehaviour
     [SerializeField] PitchMove pitchMove;
     [SerializeField] PassMove passMove;
     [SerializeField] PlayerAttributes attributes;
+    [SerializeField] StumbleMove stumbleMove = new();
 
     PlayerMovement movement;
     InputBuffer inputBuffer;
@@ -22,6 +24,16 @@ public class PlayerStateMachine : MonoBehaviour
     PlayerState currentState = PlayerState.Idle;
     IPlayerMove activeMove;
     float cooldownTimer;
+
+    CapsuleCollider body;
+    FieldBounds fieldBounds;
+    readonly List<FieldBoundaryWall> latchedWalls = new();
+    int stumbleFrame = -1;
+
+    public bool IsStumbling => currentState == PlayerState.Stumble;
+    public float StumbleProgress => IsStumbling ? stumbleMove.Progress : 0f;
+    public Vector3 StumbleNormal { get; private set; }
+    bool BlocksLocomotion => IsStumbling || Time.frameCount == stumbleFrame;
 
     // Set by HurdleMove via ctx.setTackleImmune during a successful negation roll.
     // TackleContact reads this directly (via GetComponent<PlayerStateMachine>()) before
@@ -42,6 +54,8 @@ public class PlayerStateMachine : MonoBehaviour
     void Awake()
     {
         movement = GetComponent<PlayerMovement>();
+        body = GetComponent<CapsuleCollider>();
+        fieldBounds = FindAnyObjectByType<FieldBounds>();
         inputBuffer = GetComponent<InputBuffer>();  // back to local, matches PossessionController's enable/disable target
         var defenderDetector = GetComponent<DefenderDetector>();
 
@@ -50,6 +64,8 @@ public class PlayerStateMachine : MonoBehaviour
             transform = transform,
             attributes = attributes,
             inputBuffer = inputBuffer,
+            moveBy = delta => MoveTo(transform.position + delta),
+            moveStumble = MoveStumble,
             getMoveInput = () => movement.CurrentMoveInput,
             isDefenderInRange = () => defenderDetector != null && defenderDetector.DefenderInRange,
             setTackleImmune = v => IsTackleImmune = v,
@@ -60,21 +76,29 @@ public class PlayerStateMachine : MonoBehaviour
 
     void Start()
     {
-        // Start runs after every Awake, so scene object order cannot lose the whistle
-        // subscription. Keep it while disabled: benched/AI players need cleanup too.
-        if (PlayState.Instance != null)
-            PlayState.Instance.OnPlayEnded += HandlePlayEnded;
+        // Start runs after PlayState's Awake. AI and human players both keep
+        // this machine enabled, even as possession toggles their input scripts.
+        if (PlayState.Instance == null) return;
+        PlayState.Instance.OnPlayEnded += HandlePlayEnded;
+        PlayState.Instance.OnPlayReset += ResetMoves;
     }
 
-    // Signature matches Action<PlayEndReason> — reason isn't used yet, but having it
-    // available means future logic (different freeze behavior for touchdown vs tackle,
-    // celebration state, etc.) doesn't require another signature change later.
-    void HandlePlayEnded(PlayState.PlayEndReason reason)
+    void HandlePlayEnded(PlayState.PlayEndReason reason) => ResetMoves();
+    void OnDisable() => ResetMoves();
+
+    void ResetMoves()
     {
         CancelActiveMove();
+        latchedWalls.Clear();
+        stumbleFrame = -1;
     }
 
-    void OnDisable() => CancelActiveMove();
+    // Possession still cancels input moves immediately, but a wall impact stays
+    // with this actor even if it no longer carries the ball.
+    internal void CancelCarrierMove()
+    {
+        if (!IsStumbling && (activeMove != null || currentState != PlayerState.Idle)) CancelActiveMove();
+    }
 
     void CancelActiveMove()
     {
@@ -89,39 +113,141 @@ public class PlayerStateMachine : MonoBehaviour
 
     void OnDestroy()
     {
-        if (PlayState.Instance != null)
-            PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
+        if (PlayState.Instance == null) return;
+        PlayState.Instance.OnPlayEnded -= HandlePlayEnded;
+        PlayState.Instance.OnPlayReset -= ResetMoves;
     }
 
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
+        // An impact belongs to the actor, even if control or ball ownership changes
+        // mid-move. Do not tick on its entry frame or resume locomotion on its exit frame.
+        if (IsStumbling)
+        {
+            if (Time.frameCount != stumbleFrame)
+            {
+                TickMove(Time.deltaTime);
+                if (!IsStumbling) stumbleFrame = Time.frameCount;
+            }
+            return;
+        }
+
         // A recovery may change carriers before PossessionController toggles this
         // component. Cancel stale moves before they can tick or release another ball.
         if (BallController.Instance == null || BallController.Instance.Carrier != transform ||
             PossessionController.ActivelyControlled != transform)
         {
-            CancelActiveMove();
+            CancelCarrierMove();
             return;
         }
 
+        if (stumbleFrame == Time.frameCount) return;
         if (cooldownTimer > 0f) cooldownTimer -= Time.deltaTime;
 
         if (activeMove != null)
         {
-            activeMove.Tick(ctx, Time.deltaTime);
-            if (activeMove.IsComplete)
-            {
-                activeMove.Exit(ctx);
-                activeMove = null;
-                currentState = PlayerState.Run; // moves always return to Run — locomotion re-evaluates next frame anyway
-            }
+            TickMove(Time.deltaTime);
             return; // input locked out entirely while a move is active — no steering during committed moves
         }
 
         HandleLocomotion();
         CheckMoveTriggers();
+    }
+
+    void TickMove(float deltaTime)
+    {
+        IPlayerMove move = activeMove;
+        move.Tick(ctx, deltaTime);
+        // A sweep inside a Juke/Hurdle/StiffArm tick may already have replaced it.
+        if (activeMove != move || !move.IsComplete) return;
+        move.Exit(ctx);
+        activeMove = null;
+        currentState = PlayerState.Run;
+    }
+
+    // Existing movement owners still choose destinations. This path only arbitrates
+    // wall contact and recoil, and leaves actors without a gameplay capsule alone.
+    internal static bool IsMovementLocked(Transform actor) =>
+        actor.TryGetComponent(out PlayerStateMachine machine) && machine.BlocksLocomotion;
+
+    internal static bool MoveActor(Transform actor, Vector3 destination)
+    {
+        if (actor.TryGetComponent(out PlayerStateMachine machine)) return machine.MoveTo(destination);
+        actor.position = destination;
+        return true;
+    }
+
+    internal bool MoveTo(Vector3 destination)
+    {
+        if (BlocksLocomotion) return false;
+        if (fieldBounds == null && body != null) fieldBounds = FindAnyObjectByType<FieldBounds>();
+        if (!FieldWallContact.Sweep(fieldBounds, body, destination, out Vector3 stop, out var wall, out Vector3 normal))
+        {
+            transform.position = destination;
+            ReleaseSeparatedWalls();
+            return true;
+        }
+
+        // A terminal ball position takes precedence over pulling the holder away
+        // from a wall. The existing sideline/score pollers still own the whistle.
+        var play = PlayState.Instance;
+        bool live = play == null || play.IsLive;
+        if (live && HasPendingRuling(play)) return false;
+
+        transform.position = stop;
+        if (!live || !isActiveAndEnabled || HasPendingRuling(play)) return false;
+        ReleaseSeparatedWalls();
+
+        if (latchedWalls.Contains(wall))
+        {
+            // Continued diagonal input may slide along the wall, but still
+            // sweeps against the next face at a corner or at the end of a segment.
+            Vector3 slide = Vector3.ProjectOnPlane(destination - stop, normal);
+            slide.y = 0f;
+            bool blocked = FieldWallContact.Sweep(fieldBounds, body, stop + slide, out stop, out wall, out normal);
+            transform.position = stop;
+            ReleaseSeparatedWalls();
+            // A clear slide preserves locomotion momentum along the wall. A
+            // straight push into it or a blocked corner still stops the mover.
+            if (!blocked) return slide.sqrMagnitude > 0.000001f;
+            if (latchedWalls.Contains(wall) || HasPendingRuling(play)) return false;
+        }
+
+        if (!stumbleMove.CanTrigger(ctx, currentState)) return false;
+        CancelActiveMove();
+        latchedWalls.Add(wall);
+        StumbleNormal = normal;
+        stumbleFrame = Time.frameCount;
+        stumbleMove.SetContactNormal(normal);
+        activeMove = stumbleMove;
+        activeMove.Enter(ctx);
+        currentState = PlayerState.Stumble;
+        return false;
+    }
+
+    void ReleaseSeparatedWalls()
+    {
+        // Only voluntary movement can rearm contact. Keep a small clearance
+        // beyond the recoil endpoint so holding into the wall cannot retrigger.
+        float clearance = stumbleMove.Distance + FieldWallContact.Skin * 2f;
+        for (int i = latchedWalls.Count - 1; i >= 0; i--)
+        {
+            FieldBoundaryWall wall = latchedWalls[i];
+            if (wall == null || !FieldWallContact.IsNear(fieldBounds, body, wall, clearance)) latchedWalls.RemoveAt(i);
+        }
+    }
+
+    bool HasPendingRuling(PlayState play) => play != null && BallController.Instance != null &&
+        BallController.Instance.Carrier == transform &&
+        (play.IsBallOutOfBounds(fieldBounds) || play.TryGetTouchdownTeam(out _, fieldBounds));
+
+    void MoveStumble(Vector3 delta)
+    {
+        if (HasPendingRuling(PlayState.Instance)) return;
+        FieldWallContact.Sweep(fieldBounds, body, transform.position + delta, out Vector3 stop, out _, out _);
+        transform.position = stop;
     }
 
     void HandleLocomotion()

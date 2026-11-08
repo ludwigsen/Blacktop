@@ -265,11 +265,11 @@ public class PlayResolutionTests
         Set(machine, "activeMove", hurdle);
         context.setTackleImmune(true);
         ball.AttachTo(Player(1, TeamMember.RosterSlot.RB).transform);
-        // Exercise stale-component Update first, then the normal enable/disable path.
+        // Exercise stale-state Update first, then normal possession cleanup.
         Call(machine, "Update");
         Call(possession, "Update");
         Assert.That(machine.IsTackleImmune, Is.False);
-        Assert.That(machine.enabled, Is.False);
+        Assert.That(machine.enabled, Is.True, "AI wall impacts still need the move machine.");
         Assert.That(holder.transform.position.y, Is.EqualTo(1f).Within(0.001f));
     }
 

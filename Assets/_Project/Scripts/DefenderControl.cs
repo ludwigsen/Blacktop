@@ -76,7 +76,7 @@ public class DefenderControl : MonoBehaviour
         if (PossessionController.ActivelyControlled != transform) { velocity = Vector3.zero; return; }
 
         // Stiff-armed / shed: DefenderAI is animating the shove, so input is locked out.
-        if (!isSet && ai.IsStunned) { velocity = Vector3.zero; return; }
+        if (!isSet && (ai.IsStunned || PlayerStateMachine.IsMovementLocked(transform))) { velocity = Vector3.zero; return; }
 
         var tuning = DefenderControlManager.Instance;
         float maxSpeed = (tuning != null ? tuning.MaxSpeed : 7f) * ai.SpeedMult;
@@ -92,7 +92,11 @@ public class DefenderControl : MonoBehaviour
         float rate = moveDir.magnitude > 0.1f ? accel : decel;
         velocity = Vector3.MoveTowards(velocity, targetVelocity, rate * Time.deltaTime);
         Vector3 destination = transform.position + velocity * Time.deltaTime;
-        transform.position = isSet ? ClampSetPosition(play, destination) : destination;
+        if (!PlayerStateMachine.MoveActor(transform, isSet ? ClampSetPosition(play, destination) : destination))
+        {
+            velocity = Vector3.zero;
+            return;
+        }
 
         if (moveDir.magnitude > 0.1f)
         {

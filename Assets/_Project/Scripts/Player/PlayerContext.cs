@@ -11,6 +11,17 @@ public class PlayerContext
     public PlayerAttributes attributes;
     public InputBuffer inputBuffer;
 
+    // Committed moves use the same wall sweep as normal locomotion. Stumble
+    // recoil sweeps too, but cannot trigger or restart another move.
+    public System.Action<Vector3> moveBy;
+    public System.Action<Vector3> moveStumble;
+
+    public void MoveBy(Vector3 delta)
+    {
+        if (moveBy != null) moveBy(delta);
+        else transform.position += delta; // Standalone move contexts can omit a field.
+    }
+
     // Routes to PlayerMovement.CurrentMoveInput. Moves read live stick/key direction through
     // this delegate rather than calling Input.GetAxisRaw or the new Input System directly —
     // keeps input-reading centralized in PlayerMovement, moves just consume the result.

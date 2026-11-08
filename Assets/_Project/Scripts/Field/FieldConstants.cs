@@ -1,5 +1,5 @@
 // Fixed field dimensions, shared by every field variant. Per the design call: all 11
-// fields are the same size, no per-field narrowing or shortening — visual dressing only.
+// fields share the same playable rectangle. Venue art and obstacles can vary around it.
 // This is why there's no FieldLayout ScriptableObject; there's nothing to vary per field,
 // so a static class is the right call (promote to a tunable asset only if that ever changes).
 public static class FieldConstants
@@ -8,10 +8,8 @@ public static class FieldConstants
     public const float PlayLength = 60f;         // end line to end line (60u total length)
     public const float EndZoneDepth = 10f;       // two 10u end-zone overlays inside the 60u playable length
 
-    // How far past the sideline the ball has to travel before it's ruled dead — accounts
-    // for walls/fences sitting flush at the boundary rather than exactly on it, so a
-    // stumble and an out-of-bounds ruling land in the same frame instead of one preceding
-    // the other by a few units.
+    // The existing safety band outside the legal scoring rectangle. A venue can
+    // place walls/fences here while leaving other stretches open for OOB rulings.
     public const float OutOfBoundsMargin = 2f;
 
     // Derived, not authored — keeps "goal line Z" defined in exactly one place.

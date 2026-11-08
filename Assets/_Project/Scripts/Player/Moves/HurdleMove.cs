@@ -76,7 +76,7 @@ public class HurdleMove : IPlayerMove
         lastHeightSample = heightSample;
         lastForwardSample = forwardSample;
 
-        ctx.transform.position += ctx.transform.forward * forwardDelta + Vector3.up * heightDelta;
+        ctx.MoveBy(ctx.transform.forward * forwardDelta + Vector3.up * heightDelta);
     }
 
     public bool IsComplete => timer >= Duration;

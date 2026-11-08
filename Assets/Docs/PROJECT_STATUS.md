@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-11-06
+Last updated: 2026-11-07
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -16,6 +16,10 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Transform-based player movement (no Rigidbody).
 - Juke, Hurdle, and StiffArm, attribute-driven, implemented through the `IPlayerMove` pattern and orchestrated by `PlayerStateMachine`.
 - All fourteen players inherit speed/direction-driven standard run, fast run and backward run through PlayerAnimationPresenter and the shared Animator Controller. Jump presents the existing hurdle, timed to its duration; no root motion or movement/attribute tuning changes.
+- Issue #17: The Lot has concrete sideline barriers and open ends. Downtown has a
+  chain-link fence with a central opening on one sideline. Human and AI
+  movement sweep against these hazards and recoil through the shared
+  `StumbleMove`. See FIELD_SURFACES.md for wiring and T-122 in TESTING.md for checks.
 - Issue #2: current master's existing shared-prefab orientation is correct. Rendered Editor gameplay verifies model-to-root alignment on both human sides and in both attacking directions, including turns, routes, blocking, pursuit, huddles and backward locomotion. No additional rotation is needed. See T-72 in TESTING.md for the automated evidence and separate human/platform limits.
 
 ### Ball and possession
@@ -98,7 +102,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 | Exhibition tuning/manual follow-up | Complete controller-played Head 2 Head and Pickup matches, inspect 720p/gamepad focus and same-source mixed squad colors, balance condition feel and CPU tiers. CPU drafting is deferred until final review so it uses the resolved difficulty; review exposes both lineups before launch. No production art or platform validation is implied. |
 | Front-end platform/performance follow-up | Editor UI and normal macOS startup are validated; physical controller feel and Windows remain manual. Temporary garments raise the selected fourteen-player sample from 70 to 112 skinned renderers. No frame-rate budget is claimed. |
 | Direct SampleScene development entry | Direct entry now binds the first two authored TeamDefinitions and independent lineups before CharacterApplier runs, so retired prototype GUID overrides cannot shadow the CSV. Use MainMenu for saved/custom rosters and all six teams. |
-| Ball-change follow-up across open issues | See ISSUE_PRIORITIES.md: #12 crowded labels/ground glyphs; #14 airborne scrum timing, initial release-volume clearance and control feel; #17 authored wall/fence colliders on gameplay roots; #11 hand-grip/release presentation; #13 physical-controller/Windows/macOS acceptance. These tickets remain open. |
+| Ball-change follow-up across open issues | See ISSUE_PRIORITIES.md: #12 crowded labels/ground glyphs; #14 airborne scrum timing, initial release-volume clearance and control feel; #11 hand-grip/release presentation; #13 physical-controller/Windows/macOS acceptance. These tickets remain open. |
 | Standalone shutdown resource warning | The #3 build's bounded MainMenu startup passed, but intentional shutdown logged FrontEndBackdrop.OnDestroy releasing an active RenderTexture. That unchanged front-end cleanup path needs a separate exit/scene-teardown check during #13; no ball scene was entered in this smoke run. |
 
 ## Incomplete (next up, in order)
@@ -132,10 +136,6 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - Defensive decision: player-triggered flat team boost, same as offense; better speed, coverage and tackling improve existing outcomes. No automatic spending and no guaranteed turnover. Both teams may activate in the same possession. Active teams cannot refill until their boost ends.
 - Swagger scales styling and actor-attributed move/sack/fumble/interception/touchdown earnings. CPU earns from existing gameplay awards; it does not simulate holding Style.
 - Styling: hold T or gamepad X/Square while the controlled player holds the live ball. Activation: G or LB/L1 during live play, full meter only, including while controlling a defender. No cutscene.
-
-### Walls and fences
-- Hazards only. No wall-running or traversal.
-- Detect with `OverlapBox` or a short raycast in the movement direction; trigger a `StumbleMove` (`IPlayerMove`) that zeroes velocity and applies knockback/stumble. No evasion window.
 
 ### Field modifiers
 - Conditions and severity are selected independently of venue. FieldDefinition contains art/identity only; do not derive a speed/agility effect from asphalt, grass or any surface.
@@ -285,7 +285,7 @@ ui-native-player.log; screenshots are in the chat computer-use record.
   separate shutdown resource warning is listed above. No Windows, physical-controller,
   human-played full-match or standalone ball-feel acceptance is claimed.
 - ISSUE_PRIORITIES.md ranks all ten open issues and identifies immediate follow-up
-  areas. #12 is next; #14 scrum feel, #17 hazard colliders, #11 grip/handoffs and #13
+  areas. #12 is next; #14 scrum feel, #11 grip/handoffs and #13
   platform acceptance must account for the ball change. No other issue is completed.
 - App, complete-source packet and copied evidence: ignored Builds/BallFlight in
   the original checkout. Detailed scenarios/results/limits: TESTING.md T-112–T-115.
