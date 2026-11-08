@@ -19,9 +19,15 @@ MonoBehaviour:
   semiBold: {fileID: 11400000, guid: abcba217e93ef4a029d3450276a4056c, type: 2}
   extraBold: {fileID: 11400000, guid: 604f652b1543b4aafb546888fe899c66, type: 2}
   boldItalic: {fileID: 11400000, guid: e801a45870b4c457caf61f50e15afd3d, type: 2}
-  asphaltGrain: {fileID: 0}
-  dryBrush: {fileID: 0}
-  sprayScatter: {fileID: 0}
+  panelSurface: {fileID: 21300000, guid: 89a214322358c4510b7b4136c5c92755, type: 3}
+  chalkFrame: {fileID: 21300000, guid: 8c8943e4a3fa24030b121b06b2b53c4b, type: 3}
+  brushPlate: {fileID: 21300000, guid: 64f881f12b518476ca2a255758a6abdf, type: 3}
+  crown: {fileID: 21300000, guid: 61061615b3e954fe0a11a8609d72d5c0, type: 3}
+  wordmark: {fileID: 21300000, guid: c7d78d84562a64338a684ab0d2b3cdd1, type: 3}
+  inkScrim: {fileID: 21300000, guid: b1661c1f0a52145e0b0c67f56bbf9567, type: 3}
+  asphaltGrain: {fileID: 21300000, guid: 4527e403d9aa9491d911c9eeb89c33c7, type: 3}
+  dryBrush: {fileID: 21300000, guid: 8e500972f3b2747138765bb5cfd19eb4, type: 3}
+  sprayScatter: {fileID: 21300000, guid: 43199b4579cb34a8aa983559e9183b38, type: 3}
   edgeWear: {fileID: 0}
   diagramOffense: {fileID: 11400000, guid: 59fd00977477b498fbc262dadeae11cd, type: 2}
   diagramDefense: {fileID: 11400000, guid: e18cb3b13471343dda697de3d4565545, type: 2}

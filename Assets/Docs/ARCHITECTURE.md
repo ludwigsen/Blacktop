@@ -384,17 +384,20 @@ MenuSound owns a local generated click and the persisted SFX preference (Blackto
 ## Shared UI theme system (2026-11-04)
 
 `BlacktopTheme` ScriptableObjects and `UIThemeLibrary` centralize semantic colors,
-actual Barlow weights, wordmark, optional masks and schematic fallback formations.
+Barlow weights, the scorebug team-name font, the shared street sprite kit and
+schematic fallback formations.
 The library is one Resources asset, reachable from MainMenu or direct SampleScene.
 `UITheme` owns presentation preference only (`Blacktop.UITheme` PlayerPrefs) and
 publishes changes; it owns no gameplay actors or input. `ThemeableUI`, `ThemeButton`
 and `AttributeSegments` bind explicit graphics and unsubscribe on disable.
 Team identity colors and fixed attribute tiers are outside the theme palette.
 
-`FrontEndUI` remains the common runtime uGUI factory. `AngularPanel` draws scalable
-clipped corners without panel textures. MainMenu retains all eleven supplied field
-images/crossfades/blur. Shared submenu chrome reserves a tunable 54-pixel top margin
-for the wordmark. MatchSettingsView uses three large Field/Modifier/Difficulty
+`FrontEndUI` remains the common runtime uGUI factory. `StreetArt` applies the
+library's sliced panel, chalk and brush sprites and adds non-interactive decorative
+layers. `AngularPanel` is the clipped-corner fallback. MainMenu retains all eleven
+field images/crossfades/blur behind the fixed wordmark artwork. Shared submenu chrome
+reserves a tunable 54-pixel top margin for the wordmark. MatchSettingsView uses three
+large Field/Modifier/Difficulty
 cards with the existing MatchOptions, independent condition, review and bootstrap.
 SetupProgress follows screen/focus without changing navigation or gameplay data.
 PlayerLab summary/ratings remain fixed; customization and developer PlayerEditor
@@ -403,11 +406,12 @@ use vertical accordions with the preview and save/cancel controls outside the sc
 `PlayDiagram` is a read-only MaskableGraphic with an explicit CanvasRenderer dependency;
 it reads authored formation slots, routes and defensive jobs. PlayCallSelector keeps
 its existing category/play/confirmation input and adds mouse selection. GameHUD and
-TeamScorePanel use clean angular scorebug surfaces, native Barlow typography and
-preserved team-colored crests/rules/meters. A possession marker reads the existing
-possession event. GameAnnouncement observes post-play/team-meter events and animates
-only its overlay; PlayState still owns all resolution, delay and player presentation.
+TeamScorePanel use sliced scorebug surfaces, independent team-colored plates,
+Blacktop Pro Duo names and Barlow for the rest of the scorebug. A possession marker
+reads the existing possession event. GameAnnouncement observes post-play/team-meter
+events and animates a Barlow Condensed overlay on a canvas above field prompts and
+below game over. PlayState owns resolution, delay and player presentation.
 
 No new assembly/package, gameplay state manager, input mapping or roster format.
 `UIThemeSetup` wires/rebuilds presentation assets only. Full inventory, palette table,
-font metadata, missing art and repair/build commands: UI_OVERHAUL.md / UI_FONT_INVENTORY.json.
+font metadata, sprite source and repair/build commands are in UI_OVERHAUL.md and UI_FONT_INVENTORY.json.

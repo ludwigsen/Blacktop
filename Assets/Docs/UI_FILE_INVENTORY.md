@@ -82,3 +82,40 @@ Base: a996585 (`codex/blacktop-menu-prototype`). This feature also inherits that
 | Assets/_Project/Scripts/UI/UITheme.cs.meta | NEW |
 | Assets/_Project/Scripts/UI/UIThemeLibrary.cs | NEW |
 | Assets/_Project/Scripts/UI/UIThemeLibrary.cs.meta | NEW |
+
+## Street sprite pass (2026-11-07)
+
+| Repository path | Change |
+|---|---|
+| Assets/Docs/ARCHITECTURE.md | modified |
+| Assets/Docs/PROJECT_STATUS.md | modified |
+| Assets/Docs/TESTING.md | modified |
+| Assets/Docs/UI_FILE_INVENTORY.md | modified |
+| Assets/Docs/UI_OVERHAUL.md | modified |
+| Assets/Tests/PlayMode/UIThemeTests.cs | modified |
+| Assets/_Project/Art/UI.meta | new |
+| Assets/_Project/Art/UI/StreetKit.meta | new |
+| Assets/_Project/Art/UI/StreetKit/AsphaltGrain.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/AsphaltPanel.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/BlacktopWordmark.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/BrushPlate.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/ChalkFrame.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/DryBrush.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/InkScrim.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/PaintCrown.png and .meta | new |
+| Assets/_Project/Art/UI/StreetKit/SprayScatter.png and .meta | new |
+| Assets/_Project/Resources/BlacktopUI/ThemeLibrary.asset | modified |
+| Assets/_Project/Scripts/Editor/UIThemeSetup.cs | modified |
+| Assets/_Project/Scripts/FrontEnd/FrontEndController.cs | modified |
+| Assets/_Project/Scripts/FrontEnd/FrontEndUI.cs | modified |
+| Assets/_Project/Scripts/FrontEnd/MainMenuView.cs | modified |
+| Assets/_Project/Scripts/UI/BlacktopTheme.cs | modified |
+| Assets/_Project/Scripts/UI/GameAnnouncement.cs | modified |
+| Assets/_Project/Scripts/UI/GameHUD.cs | modified |
+| Assets/_Project/Scripts/UI/PlayCallSelectorUI.cs | modified |
+| Assets/_Project/Scripts/UI/PlayDiagram.cs | modified |
+| Assets/_Project/Scripts/UI/StreetArt.cs and .meta | new |
+| Assets/_Project/Scripts/UI/TeamScorePanel.cs | modified |
+| Assets/_Project/Scripts/UI/ThemeButton.cs | modified |
+| Assets/_Project/Scripts/UI/UIThemeLibrary.cs | modified |
+| SourceAssets/UI/build_street_kit.py | new |

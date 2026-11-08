@@ -7,14 +7,14 @@ This change extends the menu prototype without merging it or modifying either so
 
 | Area | Existing owner / reusable behavior | Presentation work |
 |---|---|---|
-| Main/navigation | FrontEndController / MainMenuView, runtime uGUI, InputSystemUIInputModule | Shared theme states, angular panels, preserved four actions |
+| Main/navigation | FrontEndController / MainMenuView, runtime uGUI, InputSystemUIInputModule | Fixed wordmark, ink scrim, painted focus, preserved four actions |
 | Settings | MainMenuView.Preferences, MenuSound PlayerPrefs | Theme preference and live preview |
 | Setup | QuickPlayView / MatchSettingsView / PickupDraftView | Preserve modes, independent conditions, Random, review and MatchBootstrap; shared step indicator |
 | Rosters/editor | RosterBrowserView / PlayerEditorView / PlayerLabView / PlayerEditorSession | Vertical accordions, fixed 20-step tier bars, preserve GUID transactions |
 | Preview | RuntimePlayerPreview, camera orbit/zoom, owned render texture | Preserve resources and working preview; spacious left pane |
 | Play calling | PlayCallSelector, authored offense/defense playbooks | Theme categories/cards, actual authored schematic diagrams |
-| Scorebug | GameHUD / TeamScorePanel / HUDTheme, live score/down/clock/meter events | Clean angular geometry; team accents remain independent |
-| Announcements | GameHUD, existing post-play start/completion events | Semantic event treatments and short unscaled animation; timing unchanged |
+| Scorebug | GameHUD / TeamScorePanel / HUDTheme, live score/down/clock/meter events | Sliced chassis and team-colored paint, Blacktop Pro Duo team names |
+| Announcements | GameHUD, existing post-play start/completion events | Painted plates, live Barlow Condensed labels and short unscaled animation |
 | Post-play | PlayState, PlayerAnimationPresenter | Preserve existing delay, AI presentation and event resolution |
 
 Both scenes already use uGUI/TMP, not UI Toolkit. The menu reference canvas is
@@ -27,13 +27,12 @@ for glyph ascenders and a television-safe top inset.
 Existing art: eleven owner-supplied native 4K field images, continuous crossfade,
 standalone-safe blur shaders, team crests, legacy distressed scorebug sprites.
 Retain field image bytes/order and crest assignments. Legacy scorebug art remains
-in the project for compatibility; production scorebug construction uses geometry.
-AsphaltGrain, DryBrush, SprayScatter and EdgeWear are missing optional masks;
-theme-library sprite slots accept future grayscale art. No composite concept image
-is used as a UI sprite. Missing character art remains labelled by existing views.
+in the project for compatibility. Runtime scorebug construction uses the shared
+street sprites.
 
 Font metadata inventory is in UI_FONT_INVENTORY.json. Keep the already imported
-BlacktopProDuo.ttf (family Blacktop, style Regular) for the wordmark, natural spacing.
+BlacktopProDuo.ttf (family Blacktop, style Regular) for live team names and the source
+of the fixed wordmark image.
 Available local alternatives include COLR/CPAL white/black fill variants and
 monochrome Fill/Paint variants. TMP SDF does not reproduce COLR paint layers, so
 the existing monochrome outline source is the consistent runtime choice.
@@ -46,8 +45,8 @@ Do not synthesize extra bold/italic on these faces.
 
 `BlacktopTheme` stores the palette as a ScriptableObject. `UIThemeLibrary` is the
 single explicit `Resources/BlacktopUI/ThemeLibrary` entry, with both theme assets,
-all five typography references, schematic fallback formations and four optional
-mask slots. `UITheme` is a data-only preference service using the existing
+all five typography references, schematic fallback formations and the street
+sprite references. `UITheme` is a data-only preference service using the existing
 PlayerPrefs approach (`Blacktop.UITheme`, 0=Street Classic, 1=After Dark).
 `ThemeableUI` binds a specific Graphic to a semantic role and optional type role;
 `ThemeButton` keeps native uGUI input while owning contrast, focus/hover, pressed,
@@ -75,12 +74,13 @@ unsubscribe on disable. Themes never search or recolor gameplay objects globally
 
 Navigation uses native Barlow Condensed SemiBold; body/secondary text uses Regular;
 headings, scores and attribute numerals use ExtraBold; announcements use BoldItalic.
-Blacktop Pro Duo is exclusive to the wordmark, with zero added letter spacing.
-The themes also differ in field shade, optional mask strength and the number of
-main-menu decorative slashes. Masks are optional geometry/art extension points,
-not presented as finished asphalt/paint textures.
+Blacktop Pro Duo is the live font for team names on the scorebug. The Blacktop logo
+uses a fixed sprite based on the existing wordmark geometry. The themes tint the
+shared sprites and use different field shading and accent strengths.
 
-`AngularPanel` supplies scalable clipped corners; `AttributeSegments` paints exactly
+`StreetArt` applies sliced sprite borders and mounts decorative layers that pass
+pointer input through. `AngularPanel` supplies a clipped-corner fallback.
+`AttributeSegments` paints exactly
 20 cells using the fixed five-tier rating colors. The summary/attributes panes
 remain fixed; customization and developer create/edit use vertical accordions
 with a native ScrollRect. `FrontEndFocus` reveals controller-focused content.
@@ -89,7 +89,7 @@ Save/cancel/roster cards and the preview stay outside the scrolling form.
 The shared secondary-page logo reserves **54 reference pixels** above an 80-pixel
 wordmark slot; `FrontEndSettings.submenuLogoTopPadding` exposes the margin.
 Page content starts below the reserved header. Canvas scaling preserves this gap
-at 720p, 1080p, 1440p and 4K. Glyph bounds, not only transform bounds, are checked.
+at 720p, 1080p, 1440p and 4K. Tests check the bounds of the fixed artwork.
 
 `PlayDiagram` renders formation slots, receiver route types, handoff destination
 and defensive assignments as clean schematics. They are not exact motion forecasts.
@@ -98,35 +98,54 @@ The existing authored offensive/defensive categories and input actions remain.
 Mouse clicks also select category/card; clicking the selected card confirms it.
 
 The scorebug retains left/center/right anchors, crest mirroring, scores, play clock,
-downs, field position and segmented Gamebreaker meters. Team surfaces use clean
-geometry; serialized raster-sprite fields remain compatible but are unused by the
-active scorebug. Team colors still own crests, accent rules, frame and meter fill.
+downs, field position and segmented Gamebreaker meters. Its neutral chalk frame
+surrounds independent brush plates tinted from each team's primary color. The right
+plate mirrors independently of its logo and text. Team colors still own accent
+rules, frame and meter fill.
 The new `> BALL` marker reflects the existing drive-possession event. No match
 clock exists in the game; the existing play clock remains the displayed timing.
 
 `GameAnnouncement` observes the existing post-play lifecycle. Touchdown, turnover,
-first-down and Gamebreaker treatments use semantic palette roles and a 220ms slide.
+first-down and Gamebreaker treatments use sliced paint, semantic palette roles and a
+220ms slide. The announcement sorts above field prompts and below game over.
 Ordinary post-play duration and animation ownership stay with PlayState. Gamebreaker
 activation uses the existing team-meter event and self-hides after a short overlay.
 No gameplay state, attributes, ratings, GUIDs, save format or input mapping changes.
+
+## Street sprite source (2026-11-07)
+
+The two styleboards inform the chalk edges, paint layers and layout. The project
+ships nine separate transparent grayscale sprites in
+`Assets/_Project/Art/UI/StreetKit/`. Panels and cards share `AsphaltPanel` and
+`ChalkFrame`. Buttons, team plates and event banners reuse `BrushPlate`.
+`DryBrush`, `PaintCrown`, `SprayScatter`, `AsphaltGrain`, `InkScrim` and
+`BlacktopWordmark` are separate decorative layers, so each can be placed and tinted
+without baking in a screen, team or event label.
+
+`SourceAssets/UI/build_street_kit.py` is the editable source. Run it with Python
+and Pillow to regenerate the same pixels, then run **Blacktop > UI > Wire Theme
+Assets** to repair import settings or references. The three resizable sprites use
+full-rect 9-slicing at 200 pixels per unit. Their border widths preserve the
+corners and the paint ends as their centers stretch. Use the individual PNGs and
+their Unity import settings when composing new screens.
 
 ## Editor setup and delivery
 
 The generated theme definitions/font atlases/library are committed, so opening
 MainMenu normally requires no setup. **Blacktop > UI > Wire Theme Assets** is the
-idempotent repair/setup command. It wires fonts/themes without regenerating scenes,
+idempotent repair/setup command. It wires fonts, themes and sprites without regenerating scenes,
 rosters, character art or venue prefabs. **Blacktop > UI > Build Themed UI (macOS)**
 creates the development app under ignored Builds/UIOverhaul. All runtime components
 stay inside the existing Blacktop assembly; no new packages or cross-assembly
 references were added.
 
-Physical-controller feel, Windows behavior, human-played matches and final texture
-art require owner acceptance. Existing 720p in-world nameplate/prompt overlap is
+Physical-controller feel, Windows behavior and human-played matches require owner
+acceptance. Historical 720p in-world nameplate/prompt overlap is
 recorded in PROJECT_STATUS; this overhaul changes their typography and surface
 roles but does not rewrite their world-space positioning.
 
 
-Final macOS development build: **0 errors / 408 reported warnings**, 435,525,615
+Original theme rollout macOS development build: **0 errors / 408 reported warnings**, 435,525,615
 bytes reported (the earlier build reported 438 warnings). Actual standalone native
 checks exercised keyboard and mouse navigation, immediate Street Classic/After Dark
 switching, background cycling/blur, secondary-logo clearance, and After Dark retained

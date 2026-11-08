@@ -57,7 +57,7 @@ public class UIThemeTests
         Assert.That(UITheme.Current.id,Is.EqualTo(UIThemeId.AfterDark));
         Assert.That(JsonUtility.ToJson(menu.Service.Snapshot),Is.EqualTo(before));
         Assert.That(settings.teams[0].identity.accentColor,Is.EqualTo(team));
-        Assert.That(Object.FindObjectsByType<TMP_Text>().Where(t=>t.name!="Secondary Blacktop wordmark").All(t=>t.font.name.Contains("Barlow")),Is.True);
+        Assert.That(Object.FindObjectsByType<TMP_Text>().All(t=>t.font.name.Contains("Barlow")),Is.True);
     }
 
     [TestCase(0)] [TestCase(4)] [TestCase(5)] [TestCase(8)] [TestCase(9)] [TestCase(12)]
@@ -132,26 +132,46 @@ public class UIThemeTests
             for(int i=0;i<2;i++)
             {
                 Assert.That(panels[i].transform.Find("AccentRule").GetComponent<Image>().color,Is.EqualTo(ps.IdentityFor(i).secondaryAccentColor));
-                Assert.That(panels[i].transform.Find("Clean team surface").GetComponent<Image>().sprite,Is.Null);
+                var plate = panels[i].transform.Find("Team paint plate").GetComponent<Image>();
+                Assert.That(plate.sprite, Is.SameAs(UITheme.Library.brushPlate));
+                Assert.That(plate.type, Is.EqualTo(Image.Type.Sliced));
+                Assert.That(plate.color, Is.EqualTo(Color.Lerp(Color.black, ps.IdentityFor(i).accentColor, .53f)));
+                Assert.That(plate.rectTransform.localScale.x, Is.EqualTo(i == 0 ? 1 : -1));
             }
             Assert.That(Object.FindObjectsByType<PlayDiagram>().Any(d=>d.enabled),Is.True);
-            foreach(var text in hud.GetComponentsInChildren<TMP_Text>())Assert.That(text.font.name,Does.Contain("Barlow"));
+            // Team names and Barlow numerals must bind separate atlas materials after a theme switch.
+            foreach (var text in hud.GetComponentsInChildren<TMP_Text>())
+            {
+                Assert.That(text.font.name, Does.Contain(text.name == "TeamName" ? "BlacktopProDuo" : "Barlow"));
+                if (text.name != "TeamName") continue;
+
+                text.ForceMeshUpdate();
+                Assert.That(text.isTextTruncated, Is.False);
+                for (int j = 0; j < text.textInfo.characterCount; j++)
+                {
+                    var glyph = text.textInfo.characterInfo[j];
+                    if (!char.IsWhiteSpace(glyph.character))
+                        Assert.That(glyph.fontAsset, Is.SameAs(text.font));
+                }
+            }
             foreach(var size in new[]{new Vector2Int(1280,720),new Vector2Int(1920,1080),new Vector2Int(2560,1440),new Vector2Int(3840,2160)})
             {
                 Screen.SetResolution(size.x,size.y,false);yield return null;yield return null;
                 typeof(PlayState).GetField("playClockTimer",Private).SetValue(ps,40f);
                 ps.TrySetPossession(ps.UserTeamId);yield return null;
-                MenuPrototypeTests.Capture($"UI-{id}-{size.y}-Offense",size.x,size.y);
+                MenuPrototypeTests.Capture($"StreetKit-{id}-{size.y}-Offense",size.x,size.y);
                 ps.TrySetPossession(PlayState.OpponentOf(ps.UserTeamId));yield return null;
-                MenuPrototypeTests.Capture($"UI-{id}-{size.y}-Defense",size.x,size.y);
+                MenuPrototypeTests.Capture($"StreetKit-{id}-{size.y}-Defense",size.x,size.y);
                 var playCanvas=Object.FindAnyObjectByType<PlayCallSelector>().GetComponentInChildren<CanvasGroup>();
                 float previousAlpha=playCanvas.alpha;playCanvas.alpha=0; // Visual fixture matches the normal post-play overlay state.
                 foreach(AnnouncementKind kind in Enum.GetValues(typeof(AnnouncementKind)))
                 {
                     var root=(GameObject)typeof(GameHUD).GetField("postPlayRoot",Private).GetValue(hud);
                     root.GetComponent<GameAnnouncement>().Show(kind,kind.ToString().ToUpperInvariant());
+                    Assert.That(root.GetComponentInChildren<TMP_Text>().font, Is.SameAs(UITheme.Library.boldItalic));
+                    Assert.That(root.transform.Find("Announcement paint").GetComponent<Image>().type, Is.EqualTo(Image.Type.Sliced));
                     yield return new WaitForSecondsRealtime(.25f);
-                    MenuPrototypeTests.Capture($"UI-{id}-{size.y}-{kind}",size.x,size.y);root.SetActive(false);
+                    MenuPrototypeTests.Capture($"StreetKit-{id}-{size.y}-{kind}",size.x,size.y);root.SetActive(false);
                 }
                 playCanvas.alpha=previousAlpha;
                 typeof(GameHUD).GetMethod("ShowPostPlayResult",Private).Invoke(hud,new object[]{PlayState.PlayEndReason.Touchdown});
@@ -183,7 +203,7 @@ public class UIThemeTests
             Assert.That(scroll.viewport.rect.Contains(scroll.viewport.InverseTransformPoint(last.transform.position)),Is.True,"Controller focus must reveal accordion headers");
             void Capture(string screen)
             {
-                MenuPrototypeTests.Capture($"UI-{id}-{size.y}-{screen}",size.x,size.y);
+                MenuPrototypeTests.Capture($"StreetKit-{id}-{size.y}-{screen}",size.x,size.y);
                 var controls=menu.GetComponentsInChildren<Selectable>().Where(c=>c.IsActive()&&c.GetComponentInParent<ScrollRect>()==null);
                 foreach(var control in controls)
                 {
@@ -193,10 +213,13 @@ public class UIThemeTests
             }
             void CheckWordmark()
             {
-                var wordmark=menu.GetComponentsInChildren<TMP_Text>().Single(t=>t.name=="Secondary Blacktop wordmark");wordmark.ForceMeshUpdate();
-                var canvas=wordmark.canvas;var bounds=wordmark.textBounds;
-                float top=wordmark.transform.TransformPoint(new Vector3(bounds.center.x,bounds.max.y)).y;
-                Assert.That(Screen.height-top,Is.GreaterThanOrEqualTo(20*canvas.scaleFactor),"Visible glyphs need top clearance, not only the RectTransform");
+                var wordmark = menu.GetComponentsInChildren<Image>().Single(t => t.name == "Secondary Blacktop wordmark");
+                Assert.That(wordmark.sprite, Is.SameAs(UITheme.Library.wordmark));
+                Assert.That(wordmark.enabled, Is.True);
+                var corners = new Vector3[4];
+                wordmark.rectTransform.GetWorldCorners(corners);
+                Assert.That(Screen.height - corners.Max(c => c.y),
+                    Is.GreaterThanOrEqualTo(20 * wordmark.canvas.scaleFactor), "The logo artwork must keep its top clearance");
             }
         }
     }

@@ -16,7 +16,12 @@ public static class FrontEndUI
     {
         var go=new GameObject(name,typeof(RectTransform),typeof(AngularPanel));go.transform.SetParent(parent,false);
         var rect=go.GetComponent<RectTransform>();Anchor(rect,min,max);
-        ThemeableUI.Bind(go.GetComponent<Image>(),role,null,opacity);return rect;
+        var image = go.GetComponent<Image>();
+        // Keep small swatches, sliders and other color chips on their existing geometry.
+        if (role is UIColorRole.BackgroundPrimary or UIColorRole.BackgroundSecondary or UIColorRole.SurfaceRaised)
+            StreetArt.Apply(image, UITheme.Library?.panelSurface);
+        ThemeableUI.Bind(image, role, opacity: opacity);
+        return rect;
     }
     public static void Mask(Transform parent,Sprite sprite)
     {
@@ -81,18 +86,20 @@ public static class FrontEndUI
         if(display){var shadow=go.AddComponent<Shadow>();shadow.effectColor=UITheme.Color(UIColorRole.ShadowPrimary);shadow.effectDistance=new Vector2(2,-2);}
         return text;
     }
-    public static Button Button(Transform parent,string label,Action click,FrontEndSettings settings,float height=64)
+    public static Button Button(Transform parent,string label,Action click,FrontEndSettings settings,float height=64,bool paintedSelection=false)
     {
         var go=new GameObject(label,typeof(RectTransform),typeof(AngularPanel),typeof(Button),typeof(LayoutElement));go.transform.SetParent(parent,false);
         go.GetComponent<Image>().color=UITheme.Color(UIColorRole.SurfacePrimary);
         var button=go.GetComponent<Button>();button.targetGraphic=go.GetComponent<Image>();
         button.onClick.AddListener(()=>click());go.AddComponent<MenuSoundCue>();
         go.GetComponent<LayoutElement>().preferredHeight=height;
-        var outline=go.AddComponent<Outline>();outline.effectColor=UITheme.Color(UIColorRole.BorderSubtle);outline.effectDistance=new Vector2(2,2);
+        var frame = StreetArt.Layer(go.transform, "Button chalk frame", UITheme.Library?.chalkFrame,
+            Vector2.zero, Vector2.one, UIColorRole.BorderSubtle);
         var text=Text(go.transform,label,settings,26,false,height);Anchor(text.rectTransform,new Vector2(.06f,.03f),new Vector2(.94f,.97f));
         text.alignment=TextAlignmentOptions.MidlineLeft;
         var typography=text.GetComponent<ThemeableUI>();typography.tint=false;typography.typography=UITypeRole.Navigation;typography.Apply();
-        go.AddComponent<ThemeButton>().Apply();
+        var style = go.AddComponent<ThemeButton>();
+        style.Initialize(frame, paintedSelection);
         var cue=Panel(go.transform,"Focus marker",new Vector2(0,0),new Vector2(.018f,1),UIColorRole.TextOnBright);
         cue.gameObject.SetActive(false);go.AddComponent<FrontEndFocus>().marker=cue.gameObject;
         return button;

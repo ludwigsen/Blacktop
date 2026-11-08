@@ -72,7 +72,7 @@ public class PlayCallSelector : MonoBehaviour
     readonly List<Image> categoryBackgrounds = new();
     readonly List<Image> cardBackgrounds = new();
     readonly List<PlayDiagram> diagrams=new();
-    readonly List<Outline> cardBorders=new();
+    readonly List<Image> cardBorders = new();
 
     SelectionMode selectionMode = SelectionMode.Categories;
     int categoryIndex;
@@ -388,7 +388,11 @@ public class PlayCallSelector : MonoBehaviour
         panel.pivot = new Vector2(0.5f, 0f);
         panel.offsetMin = panelMargin;
         panel.offsetMax = new Vector2(-panelMargin.x, panelMargin.y + panelHeight);
-        panelGO.GetComponent<Image>().color = panelColor;
+        var panelImage = panelGO.GetComponent<Image>();
+        panelImage.color = panelColor;
+        StreetArt.Apply(panelImage, UITheme.Library?.panelSurface);
+        StreetArt.Layer(panelGO.transform, "Playbook chalk frame", UITheme.Library?.chalkFrame,
+            Vector2.zero, Vector2.one, UIColorRole.BorderSubtle);
 
         BuildHeader(panelGO.transform);
         BuildCategories(panelGO.transform);
@@ -469,7 +473,12 @@ public class PlayCallSelector : MonoBehaviour
             card.transform.SetParent(row.transform, false);
             var image = card.GetComponent<Image>();
             cardBackgrounds.Add(image);
-            var border=card.AddComponent<Outline>();border.effectDistance=new Vector2(2,-2);cardBorders.Add(border);
+            StreetArt.Apply(image, UITheme.Library?.panelSurface);
+            var frame = StreetArt.Layer(card.transform, "Play card chalk frame", UITheme.Library?.chalkFrame,
+                Vector2.zero, Vector2.one, UIColorRole.BorderSubtle);
+            // Card focus controls the frame color independently of the normal theme binding.
+            frame.GetComponent<ThemeableUI>().tint = false;
+            cardBorders.Add(frame);
             int slot=i;
             var click=card.AddComponent<Button>();click.transition=Selectable.Transition.None;click.navigation=new Navigation{mode=Navigation.Mode.None};
             click.onClick.AddListener(()=>{
@@ -517,9 +526,9 @@ public class PlayCallSelector : MonoBehaviour
             bool active = i == categoryIndex;
             categoryTexts[i].text = labels[i];
             categoryTexts[i].color = active ? UITheme.Color(UIColorRole.TextOnBright) : textColor;
-            categoryBackgrounds[i].color = active
-                ? activeColor
-                : cardColor;
+            categoryBackgrounds[i].color = active ? activeColor : cardColor;
+            var art = UITheme.Library;
+            StreetArt.Apply(categoryBackgrounds[i], active ? art?.brushPlate ?? art?.panelSurface : art?.panelSurface);
         }
 
         var plays = ShowingDefense
@@ -591,7 +600,7 @@ public class PlayCallSelector : MonoBehaviour
     {
         cardTitleTexts[slot].text = (selected?"> ":"")+title;
         diagrams[slot].gameObject.SetActive(!string.IsNullOrEmpty(title));
-        cardBorders[slot].effectColor=selected?activeColor:UITheme.Color(UIColorRole.BorderSubtle);
+        cardBorders[slot].color = UITheme.Color(selected ? UIColorRole.AccentSpecial : UIColorRole.BorderSubtle);
         cardDetailTexts[slot].text = detail;
         cardTitleTexts[slot].color = selected ? activeColor : textColor;
         cardDetailTexts[slot].color = selected ? activeColor : mutedColor;
