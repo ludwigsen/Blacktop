@@ -57,16 +57,14 @@ public class FrontEndController : MonoBehaviour
         Backdrop=background.gameObject.AddComponent<FrontEndBackdrop>();Backdrop.Initialize(settings);
         chrome=FrontEndUI.Panel(canvas.transform,"Submenu chrome",Vector2.zero,Vector2.one,Color.clear);
         chrome.GetComponent<Image>().raycastTarget=false;
-        var brand=FrontEndUI.Text(chrome,"Blacktop",settings,54);
-        brand.name="Secondary Blacktop wordmark";
-        ThemeableUI.Bind(brand,UIColorRole.TextPrimary,UITypeRole.Brand);
-        if(settings.menuTitleFont!=null)brand.font=settings.menuTitleFont;
-        FrontEndUI.Anchor(brand.rectTransform,new Vector2(.04f,1),new Vector2(.30f,1));
-        // Fixed reference-pixel padding scales with the canvas; glyphs stay below the safe top edge.
-        brand.rectTransform.offsetMin=new Vector2(0,-settings.submenuLogoTopPadding-80);
-        brand.rectTransform.offsetMax=new Vector2(0,-settings.submenuLogoTopPadding);
-        brand.alignment=TMPro.TextAlignmentOptions.MidlineLeft;
-        brand.characterSpacing=0;brand.textWrappingMode=TMPro.TextWrappingModes.NoWrap;
+        var wordmark = UITheme.Library?.wordmark;
+        var brand = StreetArt.Layer(chrome, "Secondary Blacktop wordmark", wordmark,
+            new Vector2(.04f, 1), new Vector2(.04f, 1), UIColorRole.TextPrimary);
+        // Keep the established reference-pixel top inset and the sprite's native proportions.
+        const float brandHeight = 80f;
+        float width = wordmark == null ? 0 : brandHeight * wordmark.rect.width / wordmark.rect.height;
+        brand.rectTransform.offsetMin = new Vector2(0, -settings.submenuLogoTopPadding - brandHeight);
+        brand.rectTransform.offsetMax = new Vector2(width, -settings.submenuLogoTopPadding);
         var help=FrontEndUI.Text(chrome,"7 ON 7  /  OWN THE BLOCK     •     ESC / B: BACK",settings,22);
         FrontEndUI.Anchor(help.rectTransform,new Vector2(.46f,.885f),new Vector2(.96f,.94f));help.alignment=TMPro.TextAlignmentOptions.MidlineRight;
         content=FrontEndUI.Panel(canvas.transform,"Screen",new Vector2(.04f,.055f),new Vector2(.96f,.89f),Color.clear);
@@ -98,7 +96,9 @@ public class FrontEndController : MonoBehaviour
         {
             var surface=FrontEndUI.Panel(view,"Page surface",Vector2.zero,Vector2.one,UIColorRole.BackgroundPrimary,.87f);
             surface.GetComponent<Image>().raycastTarget=false;
-            FrontEndUI.Mask(surface,UITheme.Library?.asphaltGrain);
+            FrontEndUI.Mask(surface, UITheme.Library?.asphaltGrain);
+            StreetArt.Layer(view, "Page chalk frame", UITheme.Library?.chalkFrame,
+                Vector2.zero, Vector2.one, UIColorRole.BorderSubtle, .7f);
         }
         var progress=chrome.GetComponent<SetupProgress>()??chrome.gameObject.AddComponent<SetupProgress>();
         progress.Show(screen,settings);

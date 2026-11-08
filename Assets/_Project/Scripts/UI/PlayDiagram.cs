@@ -34,6 +34,9 @@ public class PlayDiagram : MaskableGraphic
                     continue;
                 }
                 var route=offense.GetRouteForReceiver(i);if(route==RoutePattern.None)continue;
+                // Alternate bright inks so intersecting routes remain easy to trace.
+                Color ink = UITheme.Color(i % 3 == 0 ? UIColorRole.AccentSpecial :
+                    i % 3 == 1 ? UIColorRole.SelectionHighlight : UIColorRole.ActionConfirm);
                 Vector2 end=start+new Vector2(0,r.height*.48f);
                 switch(route)
                 {
@@ -41,12 +44,12 @@ public class PlayDiagram : MaskableGraphic
                     case RoutePattern.Hitch:end=start+new Vector2(0,r.height*.25f);break;
                     case RoutePattern.Wheel:
                         var bend=start+new Vector2(r.width*.08f,r.height*.12f);
-                        Line(start,bend,routeColor,2);start=bend;end=bend+new Vector2(0,r.height*.35f);break;
+                        Line(start,bend,ink,2);start=bend;end=bend+new Vector2(0,r.height*.35f);break;
                     case RoutePattern.Comeback:
-                        var apex=start+new Vector2(0,r.height*.45f);Line(start,apex,routeColor,2);
+                        var apex=start+new Vector2(0,r.height*.45f);Line(start,apex,ink,2);
                         start=apex;end=apex+new Vector2(r.width*.05f,-r.height*.12f);break;
                 }
-                Arrow(start,end,routeColor);
+                Arrow(start,end,ink);
             }
         }
         else for(int i=0;i<formation.defenderSlots.Count;i++)

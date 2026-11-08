@@ -16,7 +16,7 @@ public class TeamScorePanel : MonoBehaviour
     TextMeshProUGUI gamebreakerLabel;
     TextMeshProUGUI possession;
     Image logoImage;
-    Image backgroundImage;
+    Image paintPlate;
     Image accentRule;
     Outline meterFrame;
     Image[] segments;
@@ -35,9 +35,15 @@ public class TeamScorePanel : MonoBehaviour
     {
         this.reverseFill = reverseFill;
 
-        // A neutral clean surface is themed; the thin identity rule and meter retain team colors.
-        backgroundImage=CreateImage("Clean team surface",transform,Vector2.zero,Vector2.one);
-        ThemeableUI.Bind(backgroundImage,UIColorRole.SurfacePrimary);
+        var surface = CreateImage("Team surface", transform, Vector2.zero, Vector2.one);
+        StreetArt.Apply(surface, UITheme.Library?.panelSurface);
+        ThemeableUI.Bind(surface, UIColorRole.SurfacePrimary);
+
+        // Team paint sits behind the name and score. Mirror only the decorative layer.
+        paintPlate = CreateImage("Team paint plate", transform, new Vector2(.012f, .055f), new Vector2(.605f, .96f));
+        StreetArt.Apply(paintPlate, UITheme.Library?.brushPlate);
+        paintPlate.enabled = paintPlate.sprite != null;
+        if (reverseFill) paintPlate.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
 
         accentRule = CreateImage("AccentRule", transform, new Vector2(0.08f, 0.01f), new Vector2(0.95f, 0.025f));
         logoImage = CreateImage("Logo", transform, new Vector2(0f, 0.12f), new Vector2(0.175f, 0.90f));
@@ -60,12 +66,8 @@ public class TeamScorePanel : MonoBehaviour
         teamNameText.fontSizeMax = nameFontSize;
         scoreText = CreateText("Score", displayFont, scoreFontSize,
             new Vector2(0.48f - scoreShift, 0.10f), new Vector2(0.635f - scoreShift, 0.94f));
-        // Native ExtraBold carries identity weight without synthetic bolding.
-        teamNameText.fontStyle = FontStyles.Normal;
-        scoreText.fontStyle = FontStyles.Normal;
-
-        // TMP's SDF outline stays crisp at different resolutions. Share one private
-        // material between these two labels and release it with the panel.
+        // The outlined team face has its own TMP atlas. The Barlow score keeps its material.
+        // Release the team-name material with the panel.
         displayFont=teamNameText.font;
         if (displayFont != null)
         {
@@ -73,12 +75,8 @@ public class TeamScorePanel : MonoBehaviour
             wordmarkMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
             wordmarkMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, outlineWidth);
             teamNameText.fontSharedMaterial = wordmarkMaterial;
-            scoreText.fontSharedMaterial = wordmarkMaterial;
             teamNameText.UpdateMeshPadding();
-            scoreText.UpdateMeshPadding();
         }
-        ThemeableUI.Bind(teamNameText,UIColorRole.TextPrimary,UITypeRole.Heading);
-        ThemeableUI.Bind(scoreText,UIColorRole.TextPrimary,UITypeRole.Numeral);
 
         gamebreakerLabel = CreateText("GamebreakerLabel", legibleFont, labelFontSize,
             new Vector2(0.65f, 0.57f), new Vector2(0.96f, 0.82f));
@@ -96,7 +94,8 @@ public class TeamScorePanel : MonoBehaviour
         Color secondary = identity != null ? identity.secondaryAccentColor : Color.white;
         readyColor = Color.Lerp(accent, Color.white, 0.6f);
         teamNameText.text = identity != null && !string.IsNullOrWhiteSpace(identity.teamName) ? identity.teamName : "Team";
-        // Background remains theme-owned; team identity is carried by crest, accent rule and meter.
+        // Dark paint retains team hue while keeping light text readable over bright identities.
+        paintPlate.color = Color.Lerp(Color.black, accent, .53f);
         accentRule.color = secondary;
         meterFrame.effectColor = secondary;
         logoImage.sprite = identity != null ? identity.logo : null;
@@ -164,7 +163,13 @@ public class TeamScorePanel : MonoBehaviour
         text.fontStyle = FontStyles.Normal; // Supporting labels use their native font weight.
         text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
-        ThemeableUI.Bind(text,UIColorRole.TextPrimary,objectName=="Score"?UITypeRole.Numeral:objectName=="TeamName"?UITypeRole.Heading:UITypeRole.Navigation);
+        var type = objectName switch
+        {
+            "TeamName" => UITypeRole.TeamName,
+            "Score" => UITypeRole.Numeral,
+            _ => UITypeRole.Navigation
+        };
+        ThemeableUI.Bind(text, UIColorRole.TextPrimary, type);
         text.enableWordWrapping = false;
         text.enableAutoSizing = true;
         text.fontSizeMin = fontSize * 0.55f;

@@ -610,17 +610,17 @@ Repeatedly enter/leave pages and switch themes; no stale listeners or missing fo
 
 UIThemeTests uses disposable roster saves and restores the original theme preference.
 It exercises the actual Settings picker, immediate color/contrast roles, preference
-reload, newly built screens and source/team/roster isolation. Native Barlow font
-assignments are checked. The four optional mask slots are intentionally unassigned.
+reload, newly built screens and source/team/roster isolation. Barlow assignments
+and the imported street-sprite borders are checked.
 
 ## T-110: Logo safe margin, editor accordions and rating tiers
 
 At 1280x720, 1920x1080, 2560x1440 and 3840x2160, open Settings, New Game, both team
 screens, Pickup, roster tools and each Player Lab page in both themes. Confirm the
-Blacktop glyphs have clear space above them, the header/content do not collide,
+Blacktop wordmark has clear space above it, the header/content do not collide,
 fixed controls are on screen, text stays legible and panel geometry stays crisp.
 The tunable submenuLogoTopPadding default is 54 reference pixels. Automated checks
-measure visible glyph bounds with at least 20 scaled pixels of top clearance.
+measure the artwork bounds with at least 20 scaled pixels of top clearance.
 
 Summary/Attributes remain fixed. Fit/Body and developer Create/Edit use a vertical
 accordion; scroll its form with the mouse and move controller focus to the last
@@ -633,9 +633,9 @@ and rating panes still do not scroll.
 All 12 attributes retain exact numbers and twenty discrete cells. At 0,4,5,8,9,12,
 13,16,17,20 check the precise filled count and constant tier color across both themes:
 red/orange/yellow/blue/light-blue. No green/purple/gradient. Appearance/ratings stay
-independent. Native captures and control/glyph bounds are checked at all four sizes.
+independent. Native captures and control/artwork bounds are checked at all four sizes.
 
-## T-111: Play selection, clean scorebug and announcement lifecycle
+## T-111: Play selection, scorebug and announcement lifecycle
 
 Use both human sides through Head 2 Head and Pickup. Verify ALL/PASS/RUN/TRICK and
 ALL/BLITZ/ZONE/MAN categories, category/play keyboard/controller navigation, mouse
@@ -646,13 +646,14 @@ initial blank schematic). Schematics illustrate authored routes/jobs, not exact
 execution trajectories or unavailable football animations.
 
 Check team crest orientation, original independent team accents/meters, names,
-scores, play clock, downs/distance/field spot and possession marker. No distressed
-scorebug sprite should cover important text. Trigger touchdown, first down, turnover,
+scores, play clock, downs/distance/field spot and possession marker. Check that
+the mirrored paint stays behind the text and that both crests remain upright.
+Trigger touchdown, first down, turnover,
 Gamebreaker and game over through normal gameplay. Existing post-play delay, AI
 reactions, input handoff, huddle, rematch and return-to-menu must remain unchanged.
 Both themes get the same compact geometry with palette-specific surfaces/accents.
 
-Actual final graphics-enabled Unity 6000.5.6f1 full Play Mode run: **117 passed,
+Original graphics-enabled Unity 6000.5.6f1 full Play Mode run: **117 passed,
 0 failed, 0 skipped**, **140.779226 seconds**. This includes a resolved-play test that
 scores a real held-ball touchdown and earns a real first down in both themes,
 ensuring the receiving-drive reset cannot relabel a touchdown. Earlier focused
@@ -667,7 +668,7 @@ human-played/controller match remain unperformed. Legacy gameplay nameplate over
 and provisional character/play/venue art remain recorded limitations.
 
 
-Final macOS development build: **0 errors / 408 reported warnings**, 435,525,615
+Original theme rollout macOS development build: **0 errors / 408 reported warnings**, 435,525,615
 bytes reported (the earlier build reported 438 warnings). Actual standalone native
 checks exercised keyboard and mouse navigation, immediate Street Classic/After Dark
 switching, background cycling/blur, secondary-logo clearance, and After Dark retained
@@ -676,3 +677,25 @@ No runtime exception was found in the captured startup/settings Player log. No r
 edits were saved. This does not claim a physical-controller or human-played full match.
 Build and native evidence: ignored Builds/Validation/ui-release-build.log and
 ui-native-player.log; screenshots are in the chat computer-use record.
+
+## T-121: Street sprite kit and live typography (2026-11-07)
+
+In both themes at 720p, 1080p, 1440p and 4K, compare the main menu, player
+attributes, setup, play cards, and the scorebug during a post-play announcement.
+Verify the panel and brush edges stay intact as their centers stretch. Move
+focus and click through a painted button and framed card. The selected state
+should stay clear and decoration should pass input through.
+
+UIThemeTests checks the imported slice borders, team tint and right-plate
+mirroring, and the font for each rendered team-name glyph. Other scorebug
+labels and numerals use Barlow. Event text uses Barlow Condensed Bold Italic and
+keeps its existing lifecycle. During a live Gamebreaker activation with
+eligible receiver targets, verify the banner is drawn over field prompts.
+
+Graphics-enabled Unity 6000.5.6f1 Play Mode completed **156 passed, 0 failed,
+0 skipped** in **165.70 seconds**. Both themes rendered at all four sizes.
+Representative menus, play cards, attributes and announcement fixtures were
+inspected. All nine sprites regenerated pixel-for-pixel with Pillow.
+Evidence is in ignored `Builds/Validation/street-kit-final.xml` and
+`Builds/Validation/StreetKit-Overview.png`. Windows, a physical controller
+and a human-played standalone match remain manual checks.

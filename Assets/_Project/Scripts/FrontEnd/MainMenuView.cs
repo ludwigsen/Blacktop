@@ -2,45 +2,45 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The open field is the main menu's breathing room; the brand stays centered across aspect ratios.
+// The brand and menu form one left-hand stack so the field remains the hero on the right.
 public static class MainMenuView
 {
     public static void Build(FrontEndController menu, RectTransform root)
     {
-        var edition=FrontEndUI.Text(root,"7 ON 7  /  STREET FOOTBALL",menu.settings,24);
-        FrontEndUI.Anchor(edition.rectTransform,new Vector2(.02f,.91f),new Vector2(.5f,.97f));
-        var label=FrontEndUI.Text(root,"THE BLOCK IS YOURS.",menu.settings,23);
-        FrontEndUI.Anchor(label.rectTransform,new Vector2(.5f,.91f),new Vector2(.98f,.97f));
-        label.alignment=TextAlignmentOptions.MidlineRight;
-        var title=FrontEndUI.Text(root,"Blacktop",menu.settings,210);
-        ThemeableUI.Bind(title,UIColorRole.TextPrimary,UITypeRole.Brand);
-        title.characterSpacing=0;
-        title.alignment=TextAlignmentOptions.Center;
-        title.enableAutoSizing=true;title.fontSizeMin=80;title.fontSizeMax=210;
-        title.textWrappingMode=TextWrappingModes.NoWrap;
-        title.gameObject.AddComponent<Shadow>().effectDistance=new Vector2(5,-6);
-        FrontEndUI.Anchor(title.rectTransform,new Vector2(.12f,.48f),new Vector2(.88f,.80f));
-        var rule=FrontEndUI.Panel(root,"Chalk line",new Vector2(.40f,.475f),new Vector2(.60f,.479f),UIColorRole.SelectionHighlight);
-        rule.localRotation=Quaternion.Euler(0,0,-1.4f);rule.GetComponent<Image>().raycastTarget=false;
-        // Sparse scalable paint-like slashes support the wordmark without covering the field art.
-        var accents=new GameObject("Street accents",typeof(RectTransform),typeof(StreetAccents));
-        accents.transform.SetParent(root,false);FrontEndUI.Anchor(accents.GetComponent<RectTransform>(),new Vector2(.30f,.45f),new Vector2(.70f,.49f));
-        var list=FrontEndUI.Vertical(root,"Main menu",0);
-        FrontEndUI.Anchor(list,new Vector2(.36f,.115f),new Vector2(.64f,.445f));
-        list.GetComponent<VerticalLayoutGroup>().spacing=7;
-        Entry("NEW GAME",menu.ShowModes);
-        Entry("EDIT PLAYERS",()=>menu.ShowPlayerLab());
-        Entry("SETTINGS",menu.ShowPreferences);
-        Entry("QUIT",()=>menu.Confirm("CALL IT A NIGHT?","Your saved roster will be here when you get back.",menu.Quit,"QUIT GAME"));
-        var footer=FrontEndUI.Text(root,"NO STANDS. NO SPOTLIGHT. JUST YOUR BLOCK.",menu.settings,22);
-        footer.alignment=TextAlignmentOptions.Center;
-        FrontEndUI.Anchor(footer.rectTransform,new Vector2(.15f,.025f),new Vector2(.85f,.075f));
-        void Entry(string text,System.Action action)
+        var art = UITheme.Library;
+        StreetArt.Layer(root, "Menu ink scrim", art?.inkScrim, new Vector2(-.045f, 0),
+            new Vector2(.77f, 1), UIColorRole.BackgroundSecondary, .92f);
+        StreetArt.Layer(root, "Menu paint spray", art?.sprayScatter, new Vector2(-.02f, .47f),
+            new Vector2(.38f, .92f), UIColorRole.ActionCancel, .65f).preserveAspect = true;
+        StreetArt.Layer(root, "Menu crown", art?.crown, new Vector2(.04f, .77f),
+            new Vector2(.15f, .91f), UIColorRole.AccentSpecial).preserveAspect = true;
+        StreetArt.Layer(root, "Menu brand shadow", art?.wordmark, new Vector2(.05f, .562f),
+            new Vector2(.44f, .81f), UIColorRole.ShadowPrimary).preserveAspect = true;
+        StreetArt.Layer(root, "Blacktop wordmark", art?.wordmark, new Vector2(.045f, .57f),
+            new Vector2(.435f, .818f), UIColorRole.TextPrimary).preserveAspect = true;
+        StreetArt.Layer(root, "Menu brush underline", art?.dryBrush, new Vector2(.04f, .52f),
+            new Vector2(.44f, .61f), UIColorRole.AccentSpecial);
+
+        var edition = FrontEndUI.Text(root, "7 ON 7  /  STREET FOOTBALL", menu.settings, 24);
+        FrontEndUI.Anchor(edition.rectTransform, new Vector2(.045f, .925f), new Vector2(.5f, .975f));
+        var list = FrontEndUI.Vertical(root, "Main menu", 0);
+        FrontEndUI.Anchor(list, new Vector2(.045f, .115f), new Vector2(.37f, .49f));
+        list.GetComponent<VerticalLayoutGroup>().spacing = 9;
+        Entry("NEW GAME", menu.ShowModes);
+        Entry("EDIT PLAYERS", () => menu.ShowPlayerLab());
+        Entry("SETTINGS", menu.ShowPreferences);
+        Entry("QUIT", () => menu.Confirm("CALL IT A NIGHT?", "Your saved roster will be here when you get back.",
+            menu.Quit, "QUIT GAME"));
+        var footer = FrontEndUI.Text(root, "NO STANDS. NO SPOTLIGHT. JUST YOUR BLOCK.", menu.settings, 22);
+        footer.alignment = TextAlignmentOptions.MidlineLeft;
+        FrontEndUI.Anchor(footer.rectTransform, new Vector2(.045f, .045f), new Vector2(.55f, .095f));
+
+        void Entry(string label, System.Action action)
         {
-            var button=FrontEndUI.Button(list,text,action,menu.settings,61);
-            button.GetComponent<ThemeButton>().Apply();
-            var caption=button.GetComponentInChildren<TextMeshProUGUI>();
-            caption.fontSize=38;caption.alignment=TextAlignmentOptions.Center;caption.characterSpacing=0;
+            var button = FrontEndUI.Button(list, label, action, menu.settings, 74, paintedSelection: true);
+            var caption = button.GetComponentInChildren<TextMeshProUGUI>();
+            caption.fontSize = 39;
+            FrontEndUI.Anchor(caption.rectTransform, new Vector2(.15f, .10f), new Vector2(.90f, .90f));
         }
     }
 

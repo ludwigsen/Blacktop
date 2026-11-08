@@ -56,7 +56,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Players supports create/edit/duplicate/transfer/delete, seven active players plus unlimited reserves, and independent offense/defense assignment. A working-copy editor covers identity, twelve heights, five builds, derived weight, appearance/gear selections and all twelve existing 0–20 ratings, with visual-only live preview and save/cancel/reset.
 - Runtime rosters use atomic versioned JSON with backup recovery. Canonical source commit is a separate confirmed Editor-only operation. See FRONT_END.md for setup, persistence and art replacement.
 - `ReceiverSelectionUI`, play-call UI, unified `GameHUD` scorebug and winner/rematch overlay (scene-wired).
-- Scorebug retains the horizontal crest/name/score/meter composition with clean angular geometry, Barlow Condensed ExtraBold names/scores and SemiBold supporting copy. TeamIdentity still supplies matching Kings/Vipers crests and independent accent/meter colors; both UI themes share this geometry. Live score, play clock, downs, field position, possession marker and Gamebreaker are bound to existing state. See UI_OVERHAUL.md and TESTING.md.
+- The horizontal scorebug uses sliced street paint tinted by TeamIdentity. Team names use Blacktop Pro Duo; scores and supporting text use Barlow Condensed. Crests, accent rules and meters remain team-owned. Live score, play clock, downs, field position, possession and Gamebreaker are bound to existing state. See UI_OVERHAUL.md and TESTING.md.
 - `CarrierHighlight`.
 - #12: GameplayLabelLayout coordinates four actionable receiver cards with controlled,
   held and inbound-player identity. Actual screen bounds are packed below the
@@ -239,28 +239,27 @@ Standalone follow-up outside menu scope: at 1280x720, gameplay nameplates/pass p
 
 Working: Street Classic (default) / After Dark live switching and persistence through
 Settings, shared semantic palette/type bindings, actual Barlow Regular/SemiBold/
-ExtraBold/BoldItalic, existing Blacktop Pro Duo wordmark, angular buttons/cards,
+ExtraBold/BoldItalic, fixed Blacktop wordmark artwork, textured buttons/cards,
 preview swatches, large match setup cards, vertical customization accordions,
-20-cell fixed-tier attribute bars, clean scorebug and read-only play schematics.
+20-cell fixed-tier attribute bars, painted scorebug and read-only play schematics.
 Secondary-page branding now has a tunable **54-reference-pixel top margin**; page
 content is lowered to respect the header. All existing roster/save/GUID, preview,
 Head 2 Head/Pickup, condition/difficulty/Random and gameplay integration remains.
 
-Captured final regression: graphics-enabled Unity 6000.5.6f1 full Play Mode **117
+Original theme rollout: graphics-enabled Unity 6000.5.6f1 full Play Mode **117
 passed / 0 failed / 0 skipped**, **140.779226 seconds**. Includes actual resolved
 touchdown/first-down announcement priority in both themes. Real canvas renders cover
 both themes at 720p/1080p/1440p/4K; glyph clearance, fixed action bounds, exact rating
 fills and focus-revealed accordions are asserted. The earlier focused theme/menu
 run passed 19/19. See TESTING.md and ignored Builds/Validation/ui-release.*.
 
-Missing optional art: AsphaltGrain, DryBrush, SprayScatter, EdgeWear masks. Reusable
-sprite slots and native geometry remain functional without them. Existing provisional
-character/venue/play content, in-world label overlap, physical-controller feel,
-Windows and human-played standalone matches remain acceptance gaps. No final texture
-art or manual platform/gameplay acceptance is implied by automated tests.
+The street sprite kit adds nine separate assets and editable Python source.
+Panels, frames and paint plates use 9-slicing, and event lettering stays live
+in Barlow Condensed Bold Italic. Physical-controller feel, Windows and human-played
+standalone matches remain acceptance gaps for this pass.
 
 
-Final macOS development build: **0 errors / 408 reported warnings**, 435,525,615
+Original theme rollout macOS development build: **0 errors / 408 reported warnings**, 435,525,615
 bytes reported (the earlier build reported 438 warnings). Actual standalone native
 checks exercised keyboard and mouse navigation, immediate Street Classic/After Dark
 switching, background cycling/blur, secondary-logo clearance, and After Dark retained

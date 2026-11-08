@@ -7,14 +7,34 @@ public enum AnnouncementKind { Information, Touchdown, FirstDown, Turnover, Game
 // Animation observes existing events; the post-play owner still decides exactly when to hide it.
 public class GameAnnouncement : MonoBehaviour
 {
-    TMP_Text text;Image background,accent;CanvasGroup group;
-    AnnouncementKind kind;float shown,expires;
+    TMP_Text text;
+    Image background, accent, crown;
+    CanvasGroup group;
+    AnnouncementKind kind;
+    float shown, expires;
+
     public void Initialize(TMP_Text label)
     {
-        text=label;background=GetComponent<Image>();group=gameObject.AddComponent<CanvasGroup>();
-        var rule=FrontEndUI.Panel(transform,"Directional accent",new Vector2(.02f,0),new Vector2(.98f,.065f),Color.white);
-        accent=rule.GetComponent<Image>();accent.raycastTarget=false;
-        ThemeableUI.Bind(text,UIColorRole.TextPrimary,UITypeRole.Announcement).tint=false;
+        text = label;
+        // The root still owns the original layout and timing. Paint is stacked above its shadow.
+        GetComponent<Image>().enabled = false;
+        group = gameObject.AddComponent<CanvasGroup>();
+        var art = UITheme.Library;
+        var shadow = StreetArt.Layer(transform, "Paint shadow", art?.brushPlate,
+            new Vector2(.007f, -.07f), new Vector2(1.007f, .91f), UIColorRole.ShadowPrimary, .8f);
+        shadow.transform.SetAsFirstSibling();
+        background = StreetArt.Layer(transform, "Announcement paint", art?.brushPlate,
+            Vector2.zero, Vector2.one, UIColorRole.ActionCancel);
+        background.GetComponent<ThemeableUI>().tint = false;
+        accent = StreetArt.Layer(transform, "Paint underline", art?.dryBrush,
+            new Vector2(.14f, -.095f), new Vector2(.93f, .18f), UIColorRole.AccentSpecial);
+        accent.GetComponent<ThemeableUI>().tint = false;
+        crown = StreetArt.Layer(transform, "Announcement crown", art?.crown,
+            new Vector2(.023f, .63f), new Vector2(.18f, 1.24f), UIColorRole.AccentSpecial);
+        crown.preserveAspect = true;
+        // The artwork carries no baked lettering. All event copy stays in Barlow Bold Italic.
+        ThemeableUI.Bind(text, UIColorRole.TextPrimary, UITypeRole.Announcement).tint = false;
+        text.transform.SetAsLastSibling();
     }
     void OnEnable(){UITheme.Changed+=Apply;Apply();}
     void OnDisable()=>UITheme.Changed-=Apply;
@@ -35,7 +55,10 @@ public class GameAnnouncement : MonoBehaviour
         background.color=UITheme.Color(primary);
         // Large touchdown lettering uses the requested light face; smaller bright-surface copy uses dark ink.
         text.color=UITheme.Color(kind==AnnouncementKind.Information||kind==AnnouncementKind.Touchdown?UIColorRole.TextPrimary:UIColorRole.TextOnBright);
-        accent.color=UITheme.Color(kind==AnnouncementKind.FirstDown?UIColorRole.SelectionPrimary:UIColorRole.ActionConfirm);
+        accent.color = UITheme.Color(kind == AnnouncementKind.FirstDown
+            ? UIColorRole.SelectionPrimary : UIColorRole.AccentSpecial);
+        crown.enabled = crown.sprite != null &&
+            kind is AnnouncementKind.Touchdown or AnnouncementKind.Gamebreaker;
     }
     void Update()
     {

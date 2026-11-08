@@ -9,7 +9,7 @@ public enum UIColorRole
     TextPrimary, TextSecondary, TextOnBright, SelectionPrimary, SelectionHighlight,
     ActionConfirm, ActionCancel, StateSuccess, StateWarning, AccentSpecial, BorderSubtle, ShadowPrimary
 }
-public enum UITypeRole { Body, Navigation, Heading, Numeral, Announcement, Brand }
+public enum UITypeRole { Body, Navigation, Heading, Numeral, Announcement, TeamName }
 
 [CreateAssetMenu(menuName="Blacktop/UI/Theme")]
 public class BlacktopTheme : ScriptableObject

@@ -26,11 +26,45 @@ public static class UIThemeSetup
         library.diagramOffense=AssetDatabase.FindAssets("Shotgun_Base t:FormationData").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<FormationData>).FirstOrDefault();
         library.diagramDefense=AssetDatabase.FindAssets("7v7_Base t:FormationData").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<FormationData>).FirstOrDefault();
         if(library.diagramOffense==null||library.diagramDefense==null)throw new InvalidOperationException("Missing installed schematic fallback formations");
-        // All standard game UI now uses Barlow. The wordmark remains exclusive to the brand role.
+        // The scorebug team-name role uses Pro Duo. Numbers and all standard copy use Barlow.
+        library.panelSurface = StreetSprite("AsphaltPanel", new Vector4(56, 48, 56, 48));
+        library.chalkFrame = StreetSprite("ChalkFrame", new Vector4(56, 48, 56, 48));
+        library.brushPlate = StreetSprite("BrushPlate", new Vector4(128, 54, 128, 54));
+        library.crown = StreetSprite("PaintCrown", Vector4.zero);
+        library.wordmark = StreetSprite("BlacktopWordmark", Vector4.zero);
+        library.inkScrim = StreetSprite("InkScrim", Vector4.zero);
+        library.asphaltGrain = StreetSprite("AsphaltGrain", Vector4.zero);
+        library.dryBrush = StreetSprite("DryBrush", Vector4.zero);
+        library.sprayScatter = StreetSprite("SprayScatter", Vector4.zero);
         settings.theme.displayFont=library.extraBold;settings.theme.legibleFont=library.semiBold;
         EditorUtility.SetDirty(settings.theme);EditorUtility.SetDirty(library);AssetDatabase.SaveAssets();
         Debug.Log("UI_THEMES_READY: Street Classic / After Dark / native Barlow weights");
     }
+    static Sprite StreetSprite(string name, Vector4 border)
+    {
+        string path = "Assets/_Project/Art/UI/StreetKit/" + name + ".png";
+        if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
+            throw new InvalidOperationException("Missing street sprite " + path);
+
+        // Full rectangular meshes are required for nine-slice and tiled uGUI images.
+        var settings = new TextureImporterSettings();
+        importer.ReadTextureSettings(settings);
+        settings.spriteMeshType = SpriteMeshType.FullRect;
+        settings.spriteGenerateFallbackPhysicsShape = false;
+        importer.SetTextureSettings(settings);
+        importer.textureType = TextureImporterType.Sprite;
+        importer.spriteImportMode = SpriteImportMode.Single;
+        importer.spriteBorder = border;
+        importer.spritePixelsPerUnit = 200;
+        importer.mipmapEnabled = false;
+        importer.alphaIsTransparency = true;
+        importer.npotScale = TextureImporterNPOTScale.None;
+        importer.wrapMode = TextureWrapMode.Clamp;
+        importer.textureCompression = TextureImporterCompression.Uncompressed;
+        importer.SaveAndReimport();
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
     static BlacktopTheme Theme(UIThemeId id)
     {
         string path=Folder+"/"+id+".asset";var theme=AssetDatabase.LoadAssetAtPath<BlacktopTheme>(path);

@@ -151,20 +151,27 @@ public class GameHUD : MonoBehaviour
 
     void BuildPostPlayResult(Transform parent)
     {
-        postPlayRoot = new GameObject("PostPlayResult", typeof(Image));
+        postPlayRoot = new GameObject("PostPlayResult", typeof(Image), typeof(Canvas));
         postPlayRoot.transform.SetParent(parent, false);
+        // Keep live announcements above field prompts and below the game-over overlay.
+        var overlayCanvas = postPlayRoot.GetComponent<Canvas>();
+        overlayCanvas.overrideSorting = true;
+        overlayCanvas.sortingOrder = 30;
+
         var image = postPlayRoot.GetComponent<Image>();
         image.color = new Color(0f, 0f, 0f, 0.78f);
+        image.raycastTarget = false;
         var rt = postPlayRoot.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.32f, 0.72f);
-        rt.anchorMax = new Vector2(0.68f, 0.79f);
+        // Give the paint cap, underline and live lettering room below the scorebug.
+        rt.anchorMin = new Vector2(0.29f, 0.68f);
+        rt.anchorMax = new Vector2(0.71f, 0.79f);
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
         var textGO = new GameObject("Result", typeof(TextMeshProUGUI));
         textGO.transform.SetParent(postPlayRoot.transform, false);
-        postPlayText = ConfigureText(textGO, theme != null ? theme.legibleFont : null, 34);
-        AnchorStrip(postPlayText.rectTransform, Vector2.zero, Vector2.one);
+        postPlayText = ConfigureText(textGO, theme != null ? theme.legibleFont : null, 63);
+        AnchorStrip(postPlayText.rectTransform, new Vector2(.12f, .13f), new Vector2(.88f, .87f));
         postPlayRoot.SetActive(false);
         announcement=postPlayRoot.AddComponent<GameAnnouncement>();announcement.Initialize(postPlayText);
     }
@@ -279,8 +286,7 @@ public class GameHUD : MonoBehaviour
         scorebugRT.offsetMin = new Vector2(0f, -topInset);
         scorebugRT.offsetMax = new Vector2(0f, -topInset);
         var baseImage = scorebugGO.GetComponent<Image>();
-        baseImage.sprite = null; // Existing serialized artwork is retained, but clean geometry owns the active silhouette.
-        baseImage.type = Image.Type.Simple;
+        StreetArt.Apply(baseImage, UITheme.Library?.panelSurface);
         ThemeableUI.Bind(baseImage,UIColorRole.ShadowPrimary);
         // Team plates supply the same clean silhouette in both themes.
         baseImage.enabled = true;
@@ -326,7 +332,7 @@ public class GameHUD : MonoBehaviour
 
     void BuildGameStatePanel(Transform parent)
     {
-        var centerGO = new GameObject("GameState", typeof(Image), typeof(Outline));
+        var centerGO = new GameObject("GameState", typeof(Image));
         centerGO.transform.SetParent(parent, false);
         var rt = centerGO.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(teamPanelWidth, 0f);
@@ -335,11 +341,12 @@ public class GameHUD : MonoBehaviour
         rt.offsetMax = Vector2.zero;
 
         // An opaque center keeps field action from reducing down/distance readability.
-        ThemeableUI.Bind(centerGO.GetComponent<Image>(),UIColorRole.BackgroundPrimary);
-        centerGO.GetComponent<Image>().raycastTarget = false;
-        var border = centerGO.GetComponent<Outline>();
-        border.effectColor = new Color(0.65f, 0.65f, 0.62f, 0.8f);
-        border.effectDistance = new Vector2(1f, -1f);
+        var centerImage = centerGO.GetComponent<Image>();
+        StreetArt.Apply(centerImage, UITheme.Library?.panelSurface);
+        ThemeableUI.Bind(centerImage, UIColorRole.BackgroundPrimary);
+        centerImage.raycastTarget = false;
+        StreetArt.Layer(centerGO.transform, "Scorebug chalk frame", UITheme.Library?.chalkFrame,
+            Vector2.zero, Vector2.one, UIColorRole.BorderSubtle);
         var legibleFont = theme != null ? theme.legibleFont : null;
 
         var clockGO = new GameObject("PlayClock", typeof(TextMeshProUGUI));
