@@ -99,6 +99,15 @@ public class DefenderAI : MonoBehaviour
         if (PlayState.Instance != null && !PlayState.Instance.IsLive)
         { liveTimer=decisionTimer=0f; hasObservation=false; heldVelocity=Vector3.zero; return; }
 
+        if (PlayerStateMachine.IsMovementLocked(transform))
+        {
+            // Resume pursuit with a fresh observation and zero cached momentum.
+            heldVelocity = Vector3.zero;
+            hasObservation = false;
+            pushBackTimer = 0f;
+            return;
+        }
+
         // A loose ball has no carrier to infer roles from. Check the drive team BEFORE
         // shove/stun movement too, or offense could still be moved by both AI stacks.
         var ball = BallController.Instance;
@@ -108,8 +117,9 @@ public class DefenderAI : MonoBehaviour
 
         if (pushBackTimer > 0f)
         {
-            transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
-            pushBackTimer -= Time.deltaTime;
+            Vector3 destination = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
+            if (PlayerStateMachine.MoveActor(transform, destination)) pushBackTimer -= Time.deltaTime;
+            else pushBackTimer = 0f;
             return;
         }
 
@@ -189,7 +199,12 @@ public class DefenderAI : MonoBehaviour
                 Role.Contain => CalculateContainMove(carrier), _ => CalculateEngageMove(carrier) };
             decisionTimer=Difficulty.DecisionInterval;
         }
-        transform.position += (heldVelocity + CalculateSeparation()) * Time.deltaTime;
+        Vector3 destination = transform.position + (heldVelocity + CalculateSeparation()) * Time.deltaTime;
+        if (!PlayerStateMachine.MoveActor(transform, destination))
+        {
+            heldVelocity = Vector3.zero;
+            hasObservation = false;
+        }
     }
 
     // A man defender on the ACTUAL intended receiver breaks on the ball, and so does a zone
@@ -208,7 +223,7 @@ public class DefenderAI : MonoBehaviour
 
         Vector3 direction = (landing - transform.position).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
-        transform.position += direction * (MoveSpeed * breakOnBallSpeedMult) * Time.deltaTime;
+        PlayerStateMachine.MoveActor(transform, transform.position + direction * (MoveSpeed * breakOnBallSpeedMult) * Time.deltaTime);
     }
 
     void PursueLooseBall(BallController ball)
@@ -221,7 +236,7 @@ public class DefenderAI : MonoBehaviour
 
         Vector3 direction = toBall.normalized;
         transform.rotation = Quaternion.LookRotation(direction);
-        transform.position += direction * (MoveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime;
+        PlayerStateMachine.MoveActor(transform, transform.position + direction * (MoveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime);
     }
 
     Vector3 CalculateCoverMove() => coverTarget == null ? Vector3.zero : ShadowMove(coverTarget);

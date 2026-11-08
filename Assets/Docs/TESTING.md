@@ -13,6 +13,44 @@ Scenarios marked **(KNOWN BROKEN)** are expected to fail right now. A failure th
 
 **How to read each scenario:** Steps → Expected → What to watch for.
 
+## Issue #17: Wall and fence hazards (2026-11-07)
+
+### T-122: Wall contact, precedence and venue changes
+
+Launch The Lot and Downtown from match settings and play in both directions.
+Hit a Lot barrier and a Downtown fence segment head-on and diagonally as a
+carrier and a selected defender. Send an AI receiver or defender toward a
+segment. The capsule should stop before crossing the face, lose its approach
+velocity, and visibly recoil away. Check a Juke or Hurdle that intersects the
+barrier. Hurdle height and its tackle-negation flag must clear on impact.
+Holding diagonal input should slide after the recoil. Holding straight into
+the wall should stop without repeatedly staggering. Backing away rearms the
+next impact. Test a corner and both ends of Downtown's fence gap.
+
+Cross the open sideline at Downtown or an end line at The Lot. Confirm the
+existing safety-band OOB ruling and that a legal held-ball touchdown still
+wins at the goal line. Whistle during recoil, switch ball/control owners
+during a live recoil, reset the play, and swap venues before the snap.
+Confirm ordinary movement resumes for the correct actors and that the
+previous venue's colliders disappear immediately.
+
+Run the Play Mode suite with `-testFilter VenueHazardTests` for focused contact,
+timing, ownership, precedence and lifecycle coverage. `FieldSurfaceTests`
+checks normal venue selection and registration. See FIELD_SURFACES.md for the
+wall, recoil and presentation tunables.
+
+**Actual validation:** Graphics-enabled Unity 6000.5.6f1 Editor Play Mode
+passed **173 of 173** tests, including **17 of 17** venue hazard cases.
+The fixtures cover 30 and 120 Hz recoil, wall overlap recovery, frontal and
+glancing contact, continued input and corner contact, human carrier velocity,
+AI routes and shoves, hurdle interruption, control transfer, whistle/reset
+and disable, open-boundary OOB and touchdown precedence for both directions.
+The Lot (+Z, 1080p) and Downtown (−Z, 720p) were inspected before, during and
+after staged impacts through SampleScene's gameplay camera. Evidence is in
+the ignored Builds/Validation/HazardCamera and hazards-final.xml. Physical
+controller feel, human-played full matches, standalone and Windows acceptance
+remain open.
+
 ## Issue #3: Ball flight, live fumbles and ground glyphs (2026-11-06)
 
 ### T-112: Ballistic passes and spiral
@@ -53,7 +91,7 @@ gravity now determine airtime instead of the former preset fumble duration.
 Preserve the existing outer boundary/safety-band policy:
 an uncontained live loose-ball crossing is whistled before recovery, while forward
 passes/pitches keep their existing in-flight rule. No loose/airborne ball scores
-without a holder. Player wall stumbling is still #17, not implemented here.
+without a holder. Player wall stumbling has its own cases in T-122.
 
 ### T-115: Marker visibility and lifecycle
 

@@ -6,10 +6,10 @@ using UnityEngine;
 // player" object — sits on every T1/T2 roster player, offense or defense, so either
 // team's carrier can be the human-controlled one.
 //
-// This is also the fix for TackleContact/PlayerStateMachine going stale after a
+// This keeps TackleContact from going stale after a
 // completed pass or pitch: those components check THEIR OWN transform, so as long as
-// only the live carrier's copy is enabled, "their own transform" is automatically
-// correct without those scripts needing to know anything about possession themselves.
+// only the live carrier's copy is enabled, it has the correct target. The move machine
+// stays enabled for every player and gates carrier moves against live control.
 //
 // Not every roster slot has a ReceiverAI (a QB/OL doesn't run a route) — every
 // reference below is null-guarded so this works on an object missing either half of
@@ -128,7 +128,7 @@ public class PossessionController : MonoBehaviour
 
         if (playerMovement != null) playerMovement.enabled = controlled;
         if (inputBuffer != null) inputBuffer.enabled = controlled;
-        if (stateMachine != null) stateMachine.enabled = controlled;
+        if (!controlled) stateMachine?.CancelCarrierMove();
         if (tackleContact != null) tackleContact.enabled = carrying; // only the live carrier needs to check for being tackled — human-piloted or not
         if (receiverAI != null) receiverAI.enabled = ai;
 

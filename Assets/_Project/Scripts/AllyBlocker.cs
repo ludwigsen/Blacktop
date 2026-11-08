@@ -67,6 +67,7 @@ public class AllyBlocker : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (PlayerStateMachine.IsMovementLocked(transform)) { pushBackTimer = 0f; return; }
         if (contactCooldownTimer > 0f) contactCooldownTimer -= Time.deltaTime;
 
         if (IsCarrier)
@@ -117,7 +118,7 @@ public class AllyBlocker : MonoBehaviour
 
         if (currentTarget == null) return;
 
-        MoveTowardTarget();
+        if (!MoveTowardTarget()) return;
         if (contactCooldownTimer <= 0f) CheckBlockContact();
     }
 
@@ -125,8 +126,8 @@ public class AllyBlocker : MonoBehaviour
     // the held-ball gate below must not strand a blocker in a permanent pushback.
     void UpdatePushBack()
     {
-        transform.position = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
-        pushBackTimer -= Time.deltaTime;
+        Vector3 destination = Vector3.Lerp(transform.position, pushBackTarget, Time.deltaTime / pushBackTimer);
+        pushBackTimer = PlayerStateMachine.MoveActor(transform, destination) ? pushBackTimer - Time.deltaTime : 0f;
     }
 
     // No separation while scrambling: BallController chooses the nearest eligible
@@ -139,18 +140,18 @@ public class AllyBlocker : MonoBehaviour
 
         Vector3 direction = toBall.normalized;
         transform.rotation = Quaternion.LookRotation(direction);
-        transform.position += direction * (EffectiveMoveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime;
+        PlayerStateMachine.MoveActor(transform, transform.position + direction * (EffectiveMoveSpeed * looseBallPursuitSpeedMult) * Time.deltaTime);
     }
 
-    void MoveTowardTarget()
+    bool MoveTowardTarget()
     {
         Vector3 toTarget = currentTarget.position - transform.position;
         float distance = toTarget.magnitude;
-        if (distance <= stopDistance) return;
+        if (distance <= stopDistance) return true;
 
         Vector3 direction = toTarget.normalized;
         transform.rotation = Quaternion.LookRotation(direction);
-        transform.position += direction * EffectiveMoveSpeed * Time.deltaTime;
+        return PlayerStateMachine.MoveActor(transform, transform.position + direction * EffectiveMoveSpeed * Time.deltaTime);
     }
 
     void CheckBlockContact()

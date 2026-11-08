@@ -18,12 +18,17 @@ public class PlayerAnimationPresenter : MonoBehaviour
     [SerializeField, Min(0f)] float blendDamping = 0.08f;
     [SerializeField, Min(0.1f)] float teleportDistance = 3f;
 
+    [Header("Wall recoil")]
+    [SerializeField, Range(0f, 45f)] float stumbleLeanAngle = 24f;
+
     static readonly int Locomotion = Animator.StringToHash("Locomotion");
     static readonly int Hurdling = Animator.StringToHash("Hurdling");
     static readonly int HurdleRate = Animator.StringToHash("HurdleRate");
     static readonly int LocomotionRate = Animator.StringToHash("LocomotionRate");
     PlayerStateMachine stateMachine;
     Vector3 previousPosition;
+    Transform recoilPivot;
+    Quaternion uprightRotation;
 
     public Animator Animator => animator;
     public float PlanarSpeed { get; private set; }
@@ -36,6 +41,15 @@ public class PlayerAnimationPresenter : MonoBehaviour
         if (animator != null)
         {
             animator.applyRootMotion = false;
+            // Use the wrapper above the Animator so neither the gameplay root nor
+            // the Animator's own local pose is overwritten.
+            Transform pivot = animator.transform;
+            while (pivot.parent != null && pivot.parent != transform) pivot = pivot.parent;
+            if (pivot.parent == transform && pivot != animator.transform)
+            {
+                recoilPivot = pivot;
+                uprightRotation = pivot.localRotation;
+            }
             // Offscreen AI must retain the same animation state as controlled players.
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         }
@@ -59,6 +73,13 @@ public class PlayerAnimationPresenter : MonoBehaviour
         PlanarSpeed = deltaTime > 0f && !teleported ? displacement.magnitude / deltaTime : 0f;
         MovingBackward = PlanarSpeed > idleSpeed &&
             Vector3.Dot(displacement.normalized, transform.forward) < backwardDotThreshold;
+        bool stumbling = stateMachine != null && stateMachine.IsStumbling;
+        if (recoilPivot != null)
+        {
+            Vector3 lean = stumbling ? transform.InverseTransformDirection(stateMachine.StumbleNormal) : Vector3.forward;
+            float angle = stumbling ? stumbleLeanAngle * (1f - stateMachine.StumbleProgress) : 0f;
+            recoilPivot.localRotation = Quaternion.AngleAxis(angle, Vector3.Cross(Vector3.up, lean)) * uprightRotation;
+        }
         if (animator == null || animator.runtimeAnimatorController == null) return;
 
         bool hurdling = stateMachine != null && stateMachine.CurrentState == PlayerState.Hurdle;
@@ -78,7 +99,7 @@ public class PlayerAnimationPresenter : MonoBehaviour
             else blend = 1f + Mathf.InverseLerp(standardRunSpeed, Mathf.Max(standardRunSpeed + 0.1f, fastRunSpeed), PlanarSpeed);
         }
         // Formation/reset teleports must not produce a one-frame sprint or reverse stride.
-        if (teleported || deltaTime <= 0f) animator.SetFloat(Locomotion, 0f);
+        if (stumbling || teleported || deltaTime <= 0f) animator.SetFloat(Locomotion, 0f);
         else animator.SetFloat(Locomotion, blend, blendDamping, deltaTime);
         float referenceSpeed = MovingBackward ? backwardRunSpeed : fastRunSpeed;
         animator.SetFloat(LocomotionRate, Mathf.Clamp(PlanarSpeed / referenceSpeed, 1f, 1.5f));
@@ -86,6 +107,7 @@ public class PlayerAnimationPresenter : MonoBehaviour
 
     void ResetParameters()
     {
+        if (recoilPivot != null) recoilPivot.localRotation = uprightRotation;
         PlanarSpeed = 0f;
         MovingBackward = false;
         if (animator == null || animator.runtimeAnimatorController == null) return;

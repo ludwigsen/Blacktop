@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// Venue identity and art only. Conditions/severity are independent match settings.
+// Venue identity, art and optional physical boundaries. Conditions are independent match settings.
 [CreateAssetMenu(menuName = "Blacktop/Field Definition")]
 public sealed class FieldDefinition : ScriptableObject
 {
@@ -15,7 +15,7 @@ public sealed class FieldDefinition : ScriptableObject
     public Vector2 textureTiling = Vector2.one;
     [Tooltip("Optional collider-free chalk, wear or repair geometry.")]
     public GameObject detailPrefab;
-    [Tooltip("Reserved for later boundary dressing; Phase 1 does not spawn this.")]
+    [Tooltip("Optional boundary visuals and marked solid wall/fence colliders under FieldBounds.")]
     public GameObject boundaryPrefab;
     [Tooltip("Reserved for later scenery; Phase 1 does not spawn this.")]
     public GameObject environmentRootPrefab;

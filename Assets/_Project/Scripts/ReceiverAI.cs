@@ -98,6 +98,7 @@ public class ReceiverAI : MonoBehaviour
     void Update()
     {
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
+        if (PlayerStateMachine.IsMovementLocked(transform)) return;
 
         // A fumble/loose ball is no longer a route problem. AllyBlocker owns offensive
         // skill-position movement during the scrum; returning here prevents this component
@@ -127,7 +128,7 @@ public class ReceiverAI : MonoBehaviour
             return; // route's done and there's no ball to chase — nothing to do
         }
 
-        transform.position = Vector3.MoveTowards(transform.position, moveTarget, EffectiveMoveSpeed * Time.deltaTime);
+        if (!PlayerStateMachine.MoveActor(transform, Vector3.MoveTowards(transform.position, moveTarget, EffectiveMoveSpeed * Time.deltaTime))) return;
 
         // Only the ORIGINAL route can "complete" — while a ball's inbound we keep
         // evaluating every frame (the ball might still be adjusting, or we might not

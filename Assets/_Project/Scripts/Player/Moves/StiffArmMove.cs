@@ -62,7 +62,7 @@ public class StiffArmMove : IPlayerMove
         float delta = sample - lastSample;
         lastSample = sample;
 
-        ctx.transform.position += delta * ForwardBurst * ctx.transform.forward;
+        ctx.MoveBy(delta * ForwardBurst * ctx.transform.forward);
 
         if (!hasResolvedContact)
             CheckContact(ctx);

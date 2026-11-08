@@ -739,7 +739,8 @@ public class PlayState : MonoBehaviour
                 if (delta.sqrMagnitude <= 0.0025f) continue;
 
                 Vector3 direction = delta.normalized;
-                t.position = Vector3.MoveTowards(t.position, flatTarget, postPlayReactionSpeed * Time.deltaTime);
+                // A dead-ball reaction may stop at a wall without starting a live move.
+                PlayerStateMachine.MoveActor(t, Vector3.MoveTowards(t.position, flatTarget, postPlayReactionSpeed * Time.deltaTime));
                 t.rotation = Quaternion.RotateTowards(t.rotation, Quaternion.LookRotation(direction), 540f * Time.deltaTime);
             }
             yield return null;

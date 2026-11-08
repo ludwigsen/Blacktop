@@ -60,6 +60,9 @@ public class CPUCarrierAI : MonoBehaviour
 
         if (!ShouldDrive) { readTimer = 0f; return; }
 
+        // Wall recoil pauses both running and the quarterback's read/dropback.
+        if (PlayerStateMachine.IsMovementLocked(transform)) return;
+
         // A QB who recovers the other team's fumble is a returner, not the passer
         // for the old play call. Never let him throw to the opposing offense's roster.
         if (teamMember.slot == TeamMember.RosterSlot.QB &&
@@ -89,7 +92,7 @@ public class CPUCarrierAI : MonoBehaviour
             if (flushed || readTimer >= readTime * 1.5f) { UpdateRunner(); return; } // nobody's open — tuck it and go
         }
 
-        transform.position += -PlayState.Instance.AttackDirection.Forward * (dropbackSpeed * SpeedBoost * Time.deltaTime);
+        PlayerStateMachine.MoveActor(transform, transform.position - PlayState.Instance.AttackDirection.Forward * (dropbackSpeed * SpeedBoost * Time.deltaTime));
     }
 
     void ThrowTo(Transform target)
@@ -120,7 +123,7 @@ public class CPUCarrierAI : MonoBehaviour
         desired.Normalize();
 
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(desired), rotationSpeed * Time.deltaTime);
-        transform.position += desired * (runSpeed * SpeedBoost * Time.deltaTime);
+        PlayerStateMachine.MoveActor(transform, transform.position + desired * (runSpeed * SpeedBoost * Time.deltaTime));
     }
 
     float NearestOpponentDistance()

@@ -3,9 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Marks a physical wall as protecting part of a FieldBounds boundary.
 ///
-/// The wall's Collider provides the actual physical collision/bounce.
-/// This component only tells FieldBounds that this portion of the boundary
-/// is enclosed and therefore should not immediately be ruled out of bounds.
+/// The wall's Collider provides the shape for polled player and ball contact.
+/// The registered side also identifies boundary crossings contained by this wall.
 ///
 /// A wall can cover an entire boundary or only part of it. Partial walls
 /// are supported naturally because the collider itself defines the covered
@@ -33,6 +32,17 @@ public sealed class FieldBoundaryWall : MonoBehaviour
     public FieldBoundarySide BoundarySide => boundarySide;
     public Collider WallCollider => wallCollider;
     public float ContainmentGrace => containmentGrace;
+    public bool IsSolid => isActiveAndEnabled && wallCollider != null && wallCollider.enabled && !wallCollider.isTrigger;
+
+    // Field-local sides remain fixed when the teams reverse their attack direction.
+    internal Vector3 InwardNormal => boundarySide switch
+    {
+        FieldBoundarySide.LeftSideline => fieldBounds.transform.right,
+        FieldBoundarySide.RightSideline => -fieldBounds.transform.right,
+        FieldBoundarySide.NearEndLine => fieldBounds.transform.forward,
+        FieldBoundarySide.FarEndLine => -fieldBounds.transform.forward,
+        _ => Vector3.zero
+    };
 
     void Awake()
     {
@@ -86,7 +96,7 @@ public sealed class FieldBoundaryWall : MonoBehaviour
     /// </summary>
     public bool ContainsBoundaryCrossing(Vector3 worldPosition, float extraGrace = 0f)
     {
-        if (wallCollider == null || !wallCollider.enabled)
+        if (!IsSolid)
             return false;
 
         float grace = Mathf.Max(containmentGrace, extraGrace);

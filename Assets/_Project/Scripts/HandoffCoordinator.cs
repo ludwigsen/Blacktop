@@ -67,7 +67,7 @@ public class HandoffCoordinator : MonoBehaviour
         }
 
         Transform receiver = FindReceiver(carrierTeam.teamId, playCall.HandoffReceiverSlot);
-        if (receiver == null) return;
+        if (receiver == null || PlayerStateMachine.IsMovementLocked(receiver)) return;
 
         // Autopath: walk the receiver toward the QB's current position every frame
         // until the mesh point closes the gap and the exchange resolves.
@@ -78,7 +78,9 @@ public class HandoffCoordinator : MonoBehaviour
 
         // The designed exchange uses the receiver's same effective speed as routes/blocking.
         var attributes = receiver.GetComponent<PlayerStateMachine>()?.Attributes;
-        receiver.position = Vector3.MoveTowards(receiver.position, carrier.position, autoPathSpeed * (attributes != null ? attributes.Speed() : 1f) * Time.deltaTime);
+        Vector3 destination = Vector3.MoveTowards(receiver.position, carrier.position,
+            autoPathSpeed * (attributes != null ? attributes.Speed() : 1f) * Time.deltaTime);
+        if (!PlayerStateMachine.MoveActor(receiver, destination)) return;
 
         if (Vector3.Distance(carrier.position, receiver.position) <= handoffRadius)
         {
