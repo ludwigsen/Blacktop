@@ -141,8 +141,12 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - Conditions and severity are selected independently of venue. FieldDefinition contains art/identity only; do not derive a speed/agility effect from asphalt, grass or any surface.
 - Additive percentage modifiers with upper and lower bounds. Not multiplicative.
 
-### Play count
-- Scale offense toward ~36 plays total (NFL Street 1 benchmark: ~12 per category).
+### Playbook targets ([#18](https://github.com/ludwigsen/Blacktop/issues/18))
+
+- **Offense:** 30 core calls across 10 Pass, 10 Run/Option, and 10 Trick, plus 5 dedicated goal-line calls for 35 total. Use NFL Street 1 as the benchmark and adapt the concepts to Blacktop's 7v7 and Pistol/Shotgun flow.
+- **Defense:** 15 calls total across Man, Zone, Spy, and Blitz. Include answers for inside and outside runs, quick passes, mobile QBs, and deep shots. Mixed assignments count as one call.
+- **Goal line:** Prototype shallow crosses or drags, slant–flat, quick outs, and fast inside or off-tackle runs. Give receivers room to finish their routes before the end line. Include tight run fronts and shallow middle/flat coverage within the 15 defensive calls. Use playtesting to decide how the five offensive calls surface in the picker and when the CPU favors them.
+- **First set:** Build toward 7 Pass, 3 Run/Option, and 9 Defense using supported assignments and small extensions to routes or run lanes where needed. Designed options and trick calls depend on defined exchange, fake, or passing behavior. Track the inventory and dependencies in #18.
 
 ### Character appearance
 - 5 body archetypes (lean / athletic / thick / heavy / massive) as 5 unique meshes on a shared skeleton.
