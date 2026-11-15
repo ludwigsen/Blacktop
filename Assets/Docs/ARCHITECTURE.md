@@ -64,7 +64,7 @@ Rough rule: higher layers read from lower layers. Lower layers don't know UI exi
    existing reset event from those positions. See the pre-snap controls below.
 3. **Live play.**
    - **Pass play:** receivers run routes to completion or until a ball carrier crosses the LOS. User selects a receiver via `ReceiverSelectionUI`.
-   - **Run play:** WRs block. A visible handoff is required (handoff visuals are not built yet).
+   - **Run play:** WRs block. The designed run cues the QB give and runner receive poses at the existing handoff distance.
    - Defense engages: the closest defender engages the carrier, others contain, with an override once the carrier breaks the LOS.
 4. **Resolution.** Play ends by tackle, touchdown, incomplete pass, out of bounds, or safety. Held/loose-ball OOB is polled automatically; forward passes/pitches finish flight before a ruling. Airborne fumbles are live loose balls. `PlayState` validates held-ball touchdowns inside the legal rectangle, with the same boundary checks used before contact/fumble rolls.
 5. **Play ended.** `PlayState.OnPlayEnded` fires after score-team, next possession, and whistle spot are resolved. Player moves cancel through `IPlayerMove.Cancel`, independently of successful `Exit` (which releases passes/pitches). The existing three-second presentation then gathers the next huddle. Gamebreaker persists across these ordinary whistles; scores and changes of possession end both teams' active boosts.
@@ -290,7 +290,7 @@ attributes to movement, moves, receivers, defenders, blockers, CPU and Gamebreak
 - **Downs/yardage tracker:** already implemented as `DownsTracker` and scene-wired; listed here previously as planned.
 - **Create-a-Team / progression:** new-team creation, trading rules, free agency and career systems remain deferred. Development roster transfers between installed teams are implemented.
 - **Production appearance art:** five authored bodies, pooled distinct faces / hair / facial hair and fitted garments. Shared-rig assembly, height profiles and temporary body/garment variants are implemented.
-- **Handoff animation and designed run plays.**
+- **Handoff contact and a broader set of designed run plays.**
 
 ## Play-resolution and live-turnover ownership (2026-10-17)
 
@@ -344,7 +344,22 @@ Branding has no reference to roster or ratings. TeamRoster.PlayerRecord remains 
 
 `FootballVisual.prefab` contains the model and a `FootballAppearance` component. `FootballStyle` ScriptableObjects hold cosmetic palette/smoothness data. StreetClassic and BacklotLeather are supplied. `SelectedStyle`, `StyleCount`, `StyleAt` and `SelectStyle` provide the integration point for a future pre-game picker; selection UI and persistence are not built. Selection uses per-slot MaterialPropertyBlocks, leaving shared materials, mesh, possession, recovery and collision untouched. There is no new singleton or physics component.
 
-SampleScene retains the same BallController root/component IDs and its SphereCollider; the legacy sphere renderer is disabled and the visual prefab is added as a child. The root scale is normalized to one (the SphereCollider's previous maximum scale was already one, retaining its world radius). The scene carry offset is fitted to (0.34, 0.12, 0.22) relative to the player root. This is also the held ruling position because the existing BallController remains authoritative. Hand-bone attachment, visible handoff and locomotion/action animation are separate follow-ups; this change adds no animation-driven movement.
+SampleScene retains the same BallController root/component IDs and its SphereCollider; the legacy sphere renderer is disabled and the visual prefab is added as a child. The root scale is normalized to one (the SphereCollider's previous maximum scale was already one, retaining its world radius). The scene carry offset is fitted to (0.34, 0.12, 0.22) relative to the player root. This is also the held ruling position because BallController remains authoritative. FootballAppearance moves the rendered child after Animator and ball simulation updates. The collider, ruled position and launch origin still use the gameplay root.
+
+### Football action presentation
+
+The shared controller's Football override layer masks the upper body. It plays
+the native Humanoid Carry Ready, Carry Tuck, Throw Windup, Throw Follow Through,
+Handoff Give and Handoff Take clips. PlayerAnimationPresenter selects carry by
+actual speed and follows the human PassMove windup clock. BallController.Throw
+cues release for both human and CPU forward passes. The visible ball starts
+from the last evaluated hand grip and blends onto the ballistic path.
+
+HandoffCoordinator calls BallController.HandoffTo at the existing mesh-point
+distance. AttachTo commits possession immediately. Both presenters aim their
+reach toward the same point and FootballAppearance blends the rendered ball
+from giver to runner over 0.16 seconds. The animation layer never commits an
+action. See T-124 in TESTING.md for current preview and match checks.
 
 
 ## Shared player locomotion and hurdle presentation (2026-10-18)

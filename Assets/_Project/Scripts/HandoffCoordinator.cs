@@ -84,7 +84,8 @@ public class HandoffCoordinator : MonoBehaviour
 
         if (Vector3.Distance(carrier.position, receiver.position) <= handoffRadius)
         {
-            BallController.Instance.AttachTo(receiver);
+            // Commit ownership at the same mesh point. The paired action is visual.
+            BallController.Instance.HandoffTo(receiver);
             handoffResolvedThisPlay = true;
         }
     }

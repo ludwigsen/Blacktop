@@ -529,6 +529,12 @@ MonoBehaviour:
   backwardDotThreshold: -0.25
   blendDamping: 0.08
   teleportDistance: 3
+  carryTuckSpeed: 3
+  footballBlendSeconds: 0.07
+  followThroughDuration: 0.31
+  handoffPoseDuration: 0.4
+  handoffTurnLimit: 65
+  footballGripOffset: {x: 0.085, y: 0.005, z: 0.075}
 --- !u!114 &1016471713031818523
 MonoBehaviour:
   m_ObjectHideFlags: 0

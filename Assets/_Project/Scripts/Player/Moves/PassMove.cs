@@ -66,6 +66,9 @@ public class PassMove : IPlayerMove
         // no position movement during windup — player just locks, same as the others
     }
 
+    // The visual winds up on the same clock that commits gameplay release.
+    internal float VisualWindup => target != null ? Mathf.Clamp01(timer / Mathf.Max(0.001f, windupDuration)) : -1f;
+
     public bool IsComplete => timer >= windupDuration;
 
     public void Exit(PlayerContext ctx)

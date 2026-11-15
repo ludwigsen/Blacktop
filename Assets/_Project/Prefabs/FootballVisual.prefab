@@ -50,6 +50,8 @@ MonoBehaviour:
   availableStyles:
   - {fileID: 11400000, guid: b5bf7d3d6591f467784cc6b89e7af5fe, type: 2}
   - {fileID: 11400000, guid: 8238444a9bf634762b45682e1b606460, type: 2}
+  handoffBlendSeconds: 0.16
+  passBlendSeconds: 0.07
 --- !u!1001 &7640901758933503166
 PrefabInstance:
   m_ObjectHideFlags: 0

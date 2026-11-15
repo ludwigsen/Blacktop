@@ -52,6 +52,7 @@ public class BallController : MonoBehaviour
     [SerializeField] BallLooseMotion looseMotion = new();
     readonly HashSet<TeamMember> releaseRecoveryContacts = new();
     readonly HashSet<TeamMember> currentRecoveryContacts = new();
+    FootballAppearance appearance;
     Vector3 flightVelocity;
     float spiralAngle;
 
@@ -100,6 +101,7 @@ public class BallController : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        appearance = GetComponentInChildren<FootballAppearance>();
         // Existing scenes receive marker presentation without a scene/GUID migration.
         if (!TryGetComponent<BallGroundMarkers>(out _)) gameObject.AddComponent<BallGroundMarkers>();
         // Initial carrier is resolved in Start() from PlayState's possession team —
@@ -138,7 +140,8 @@ public class BallController : MonoBehaviour
 
     void HandlePlayEnded(PlayState.PlayEndReason reason)
     {
-        // A whistle freezes free motion immediately, including a dead pass in flight.
+        // A whistle freezes free motion and ends any visual transfer.
+        appearance?.ClearTransfer();
         looseMotion.Stop();
         flightVelocity = Vector3.zero;
     }
@@ -206,6 +209,16 @@ public class BallController : MonoBehaviour
     // arcHeight remains the authored cosmetic height for the special Street pitch.
     public void Throw(Vector3 target, Transform receiver, bool isPitch, float arcHeight, float duration)
     {
+        appearance?.ClearTransfer();
+        if (!isPitch && IsHeld && carrier != null &&
+            carrier.TryGetComponent<PlayerAnimationPresenter>(out var thrower))
+        {
+            // Use the same release cue for human and CPU passes. Capture the
+            // visible grip before the simulation snaps its root to the launch spot.
+            appearance?.BeginPass(thrower);
+            thrower.ShowPassRelease();
+        }
+
         launchPoint = RulingPosition;
         transform.position = launchPoint;
         looseMotion.Stop();
@@ -482,8 +495,22 @@ public class BallController : MonoBehaviour
         return false;
     }
 
+    internal void HandoffTo(Transform receiver)
+    {
+        // This entry point is only used by the designed run exchange.
+        // Ordinary catches, recoveries, and formation resets use AttachTo.
+        var giver = carrier != null ? carrier.GetComponent<PlayerAnimationPresenter>() : null;
+        Vector3 exchangePoint = carrier != null ? (carrier.position + receiver.position) * 0.5f : receiver.position;
+        AttachTo(receiver);
+
+        if (giver != null) giver.ShowHandoff(true, exchangePoint);
+        if (receiver.TryGetComponent<PlayerAnimationPresenter>(out var taker)) taker.ShowHandoff(false, exchangePoint);
+        appearance?.BeginHandoff(giver);
+    }
+
     public void AttachTo(Transform newCarrier)
     {
+        appearance?.ClearTransfer();
         looseMotion.Stop();
         releaseRecoveryContacts.Clear();
         flightVelocity = Vector3.zero;
@@ -496,6 +523,7 @@ public class BallController : MonoBehaviour
     // fumble or incomplete pass. Recovery is handled by the live loose-ball path.
     public void Drop()
     {
+        appearance?.ClearTransfer();
         looseMotion.Stop();
         releaseRecoveryContacts.Clear();
         flightVelocity = Vector3.zero;

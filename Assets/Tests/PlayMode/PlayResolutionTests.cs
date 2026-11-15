@@ -637,8 +637,13 @@ public class PlayResolutionTests
         var renderer = appearance.GetComponentInChildren<MeshRenderer>();
         var mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
         Assert.That(mesh.subMeshCount, Is.EqualTo(6));
-        Assert.That(renderer.bounds.size.z, Is.InRange(0.30f, 0.34f));
-        Assert.That(renderer.bounds.size.x, Is.InRange(0.18f, 0.21f));
+        // Include the imported model scale in the dimension check. World-space
+        // bounds would also include the wrist rotation and inflate the result.
+        Vector3 dimensions = Vector3.Scale(mesh.bounds.size, renderer.transform.lossyScale);
+        float[] axes = { dimensions.x, dimensions.y, dimensions.z };
+        System.Array.Sort(axes);
+        Assert.That(axes[2], Is.InRange(0.30f, 0.34f));
+        Assert.That(axes[0], Is.InRange(0.18f, 0.21f));
 
         // A cosmetic selection must not alter ownership, ruling position, mesh or collision volume.
         Transform holder = ball.Carrier;

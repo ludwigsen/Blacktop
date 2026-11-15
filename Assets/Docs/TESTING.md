@@ -266,7 +266,7 @@ checkout's ignored Builds/PreSnap directory.
 ### T-02: QB starts with the ball
 **Steps:** Reach the line of scrimmage on any play.
 **Expected:** QB already holds the ball in Pistol or Shotgun. No snap animation or delay.
-**Watch for:** Ball at the QB's feet or floating above the hands; the football has a fitted waist-level carry offset, but a hand-aligned carry pose remains unfinished.
+**Watch for:** Ball floating outside the QB's fingers or passing through the torso. See T-124 for grip and action checks.
 
 ### T-03: Control authority
 **Steps:** Start a play; pass to a receiver; let the receiver catch it.
@@ -299,7 +299,7 @@ checkout's ignored Builds/PreSnap directory.
 ### T-21: WRs block on run plays
 **Steps:** Call a run play. Hand off or run with the QB.
 **Expected:** WRs block instead of running routes.
-**Watch for:** WRs running routes on run plays. (**Blocking logic is marked untested.** Treat anything odd here as worth reporting rather than assumed intended. Also note: a visible handoff is not built yet.)
+**Watch for:** WRs running routes on run plays or the football floating between the QB and runner during the exchange. T-124 covers the exchange. Blocking feel remains unverified.
 
 ### T-22: Blocking effectiveness
 **Steps:** Run the same run play 5 times. Observe `AllyBlocker` behavior.
@@ -407,11 +407,9 @@ Evidence is retained locally under ignored `Builds/Validation/Issue2/`: baseline
 
 ## Known limitations (not bugs to fix as side effects)
 
-- Football visuals are imported; hand-aligned carrying and action animations remain unfinished.
-- No visible handoff; run plays are not fully designed.
+- Football carry, throw and paired handoff are wired. Gait/contact quality, hand alignment and believable weight transfer still need match-speed review.
 - Downs and distance are implemented; regression-test fourth-down turnovers and goal-to-go.
 - No game clock.
-- Football carryOffset is fitted at waist level; fingers/hand-bone alignment remains pending carry/handoff animation.
 - Blocking is untested; expect rough behavior.
 - Recovery uses nearest distance plus entity-ID tie-break; exercise overlapping players.
 - Loose-ball pursuit now has exclusive movement ownership; controller feel still requires manual scrum testing.
@@ -550,6 +548,49 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 **Automated scenarios:** PlayerAnimationTests covers all fourteen shared Humanoid stacks; standard/fast/backward animation selection on every actor; root-motion isolation; teleports, vertical-motion filtering and reenable; hurdle rate, imported upward-body-motion isolation and whistle cancellation. Existing match/Gamebreaker/football-style cases remain in the same run.
 
 **Validation:** Unity 6000.5.6f1 isolated Editor Play Mode: **44/44 passed**, zero failures/skips (the prior 40 plus four animation cases). All fourteen actors were exercised at standard/fast/backward speeds with root-position and pelvis-grounding assertions. The imported clips retain Original Y to match the existing fitted body/idle; Jump extracts its trajectory using Original, keeping its body center stable while legs articulate. Root motion remains off. Rendered current-bone poses were inspected for backward, idle, standard/fast run and five jump phases; temporary QA bakes avoid reusing a GPU skinning cache between captures in the same Editor frame. Final runtime/controller/prefab/import files match the tested copy byte for byte; git diff --check is clean. Evidence: ignored Builds/Validation/player-animation-playmode.xml, Player-locomotion-poses.png, Player-hurdle-poses.png and player-animation-preview.log. The copied Editor search cache emitted its existing QuickSearch indexing exception during preview startup; no gameplay test failed. Physical controller feel, Windows and a new standalone build remain unverified.
+
+## T-124: Football carry, throw and designed handoff (2026-11-15)
+
+1. Open `Assets/Scenes/SampleScene.unity`. In the Hierarchy expand a Player's
+   PlayerVisuals > PlayerModel. On the Animator object open Window >
+   Animation > Animator. Inspect the Football layer alongside Base Layer.
+   For pose review, open Window > Animation > Animation and scrub the clips
+   on the selected Animator object. In the Carry state, ready and tuck are
+   the two motions in its blend tree. The ball and paired reaches need Play Mode.
+2. Enter Play Mode and call Slants. After the offense sets, the QB holds the
+   ball in a ready grip. Press R to start, use WASD to move and turn, and use
+   Left Shift to exercise the fast gait. Look for upper torso contact and
+   clean forearm and wrist placement. Repeat as a runner and on dressed
+   characters of different builds and heights.
+3. Start another Slants play and select a receiver with the shown 1–4 prompt,
+   or use H for the existing auto-target pass. Watch for one release, a
+   continuous ball path, overhand follow-through and recovery. Pause and
+   frame-step across release, then repeat at regular gameplay speed.
+4. Call Dive and press R once set. Watch the runner's approach, both arms at
+   the mesh point, and the ball through the runner's breakaway. Expect one
+   ownership change at the proximity trigger and an approximately 0.16 s
+   rendered-ball blend. A visible gap, floating ball or late receiving pocket
+   fails visual acceptance. Repeat on both attacking sides and after a
+   whistle. Dive uses Pistol. To test a Shotgun exchange, assign Shotgun_Base
+   to Dive in a disposable test copy.
+
+PlayerAnimationTests drives the real human pass move, CPU release,
+and HandoffCoordinator in SampleScene. It checks the six Humanoid clips and
+shared Avatar on all 14 actors, carry over idle/standard/fast gaits,
+grip tracking through turns, cancellation, unchanged ruling position,
+distinct pitch presentation, and one ownership transfer per play.
+The isolated fixtures drive actor and Animator steps. Match-speed realism,
+physical controllers, Windows and standalone acceptance remain manual.
+
+Graphics-enabled Unity 6000.5.6f1 passed 10 focused cases on the original
+recovered checkout and 180 of 180 full Play Mode cases after recovery on
+`master` based on `3e8eb02`. Two separate 11-case diagnostic runs captured
+frames with the default model and the front-end Athletic outfit. The frames
+show a low running carry, a gap below the throwing hand before release,
+and visible separation between the two handoff reaches. Temporary clothing
+shells show clipping. The throw frames sample the animation clock with the
+ball flight clock held at launch. Local XML, logs and labeled frames are under
+`Builds/Validation/AnimationAudit/`.
 
 ## T-101: Modular player appearances (2026-10-22)
 

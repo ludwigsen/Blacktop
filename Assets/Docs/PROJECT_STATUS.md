@@ -37,6 +37,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - `PlayState.PossessionTeamId` owns drive direction; live carrier ownership drives return control/direction before the whistle.
 - QB starts with the ball in hand (no snap).
 - Street-inspired football replaces the visible sphere: Blender source, Unity FBX, raised laces, leather maps, Blacktop stamp, and reusable FootballVisual prefab. Two FootballStyle presets (Street Classic / Backlot Leather) are selectable through FootballAppearance; a player-facing picker/persistence is deferred.
+- The shared Humanoid rig plays carry, human throw windup, shared throw follow-through and paired handoff poses. The rendered football follows the live hand grip, with ownership and rulings on the ball root. See T-124 for validation and visual limitations.
 
 ### Offense and defense
 - `BlockingCoordinator` / `AllyBlocker` for blocking. **Marked "untested" in observed play.**
@@ -90,7 +91,8 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 |---|---|
 | OOB / goal-line rulings need Editor validation | Automatic OOB polling exists. Held-ball goal-line and sideline checks now share live ruling position and contact precedence; test both directions and corners. |
 | Downs and first-down marker | Automated match cases verify first downs, incompletions, OOB gains and fourth-down possession changes; visual line placement still needs manual review. |
-| Ball carry pose provisional | Scene carryOffset is fitted to the smaller football; hand-bone grip and a carry animation remain to align it precisely with the fingers. |
+| Football action motion is provisional (#11) | Carry needs secure torso/forearm fit. Throw lacks an authored lower-body weight transfer. Handoff starts its visual blend on ownership transfer and needs a contact-matched receiving pocket. Match-speed and dressed roster acceptance remain open. |
+| Football animation authoring | Editable Unity clips are installed. The earlier batch authoring and capture scripts were temporary. Blender has the character rig with no action sources for these clips. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
 | Blocking / D-Moves feel (#14) | Previously unused ratings now own block-contact recovery cadence and recovery from block knockback respectively. Neutral timers and the existing power/resistance contest are retained; manual engagement/balance acceptance is still needed. |
 | Gamepad action bindings (#13) | Pass, Pitch and the human offensive start-play action still need controller bindings. #10 adds LT/L2 for play art and reuses RB/R1 for defensive cycling. |
@@ -109,8 +111,8 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 
 1. **Normal standalone gameplay pass** — owner verified the prior four-fix Editor gameplay. The expanded 39-case suite passes in both Editor and a macOS standalone player, including matches to 21 and rematches. Manual controller/graphics checks of the normal app remain.
 2. **Loose-ball gameplay feel (#14)** — ownership is exclusive; #3 adds moving/airborne fumbles and ground glyphs. Recheck scrum readability, release-contact clearance and recovery/control transfer with physical input.
-3. **Visible handoff** — football mesh is integrated; proximity transfer still needs an observable QB-to-back exchange.
-4. **Football animation readability** — running/backpedaling/fast-run and hurdle clips are wired. Carry grip, throwing, catching and tackle reactions remain unfinished; controller feel, foot sliding and transition tuning still need manual playtesting.
+3. **Handoff contact (#11)** — make the giver's presentation and the runner's receiving pocket meet at the existing ownership event. Verify a single visually continuous ball and an unobstructed breakaway on Dive.
+4. **Football animation readability (#11)** — refine throw weight transfer/release and carry grip. Hard Cut Left/Right, catch-to-tuck and tackle reactions still need motion. Controller feel, foot sliding and transition tuning need live playtesting.
 5. **Front-end manual acceptance** — finish a physical-controller match with an edited roster, confirm all gameplay actions and restart persistence on Windows. MainMenu, roster editing and both exhibition modes are implemented; automated integration includes both human sides, rematch and return to menu.
 6. **Roster authoring** — identity/ratings deliberately remain in the existing GUID-keyed PlayerRecord. Runtime appearance DTOs omit Unity asset references; explicit source commit creates per-GUID appearance assets. New-team creation is deferred.
 7. **Exhibition balance/acceptance** — ConditionData now feeds bounded match-scoped effects through PlayerAttributes, with independent Accel handling. Four data-driven difficulties affect real CPU pursuit, coverage, offensive decisions and draft ranking. Conditions, difficulty, the six-team draft pool and physical controller play still need manual acceptance.

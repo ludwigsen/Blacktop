@@ -126,3 +126,14 @@ All animations must:
 - Support Blacktop's arcade football gameplay.
 - Prefer physically believable standard animations before stylized alternatives.
 - Be validated in Blender and Unity before completion.
+
+### Local Blender workflow
+
+For all Blacktop Blender animation tasks, prioritize local execution with minimal external dependencies.
+
+- Use locally installed Blender skills and scripts. Do not fetch or reinstall skills during execution.
+- Run the local Blender installation with headless Python whenever possible.
+- Do not use remote Blender MCP services.
+- Reuse existing Blender files, rigs, skeletons, and animation assets.
+- Obtain explicit approval before downloading assets, Python packages, or any other dependencies.
+- If an operation requires network access, explain why before attempting it. Continue with local work when network access is unavailable.

@@ -46,6 +46,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerState CurrentState => currentState;
     // Read-only timing for the shared animation presenter, including move cancellation.
     public float HurdleDuration => hurdleMove.Duration;
+    internal float PassWindup => activeMove == passMove && passMove != null ? passMove.VisualWindup : -1f;
     public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
     // Exposed so BallController can read a receiver's Catching (and any future stat)
     // without every consumer needing its own duplicate serialized attributes reference.
