@@ -110,3 +110,19 @@ If a doc disagrees with the code, the code wins. Fix the doc.
 ## Design backlog that is a hard constraint when reached
 
 Details are in `PROJECT_STATUS.md`. Summary: 12 player attributes with single-owner effects; Gamebreaker (NFL Street 1 flat possession-long boost + NFL Street 3 player-triggered activation, no cutscene); walls as hazards; additive per-field modifiers; character appearance built from 5 body archetypes on a shared skeleton, height bands via uniform scale, and pooled faces/hair/facial hair. Maximum perceived variety per asset.
+
+## Blender Animation Standards
+
+For all Blender character animation tasks:
+- Use blender-core as the starting point.
+- Use blender-animation for creating or editing animations.
+- Use blender-character-rigging for skeleton and rig issues.
+- Use blender-asset-qa for validation.
+
+All animations must:
+- Preserve Unity Humanoid Avatar compatibility.
+- Use consistent skeleton and bone mappings.
+- Avoid foot sliding and unnatural joint movement.
+- Support Blacktop's arcade football gameplay.
+- Prefer physically believable standard animations before stylized alternatives.
+- Be validated in Blender and Unity before completion.
