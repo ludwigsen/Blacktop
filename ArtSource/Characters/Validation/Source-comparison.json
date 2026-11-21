@@ -1,0 +1,109 @@
+{
+  "Slim": {
+    "rest_max_delta_m": 4.76837158203125e-07,
+    "source_contacts": 0,
+    "rig_contacts": 0,
+    "regions": {},
+    "catch_extreme_edge_mm": [
+      7.830150604248047,
+      28.82462501525879
+    ],
+    "edge_start_xyz": [
+      -0.17867140471935272,
+      0.0277637280523777,
+      1.3028733730316162
+    ]
+  },
+  "Athletic": {
+    "rest_max_delta_m": 2.384185791015625e-07,
+    "source_contacts": 0,
+    "rig_contacts": 0,
+    "regions": {},
+    "catch_extreme_edge_mm": [
+      6.1668009757995605,
+      27.22148323059082
+    ],
+    "edge_start_xyz": [
+      -0.19504457712173462,
+      0.019436394795775414,
+      1.2926450967788696
+    ]
+  },
+  "Muscular": {
+    "rest_max_delta_m": 4.76837158203125e-07,
+    "source_contacts": 0,
+    "rig_contacts": 0,
+    "regions": {},
+    "catch_extreme_edge_mm": [
+      5.799469470977783,
+      30.648887634277344
+    ],
+    "edge_start_xyz": [
+      -0.2180192917585373,
+      0.025642823427915573,
+      1.2809662818908691
+    ]
+  },
+  "Stocky": {
+    "rest_max_delta_m": 4.76837158203125e-07,
+    "source_contacts": 14,
+    "rig_contacts": 14,
+    "regions": {
+      "thigh_l / thigh_r": 6,
+      "pelvis / pelvis": 8
+    },
+    "catch_extreme_edge_mm": [
+      3.6413183212280273,
+      31.45901870727539
+    ],
+    "edge_start_xyz": [
+      -0.21822597086429596,
+      0.03241736814379692,
+      1.2744812965393066
+    ]
+  },
+  "Power": {
+    "rest_max_delta_m": 4.76837158203125e-07,
+    "source_contacts": 145,
+    "rig_contacts": 146,
+    "regions": {
+      "spine_03 / upperarm_r": 40,
+      "pelvis / pelvis": 20,
+      "spine_03 / upperarm_l": 40,
+      "upperarm_r / upperarm_r": 10,
+      "thigh_l / thigh_r": 26,
+      "upperarm_l / upperarm_l": 10
+    },
+    "catch_extreme_edge_mm": [
+      0.4974830746650696,
+      31.767070770263672
+    ],
+    "edge_start_xyz": [
+      -0.23907360434532166,
+      0.03693835064768791,
+      1.2663904428482056
+    ]
+  },
+  "Massive": {
+    "rest_max_delta_m": 4.76837158203125e-07,
+    "source_contacts": 131,
+    "rig_contacts": 130,
+    "regions": {
+      "spine_03 / upperarm_r": 39,
+      "spine_03 / upperarm_l": 39,
+      "thigh_l / thigh_r": 41,
+      "pelvis / pelvis": 3,
+      "upperarm_r / upperarm_r": 4,
+      "upperarm_l / upperarm_l": 4
+    },
+    "catch_extreme_edge_mm": [
+      4.658512592315674,
+      37.272010803222656
+    ],
+    "edge_start_xyz": [
+      0.23790332674980164,
+      0.008823690004646778,
+      1.2736220359802246
+    ]
+  }
+}
