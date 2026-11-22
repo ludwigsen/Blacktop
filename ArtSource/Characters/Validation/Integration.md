@@ -41,8 +41,18 @@ The earlier Local-cleanup.tsv records prior cache removals. The current run's se
 
 - **PASS · Interactive lineup.** A disposable Play Mode check opened the saved scene, verified the dominant clip on all six live Animators for all eleven choices, held a scrubbed phase, isolated one actor and restored the full set. It also verified that Play advances the phase. The camera capture shows the six rendered skins in the three-quarter run view. No physical mouse-input usability test was performed.
 - **PASS · Runtime and dependency checks.** The full run passed 181/181 with no failures or skips, including 180 project tests and the additional lineup check. Four exhibition lifecycle cases verified the live skin, Avatar and controller of each actor against the saved selection and counted six distinct rigs in Head 2 Head and Pickup, home and away. A fresh Unity dependency traversal from both enabled scenes and Player.prefab found six production model/prefab pairs and zero old body, eyes, wrapper or skeleton. The separate model test sampled eleven clips at nine phases on each of six valid Humanoid Avatars (594 samples).
-- **PASS · Power correction.** Four weights lists changed. Each side's catch-stress opening fell from 31.767 to 0.459 mm. The production importer GUID is preserved. Rest surface, bone count, hierarchy and weight budget passed.
+- **PASS · Power correction.** Only four vertices received new weights. Each side's catch-stress opening fell from 31.767 to 0.459 mm. The production importer GUID is preserved. Rest surface, bone count, hierarchy and weight budget passed.
 - **FAIL · Handoff contact quality.** The staged gameplay exchange test passed ownership and timing checks. In the actual rendered frames at 20, 100 and 220 ms, the ball moves between players while the hands fail to form a receiving pocket. The ball center is 0.197 m from the receiving hand bone at 100 ms and 0.121 m at 220 ms. These are center-to-bone distances, not skin clearance. The frames support animation refinement, separate from rig weighting. See [the staged exchange](Handoff-contact.jpg).
 - **NOT TESTED · Human-played match-speed visual acceptance** across the full six-body roster, physical-controller feel and Windows playback. The staged exchange holds player roots in the test fixture. Automated mode passes and isolated review poses cover different questions.
 
 Local raw evidence is under Builds/Validation/MPFB/Integration, including playmode.xml, model-review.log, shipping-dependencies.txt, lineup.png and handoff.xml. The original migration report and Cleanup.tsv refer to the earlier retirement checkpoint.
+
+
+## Cleanup measurement
+
+**PASS.** The main checkout measured 8,420,406,231 logical file bytes immediately before cleanup and 8,420,383,688 immediately after, including Git, ignored files and the independent checkout. This isolated 22,543 bytes of recovery. At task start the checkout measured 8,417,719,995 bytes. Test evidence and new Git objects account for growth over the whole task. The disposable Unity project was outside these totals. No Unity asset or metadata file was deleted.
+
+| Removed repository path | Bytes | Reason |
+|---|---:|---|
+| Tools/CharacterPipeline/__pycache__/check_poses.cpython-313.pyc | 12,317 | Ignored compiled Python cache. The source and the validated diagnostics are retained. |
+| Tools/CharacterPipeline/__pycache__/rig_body.cpython-313.pyc | 10,226 | Ignored compiled Python cache for the prior rig builder. The current source contains the reproducible Power correction. |
