@@ -120,23 +120,23 @@
     "Shoulder abduction": {
       "edge_ratio_min_max": [
         0.6037392020225525,
-        36.31932067871094
+        3.022258758544922
       ],
       "edge_ratio_p01_p99": [
         0.9746628165245056,
-        1.0169778168201447
+        1.017495441436768
       ],
-      "intersecting_triangle_pairs": 96,
+      "intersecting_triangle_pairs": 97,
       "new_contacts": {}
     },
     "Shoulder forward": {
       "edge_ratio_min_max": [
         0.20646053552627563,
-        60.62234115600586
+        5.247197151184082
       ],
       "edge_ratio_p01_p99": [
-        0.96439708173275,
-        1.0721231341362
+        0.9649248957633972,
+        1.07281358242035
       ],
       "intersecting_triangle_pairs": 131,
       "new_contacts": {
@@ -148,7 +148,7 @@
     "Shoulder backward": {
       "edge_ratio_min_max": [
         0.10842020064592361,
-        33.98898696899414
+        2.4073991775512695
       ],
       "edge_ratio_p01_p99": [
         0.9782966077327728,
@@ -245,15 +245,15 @@
     "Running stride": {
       "edge_ratio_min_max": [
         0.13643620908260345,
-        36.19097900390625
+        8.841336250305176
       ],
       "edge_ratio_p01_p99": [
-        0.8280865520238876,
-        1.3014052927494064
+        0.8271262437105179,
+        1.3003806352615357
       ],
-      "intersecting_triangle_pairs": 345,
+      "intersecting_triangle_pairs": 343,
       "new_contacts": {
-        "spine_03 / upperarm_r": 64,
+        "spine_03 / upperarm_r": 62,
         "calf_l / thigh_l": 48,
         "pelvis / thigh_l": 33,
         "spine_03 / upperarm_l": 78,
@@ -269,13 +269,13 @@
     "Throwing position": {
       "edge_ratio_min_max": [
         0.2501975893974304,
-        61.24501037597656
+        5.297054290771484
       ],
       "edge_ratio_p01_p99": [
-        0.8590413987636566,
+        0.8593360543251037,
         1.2295343101024632
       ],
-      "intersecting_triangle_pairs": 73,
+      "intersecting_triangle_pairs": 74,
       "new_contacts": {
         "lowerarm_r / upperarm_r": 27
       }
@@ -283,10 +283,10 @@
     "Catching position": {
       "edge_ratio_min_max": [
         0.21221469342708588,
-        63.8555793762207
+        5.44630241394043
       ],
       "edge_ratio_p01_p99": [
-        0.8650632619857788,
+        0.8655556440353394,
         1.247478866577149
       ],
       "intersecting_triangle_pairs": 46,

@@ -44,6 +44,20 @@ def use_athletic_sculpt(mesh):
     bpy.data.objects.remove(sculpt, do_unlink=True)
 
 
+def correct_power_underarms(body):
+    # These adjacent vertices are sub-millimetre neighbors on the locked Power topology.
+    # Preserve the mean shoulder/spine influence on each pair as the arm rotates.
+    for pair in ((8304, 8314), (1632, 1642)):
+        first, second = (body.data.vertices[i] for i in pair)
+        if not 0.00045 < (first.co - second.co).length < 0.00055:
+            raise ValueError("Power underarm correspondence changed")
+        weights = [{g.group: g.weight for g in v.groups} for v in (first, second)]
+        if weights[0].keys() != weights[1].keys() or len(weights[0]) > 4:
+            raise ValueError("Power underarm influence set changed")
+        for group, weight in weights[0].items():
+            body.vertex_groups[group].add(pair, (weight + weights[1][group]) / 2, 'REPLACE')
+
+
 def build(name, directory):
     target = directory / f"BT_{name}_Rigged.blend"
     # A new destination protects manual adjustments in a previous derivative.
@@ -80,6 +94,8 @@ def build(name, directory):
         total = sum(w for w, _ in ranked)
         for weight, bone in ranked:
             groups[bone].add([index], weight / total, 'REPLACE')
+    if name == "Power":
+        correct_power_underarms(body)
     skin.materials.clear()
     skin.materials.append(bpy.data.materials.new("Body"))
     modifier = body.modifiers.new("Skeleton", "ARMATURE")
