@@ -45,3 +45,13 @@ Body selection preserves the five historical serialized ordinals (Lean → SLIM,
 PASS · The graphics-enabled Play Mode suite passed 180/180 before cleanup, including match bootstrap, Head 2 Head, Pickup, the in-menu save flow, 14 actors, 72 body/height selections, handoff ownership and presentation, and shared-controller playback. The imported bind height is calibrated on the visual child. The capsule remains 2 m high and 1 m wide. With grounded feet, selected rest heights place the crown from 30 cm below to 1 cm above the capsule top. Lateral arm silhouettes can extend past the radius. No capsule dimensions or player ratings were adjusted.
 
 PASS · An independent Unity check reloaded the separated runtime and authoring prefabs. The actor and preview use the fitted Athletic default and the authoring model retains its original skeleton contract.
+
+## Dependency and cleanup checkpoint
+
+PASS · Unity enumerated direct importer/serialized dependencies before deletion. The candidate set had no incoming references from surviving project assets. Four empty/missing cosmetic records still referred to the old skeleton; their unused references were removed. A second recursive check from MainMenu, SampleScene and Player.prefab found zero legacy body FBX, temporary meshes, authoring prefab or old skeleton. The old authoring model and eye meshes remain available outside that graph. The original Blender/Unity interchange code is archived alongside its validation driver.
+
+PASS · The historical animation authoring driver successfully rebaked the six original football actions on the preserved 58-joint reference rig. The entire parsed bake matched the existing compressed reference. A tracked-Blender external-path scan found no readers of the two duplicate football textures. Their surviving production files have matching SHA-256 digests.
+
+Cleanup.tsv lists 68 phase-7 source-tree files with byte sizes, digests and the corresponding dependency decision. Their combined original size was 30,113,669 bytes. Phase 1 separately removed two generator bytecode files totalling 46,473 bytes. The two idle, ignored compiler/shader caches totalled 314,939,219 logical bytes. The independent modified checkout under Builds/StandardFootball, installed packages, unique source exports, licensed assets and earlier test evidence were preserved.
+
+PASS · Final graphics-enabled Play Mode run after removals: 180 passed, zero failed or skipped, 178.93 seconds. The 26 exhibition, 11 animation, nine front-end, seven appearance and five supplied-roster tests are included in that total. The full result XML is in Builds/Validation/MPFB/runtime-final.xml.

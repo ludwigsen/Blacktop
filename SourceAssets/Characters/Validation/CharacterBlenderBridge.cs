@@ -34,7 +34,7 @@ public static class CharacterBlenderBridge
             matrix=Matrix(skin.transform.worldToLocalMatrix*n.localToWorldMatrix) }).ToArray();
         if(bones.Select(b=>b.name).Distinct().Count()!=bones.Length)throw new InvalidOperationException("Bone leaf names must be unique for Blender authoring.");
         var surfaces=new List<Surface>();
-        foreach(string path in AssetDatabase.FindAssets("t:Mesh",new[]{FrontEndTemporaryArt.Folder}).Select(AssetDatabase.GUIDToAssetPath).Where(p=>!Path.GetFileName(p).StartsWith("Eye_",StringComparison.Ordinal)).OrderBy(p=>p))
+        foreach(string path in AssetDatabase.FindAssets("t:Mesh",new[]{LegacyMeshReader.Folder}).Select(AssetDatabase.GUIDToAssetPath).Where(p=>!Path.GetFileName(p).StartsWith("Eye_",StringComparison.Ordinal)).OrderBy(p=>p))
             surfaces.Add(Describe(AssetDatabase.LoadAssetAtPath<Mesh>(path),skin,path,skin.transform));
         foreach(var eye in eyes)
         {
@@ -48,13 +48,13 @@ public static class CharacterBlenderBridge
         using(var writer=new StreamWriter(gzip))writer.Write(JsonUtility.ToJson(packet));
         Debug.Log($"Exported {surfaces.Count} editable surfaces and {bones.Length} rig bones. Build .blend sources with SourceAssets/Characters/build_sources.py.");
     }
-    static string EyePath(string name)=>FrontEndTemporaryArt.Folder+"/Eye_"+name+".asset";
+    static string EyePath(string name)=>LegacyMeshReader.Folder+"/Eye_"+name+".asset";
     static void EnsureEditableEyes(SkinnedMeshRenderer[] source)
     {
         // Extract imported eye geometry once so Blender edits can return without replacing the FBX rig.
         foreach(var eye in source)
             if(AssetDatabase.LoadAssetAtPath<Mesh>(EyePath(eye.name))==null)
-            {var copy=FrontEndTemporaryArt.ReadableCopy(eye.sharedMesh);copy.name="Eye_"+eye.name;AssetDatabase.CreateAsset(copy,EyePath(eye.name));}
+            {var copy=LegacyMeshReader.ReadableCopy(eye.sharedMesh);copy.name="Eye_"+eye.name;AssetDatabase.CreateAsset(copy,EyePath(eye.name));}
         const string path="Assets/_Project/Prefabs/PlayerModel.prefab";
         var prefab=PrefabUtility.LoadPrefabContents(path);bool changed=false;
         try
@@ -73,7 +73,7 @@ public static class CharacterBlenderBridge
     }
     static Surface Describe(Mesh original,SkinnedMeshRenderer skin,string path,Transform canonical)
     {
-        var mesh=FrontEndTemporaryArt.ReadableCopy(original);
+        var mesh=LegacyMeshReader.ReadableCopy(original);
         try
         {
             var weights=mesh.boneWeights;
@@ -109,7 +109,7 @@ public static class CharacterBlenderBridge
             foreach(var row in packet.meshes)
             {
                 // Restrict writes to existing character meshes; never accept arbitrary export paths.
-                if(row==null||string.IsNullOrEmpty(row.targetAsset)||!row.targetAsset.StartsWith(FrontEndTemporaryArt.Folder+"/",StringComparison.Ordinal)||
+                if(row==null||string.IsNullOrEmpty(row.targetAsset)||!row.targetAsset.StartsWith(LegacyMeshReader.Folder+"/",StringComparison.Ordinal)||
                     row.targetAsset.Contains("..")||!paths.Add(row.targetAsset)||AssetDatabase.AssetPathToGUID(row.targetAsset)!=row.targetGuid)
                     throw new InvalidDataException("Export targets must be unique existing character mesh assets with matching GUIDs.");
                 var target=AssetDatabase.LoadAssetAtPath<Mesh>(row.targetAsset);
