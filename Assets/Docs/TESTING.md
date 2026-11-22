@@ -787,3 +787,7 @@ and a human-played standalone match remain manual checks.
 4. Check recursive dependencies of MainMenu, SampleScene and Player.prefab for the old PlayerModel, PlayerBody, old skeleton and temporary meshes. The historical football-action reference rebake should still match the six-action, 58-joint reference.
 
 All three migration Play Mode runs passed 180/180, including separate runs with the local and committed match scene. The packaged macOS player reached the six-team menu on Metal. The 594 sampled Unity poses validate retargeting on the installed clips. Physical controller feel, a human-played full match, match-speed ball grip, foot planting and Windows playback require separate review. The animation readiness matrix records individual missing clips.
+
+## T-126 · Inspect the six-body lineup
+
+Enter Play Mode in MPFBCharacterReview. Select each of the eleven motions and verify all six characters move. Pause, scrub, resume, isolate each body and switch between front, side and three-quarter. Check that the feet keep the same baseline and the paused phase survives camera and body changes. Follow the interactive review instructions in ArtSource/Characters/README.md. In the exhibition lifecycle tests, disposable player appearances exercise the production skeleton, renderer, Avatar and controller for all six builds on both sides and in both modes.
