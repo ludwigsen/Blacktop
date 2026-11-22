@@ -25,6 +25,8 @@ namespace Blacktop.Player
         // (leaks/allocates every call, breaks batching). MPB avoids both.
         private MaterialPropertyBlock mpb;
 
+        public void BindVisual(Renderer visual) => bodyRenderer = visual;
+
         private void Awake()
         {
             stateMachine = GetComponent<PlayerStateMachine>();
@@ -36,7 +38,7 @@ namespace Blacktop.Player
             // Polling here because PlayerStateMachine doesn't currently expose
             // a state-changed event — just a CurrentState-style property (assumed below).
             // If that's wrong, tell me the real property/enum name.
-            ApplyColorForState(stateMachine.CurrentState);
+            if (bodyRenderer != null) ApplyColorForState(stateMachine.CurrentState);
         }
 
         private void ApplyColorForState(PlayerState state)

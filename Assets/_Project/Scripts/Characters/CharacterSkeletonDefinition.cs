@@ -6,6 +6,7 @@ public class CharacterSkeletonDefinition : ScriptableObject
 {
     public string id = "blacktop.humanoid.v1";
     public GameObject referenceModel;
+    [Min(.01f)] public float restHeightMeters = 1.83f; // Measured before any Animator pose.
     public SkinnedMeshRenderer referenceSkin;
     [Min(0.00001f)] public float bindTolerance = 0.001f;
 

@@ -15,10 +15,9 @@ public static class FrontEndSetup
     public static void Generate()
     {
         Directory.CreateDirectory(Data);AssetDatabase.Refresh();
-        var legacy=AssetDatabase.LoadAssetAtPath<PlayerAppearanceCatalog>(CharacterAppearanceSetup.Data+"/PrototypeCatalog.asset");
-        var catalog=Create<PlayerAppearanceCatalog>("FrontEndCatalog",asset=>{
-            asset.parts=FrontEndTemporaryArt.Build(legacy);asset.heightProfiles=legacy.heightProfiles;
-            asset.skinTones=legacy.skinTones;asset.hairColors=legacy.hairColors;});
+        // The production catalog carries stable saved IDs and fitted body prefab references.
+        var catalog=AssetDatabase.LoadAssetAtPath<PlayerAppearanceCatalog>(Data+"/FrontEndCatalog.asset");
+        if (catalog==null) throw new InvalidOperationException("Restore the versioned FrontEndCatalog.asset.");
         var standard=Create<PlayerAppearanceDefinition>("FrontEndDefault",asset=>{
             var source=AssetDatabase.LoadAssetAtPath<PlayerAppearanceDefinition>(CharacterAppearanceSetup.Data+"/Appearance_Standard.asset");
             EditorUtility.CopySerialized(source,asset);asset.id="appearance.frontend.default";asset.bodyId="body.athletic.temporary";
@@ -69,7 +68,7 @@ public static class FrontEndSetup
         var settings=Create<FrontEndSettings>("FrontEndSettings",asset=>{
             asset.teams=teams;asset.fields=new[]{AssetDatabase.LoadAssetAtPath<FieldDefinition>("Assets/_Project/Data/Fields/TheLot.asset"),AssetDatabase.LoadAssetAtPath<FieldDefinition>("Assets/_Project/Data/Fields/Downtown.asset")};
             asset.appearances=catalog;asset.defaultAppearance=standard;asset.weights=weight;
-            asset.visualPrefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/PlayerModel.prefab");
+            asset.visualPrefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/MPFBPlayerModel.prefab");
             asset.theme=AssetDatabase.LoadAssetAtPath<HUDTheme>("Assets/_Project/Scripts/UI/BlacktopHUDTheme.asset");
             asset.paint=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/scorebug_base.png");});
         // Register committed exhibition catalogs without regenerating rosters or venue assets.

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: facial.beard
   slot: 3
   bodyArchetype: 1
-  skeleton: {fileID: 11400000, guid: 985357a217d524e44927dc1c70ba514b, type: 2}
+  skeleton: {fileID: 0}
   placeholder: 1
   authoringNote: No mesh available. Attachment omitted.
   emptyOption: 0

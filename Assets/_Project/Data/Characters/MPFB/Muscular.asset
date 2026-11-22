@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e206ab331226149019cf27b167df7ccc, type: 3}
+  m_Name: Muscular
+  m_EditorClassIdentifier: Blacktop::CharacterSkeletonDefinition
+  id: MUSCULAR
+  referenceModel: {fileID: 7689265048826249661, guid: 6109b36bbd36445949cb85b198f6c627, type: 3}
+  restHeightMeters: 1.7291076
+  referenceSkin: {fileID: 2628993937444234528, guid: 6109b36bbd36445949cb85b198f6c627, type: 3}
+  bindTolerance: 0.001

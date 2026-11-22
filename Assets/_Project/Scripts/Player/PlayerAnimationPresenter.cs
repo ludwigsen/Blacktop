@@ -67,8 +67,16 @@ public class PlayerAnimationPresenter : MonoBehaviour
     {
         stateMachine = GetComponent<PlayerStateMachine>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
+        BindVisual(animator);
+    }
+
+    public void BindVisual(Animator visual)
+    {
+        // Refresh hand, chest and recoil references whenever the fitted Avatar changes.
+        animator = visual;
         if (animator != null)
         {
+            footballState = 0;
             animator.applyRootMotion = false;
             footballLayer = animator.GetLayerIndex("Football");
             if (animator.isHuman)

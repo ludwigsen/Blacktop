@@ -90,9 +90,9 @@ public static class FrontEndTemporaryArt
             float width=1,depth=1;
             switch(build)
             {
-                case BodyArchetype.Lean:width-=.12f*chest+.10f*waist+.08f*legs;depth-=.10f*chest+.09f*waist;break;
-                case BodyArchetype.Thick:width+=.14f*chest+.08f*waist+.15f*legs+.10f*arms;depth+=.13f*chest+.10f*legs;break;
-                case BodyArchetype.Heavy:width+=.12f*chest+.34f*waist+.14f*legs;depth+=.14f*chest+.42f*waist+.12f*legs;break;
+                case BodyArchetype.Slim:width-=.12f*chest+.10f*waist+.08f*legs;depth-=.10f*chest+.09f*waist;break;
+                case BodyArchetype.Stocky:width+=.14f*chest+.08f*waist+.15f*legs+.10f*arms;depth+=.13f*chest+.10f*legs;break;
+                case BodyArchetype.Power:width+=.12f*chest+.34f*waist+.14f*legs;depth+=.14f*chest+.42f*waist+.12f*legs;break;
                 case BodyArchetype.Massive:width+=.28f*chest+.10f*waist+.22f*legs+.22f*arms;depth+=.25f*chest+.08f*waist+.18f*legs;break;
             }
             p.x*=width;p.z*=depth;vertices[i]=p;

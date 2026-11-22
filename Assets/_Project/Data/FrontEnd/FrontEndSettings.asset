@@ -60,7 +60,7 @@ MonoBehaviour:
   pickupAwayStyle: {fileID: 11400000, guid: 9bccb93aaef7c4f8b984232e1e48202e, type: 2}
   appearances: {fileID: 11400000, guid: 080e2e62a24084ef5afa1f38995c1b45, type: 2}
   defaultAppearance: {fileID: 11400000, guid: ce0cec7ed09f642b284ba6280a3a8e1c, type: 2}
-  visualPrefab: {fileID: 132864934065619634, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+  visualPrefab: {fileID: 132864934065619634, guid: e381b10497bd436a9982060a276f8d88, type: 3}
   weights: {fileID: 11400000, guid: dffbc260cc709498b873577ad1d05101, type: 2}
   theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
   paint: {fileID: 21300000, guid: 1df3f1918c9094b7294ce86d246644ee, type: 3}

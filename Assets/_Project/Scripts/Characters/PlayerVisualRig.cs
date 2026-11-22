@@ -23,11 +23,42 @@ public class PlayerVisualRig : MonoBehaviour
     Bounds originalBounds;
     Transform head;
 
+    bool placementCaptured;
+    public void SelectBody(CharacterSkeletonDefinition next)
+    {
+        if (skeleton == next && animator != null) return;
+        if (!placementCaptured)
+        {
+            originalPosition = transform.localPosition;
+            originalScale = transform.localScale;
+            placementCaptured = true;
+        }
+        var previous = animator != null ? animator.gameObject : null;
+        var instance = Instantiate(next.referenceModel, transform, false);
+        instance.name = "PlayerBody";
+        instance.transform.localPosition = footPivot;
+        instance.transform.localScale = Vector3.one * (referenceHeightCm * .01f / next.restHeightMeters);
+        skeleton = next;
+        animator = instance.GetComponent<Animator>();
+        bodyRenderer = instance.GetComponentInChildren<SkinnedMeshRenderer>();
+        bones = null;
+        if (previous != null)
+        {
+            // Destroy is deferred in Play Mode. Deactivate the old skin before rendering.
+            previous.SetActive(false);
+            if (Application.isPlaying) Destroy(previous); else DestroyImmediate(previous);
+        }
+    }
+
     public void Initialize()
     {
         if (bones != null) return;
-        originalPosition = transform.localPosition;
-        originalScale = transform.localScale;
+        if (!placementCaptured)
+        {
+            originalPosition = transform.localPosition;
+            originalScale = transform.localScale;
+            placementCaptured = true;
+        }
         originalMesh = bodyRenderer.sharedMesh;
         originalMaterials = bodyRenderer.sharedMaterials;
         originalBones = bodyRenderer.bones;

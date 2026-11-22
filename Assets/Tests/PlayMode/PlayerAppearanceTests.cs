@@ -55,11 +55,11 @@ public class PlayerAppearanceTests
             Assert.That(assembler.rig.bodyRenderer.sharedMaterials, Is.EqualTo(materials));
             Assert.That(actor.GetComponentsInChildren<Rigidbody>(true), Is.Empty);
         }
-        Assert.That(actors.Sum(a => a.GetComponentsInChildren<SkinnedMeshRenderer>().Length), Is.EqualTo(70));
+        Assert.That(actors.Sum(a => a.GetComponentsInChildren<SkinnedMeshRenderer>().Length), Is.EqualTo(14));
     }
 
     [Test]
-    public void AllSixtyHeightBuildSelectionsLeaveGameplayAndGuidRatingsUntouched()
+    public void AllSeventyTwoHeightBuildSelectionsLeaveGameplayAndGuidRatingsUntouched()
     {
         Freeze();
         var actor = actors[0];
@@ -79,9 +79,11 @@ public class PlayerAppearanceTests
         foreach (var profile in assembler.catalog.heightProfiles)
         {
             definition.bodyArchetype = build;
-            definition.bodyId = "body." + build.ToString().ToLowerInvariant() + ".prototype";
+            definition.bodyId = build.ToString().ToUpperInvariant();
             definition.heightProfile = profile;
             Assert.That(assembler.TryApply(definition), Is.True, assembler.LastDiagnostics);
+            Assert.That(assembler.rig.skeleton.id, Is.EqualTo(definition.bodyId));
+            Assert.That(assembler.rig.animator.avatar, Is.SameAs(assembler.rig.skeleton.referenceModel.GetComponent<Animator>().avatar));
             Assert.That(actor.transform.position, Is.EqualTo(rootPosition));
             Assert.That(actor.transform.localScale, Is.EqualTo(rootScale));
             Assert.That((collider.center, collider.height, collider.radius), Is.EqualTo(originalCollider));
@@ -186,9 +188,8 @@ public class PlayerAppearanceTests
         hair.id = "test.skinned.attachment";
         hair.slot = CharacterPartSlot.Hair;
         hair.skeleton = assembler.rig.skeleton;
-        // Existing eye geometry is a test fixture for skin binding, never shipped as hairstyle art.
-        hair.skinnedSource = hair.skeleton.referenceModel.GetComponentsInChildren<SkinnedMeshRenderer>()
-            .First(r => r != hair.skeleton.referenceSkin);
+        // Exercise skin binding with a temporary fixture on the selected production rig.
+        hair.skinnedSource = hair.skeleton.referenceSkin;
         hair.materialTints = new[] { CharacterTint.Hair };
         hair.lowerDetailLevels = new[] { new CharacterSkinLod { source = hair.skinnedSource, screenHeight = 0.1f } };
         var accessory = ScriptableObject.CreateInstance<CharacterPartDefinition>();
@@ -209,7 +210,7 @@ public class PlayerAppearanceTests
         team.accentColor = Color.red;
         Assert.That(assembler.TryApply(saved, team, 12), Is.True, assembler.LastDiagnostics);
         var skin = assembler.rig.GetComponentsInChildren<SkinnedMeshRenderer>().First(r => r.name == hair.id);
-        Assert.That(skin.bones[0], Is.SameAs(assembler.rig.animator.GetBoneTransform(HumanBodyBones.Head)));
+        Assert.That(skin.bones[0], Is.SameAs(assembler.rig.Remap(hair.skinnedSource)[0]));
         Assert.That(skin.GetComponent<LODGroup>().GetLODs().Length, Is.EqualTo(2));
         var rigid = assembler.rig.GetComponentsInChildren<MeshRenderer>().First(r => r.name == accessory.id);
         Assert.That(rigid.transform.parent, Is.SameAs(assembler.rig.animator.GetBoneTransform(HumanBodyBones.LeftHand)));

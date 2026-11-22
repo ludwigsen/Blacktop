@@ -173,7 +173,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5e605245ef781483a92f1956d32b3bb4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::ReceiverAI
   moveSpeed: 6
   routeDepth: 12
@@ -190,7 +190,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 145668ef901a2464a8319eddfa369452, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayerMovement
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
   baseMaxSpeed: 8
@@ -207,7 +207,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc9e0ff22fdcc4b73b9e602d6eb10524, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::InputBuffer
   bufferWindow: 0.1
 --- !u!114 &5442826729914350431
@@ -220,7 +220,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 842d5b81f2fce4ebd9040e867922d71e, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayerStateMachine
   jukeMove:
     curve:
@@ -322,13 +322,14 @@ MonoBehaviour:
     windupDuration: 0.15
     maxReceiverSearchRadius: 20
     receiverSearchConeAngle: 70
-    baseArcHeight: 0.5
-    arcHeightPerDistance: 0.12
     baseThrowSpeed: 35
     minFlightDuration: 0.15
     baseMaxLeadError: 3
     minLeadError: 0.2
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
+  stumbleMove:
+    duration: 0.32
+    knockbackDistance: 0.85
 --- !u!114 &4724835751135970437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -339,7 +340,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 881abf67396a14e6bac8ddfe6fd0c865, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TackleContact
   contactRadius: 0.8
   baseFumbleChance: 0.5
@@ -355,7 +356,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 32fd5682844c842089eafb598467f06f, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::PossessionController
 --- !u!114 &7093260107439753859
 MonoBehaviour:
@@ -367,7 +368,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c71d9e51a30e46119c3f22955fb60ee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::AllyBlocker
   moveSpeed: 5
   stopDistance: 0.5
@@ -387,7 +388,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a098b1d7080e4c11b3e5f232cd8bb4d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::DefenderDetector
   boxSize: {x: 2, y: 1.5, z: 2}
   boxOffset: {x: 0, y: 0, z: 1.2}
@@ -401,9 +402,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5fdaf9de399a445387dcd50c7449f67, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::Blacktop.Player.PlayerVisualFeedback
-  bodyRenderer: {fileID: 4901101267496981474}
+  bodyRenderer: {fileID: 2233451805328046851}
   idleColor: {r: 1, g: 1, b: 1, a: 1}
   walkColor: {r: 0, g: 1, b: 1, a: 1}
   runColor: {r: 0, g: 0.3, b: 1, a: 1}
@@ -420,10 +421,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
   teamId: 0
   slot: 0
+  defensiveLineupSlot: -1
 --- !u!114 &4609209659204268853
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,7 +436,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e476568d12b3c411aac940724e2517be, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::DefenderAI
   attributes: {fileID: 0}
   baseMoveSpeed: 5
@@ -451,6 +453,7 @@ MonoBehaviour:
   breakReactionDelay: 0.15
   zoneReactRadius: 4
   zoneBreakRadius: 8
+  blockRecoveryDuration: 0.15
 --- !u!114 &5906274877810500750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -461,7 +464,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bea1ba26bd3cc44aa80c3fbeab706cf1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::CPUCarrierAI
   dropbackSpeed: 2.5
   maxReadTime: 1.4
@@ -470,8 +473,6 @@ MonoBehaviour:
   receiverSearchConeAngle: 90
   baseThrowSpeed: 30
   minFlightDuration: 0.15
-  baseArcHeight: 0.5
-  arcHeightPerDistance: 0.12
   runSpeed: 7
   rotationSpeed: 540
   avoidanceRadius: 4
@@ -487,10 +488,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 28a8202570e124c3694eae6de69b7089, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::CharacterApplier
   roster: {fileID: 0}
-  playerId:
+  playerId: 
   showNameplate: 1
   nameplateHeight: 1.45
   nameplateFontSize: 28
@@ -504,7 +505,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 33d67016fcebf4fe384b48313ab79193, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::GamebreakerController
   attributes: {fileID: 11400000, guid: 1b1a5a0422bd14b18a48e079974fdfcb, type: 2}
   basePointsPerSecond: 2.5
@@ -518,9 +519,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3c04f4dff02543fa897783547e514a82, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayerAnimationPresenter
-  animator: {fileID: 4719877451874111220}
+  animator: {fileID: 6674556529098754192}
   hurdleClip: {fileID: -203655887218126122, guid: fd432b59172b4458b9d5671e43bf78ce, type: 3}
   standardRunSpeed: 6
   fastRunSpeed: 10
@@ -529,6 +530,7 @@ MonoBehaviour:
   backwardDotThreshold: -0.25
   blendDamping: 0.08
   teleportDistance: 3
+  stumbleLeanAngle: 24
   carryTuckSpeed: 3
   footballBlendSeconds: 0.07
   followThroughDuration: 0.31
@@ -545,7 +547,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b214297e764e4fcdbc68d9052044130, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayerVisualAssembler
   catalog: {fileID: 11400000, guid: 4280b2fb93bbc4889a3c07e42284bd7f, type: 2}
   defaultAppearance: {fileID: 11400000, guid: 1dab94d6f485144b0a9b693abcd61969, type: 2}
@@ -558,47 +560,47 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8913779436201755825}
     m_Modifications:
-    - target: {fileID: 132864934065619634, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 132864934065619634, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_Name
       value: PlayerModel
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+    - target: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -606,30 +608,30 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: e381b10497bd436a9982060a276f8d88, type: 3}
 --- !u!114 &1501750431066840100 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8798558388011226611, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8798558388011226611, guid: e381b10497bd436a9982060a276f8d88, type: 3}
   m_PrefabInstance: {fileID: 7984187470477920727}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 75d12b5e570af44748270c132cd0688a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::PlayerVisualRig
---- !u!95 &4719877451874111220 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 3408617690538116899, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+--- !u!137 &2233451805328046851 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8084903228908401364, guid: e381b10497bd436a9982060a276f8d88, type: 3}
   m_PrefabInstance: {fileID: 7984187470477920727}
   m_PrefabAsset: {fileID: 0}
---- !u!137 &4901101267496981474 stripped
-SkinnedMeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3083203852337011253, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+--- !u!95 &6674556529098754192 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3633633038027718983, guid: e381b10497bd436a9982060a276f8d88, type: 3}
   m_PrefabInstance: {fileID: 7984187470477920727}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &7508448050962641498 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 504075002395245453, guid: ad103cf523c4c4a90b94cf2088fe8080, type: 3}
+  m_CorrespondingSourceObject: {fileID: 504075002395245453, guid: e381b10497bd436a9982060a276f8d88, type: 3}
   m_PrefabInstance: {fileID: 7984187470477920727}
   m_PrefabAsset: {fileID: 0}

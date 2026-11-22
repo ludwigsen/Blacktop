@@ -113,12 +113,12 @@ public class PlayerEditorView : MonoBehaviour
             session.Draft.appearance.height=heights[i];UpdatePreview();},Settings);
         FrontEndUI.Picker(form,"Build",Enum.GetNames(typeof(BodyArchetype)),(int)session.Draft.appearance.bodyArchetype,i=>{
             var selection=session.Draft.appearance;selection.bodyArchetype=(BodyArchetype)i;
-            var body=Settings.appearances.parts.First(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==(BodyArchetype)i&&p.temporaryVisual);
+            var body=Settings.appearances.Find(((BodyArchetype)i).ToString().ToUpperInvariant());
             selection.bodyId=body.id;
             selection.clothingIds=selection.clothingIds.Select(CompatibleVariant).ToArray();
             selection.accessoryIds=selection.accessoryIds.Select(CompatibleVariant).ToArray();UpdatePreview();},Settings);
         Note("Weight follows height and build. You control the ratings separately. Every height and build is available at every position.");
-        Note("Body and garment variants are functional TEMPORARY silhouettes, not finished character art. Heavy emphasizes torso/belly mass; Massive emphasizes chest, shoulders and limbs.");
+        Note("Outfit selections are saved for future fitted garments.");
         FrontEndUI.Picker(form,"Preview animation",new[]{"IDLE","RUN","BACKWARD","FAST RUN"},0,i=>preview.Animation(new[]{0f,1f,-1f,2f}[i]),Settings);
         preview.SetHeadView(false);
     }
@@ -143,7 +143,7 @@ public class PlayerEditorView : MonoBehaviour
                 if(clothing)session.Draft.appearance.clothingIds=next.ToArray();else session.Draft.appearance.accessoryIds=next.ToArray();
             },true);
         }
-        Note("Temporary garments use team colors. Missing gear is labelled. The prototype has no numbered garment renderer; roster nameplates show the saved number in the match.");
+        Note("Outfit selections are saved. The match nameplate shows the player’s jersey number.");
     }
     void Preset(string label,CharacterPartSlot slot,string current,Action<string> set,bool optional=false)
     {
