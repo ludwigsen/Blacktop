@@ -68,6 +68,7 @@ public static class MpfbPrefabReview
             var camera = new GameObject("Lineup camera",typeof(Camera)).GetComponent<Camera>();
             camera.transform.position = new Vector3(0,1,9);
             camera.transform.LookAt(new Vector3(0,.86f,0));
+            camera.gameObject.AddComponent<CharacterLineupReview>();
             camera.orthographic = true;
             camera.orthographicSize = 3;
             var light = new GameObject("Lineup light",typeof(Light)).GetComponent<Light>();

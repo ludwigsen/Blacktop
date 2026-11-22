@@ -374,6 +374,9 @@ The catalog recognizes the five historic build ordinals and both saved prototype
 
 The pipeline and prefab authoring steps are in `ArtSource/Characters/README.md`. The saved MPFBCharacterReview scene contains all six visual prefabs and is excluded from the shipping scene list.
 
+The development-only MPFBCharacterReview scene owns its playback and camera controls through CharacterLineupReview on the lineup camera. It samples the existing prefab Animators using the production clips' durations. It has no gameplay player or scene-level dependency in the shipping scenes.
+
+
 ## Main menu, roster authoring and Quick Play (2026-10-23)
 
 `FrontEndSettings` references installed `TeamDefinition` assets (branding, existing roster and GUID-based independent lineups), fields, appearance catalog, weight tuning and presentation assets. `RosterService` imports detached defaults or validated schema-1 JSON. Every membership/lineup/record edit uses clone → validate → atomic save → swap; global GUID uniqueness, per-team numbers, 0–20 ratings, appearance compatibility and independent offense/defense assignments share one validator. Seven active players are required for Head 2 Head, while partial lineups and unlimited reserves may be saved.

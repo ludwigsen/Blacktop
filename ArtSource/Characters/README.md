@@ -41,3 +41,7 @@ Use an existing character appearance asset or copy it for the player. Set its bo
 Old numeric builds 0 through 4 retain the Slim, Athletic, Stocky, Power and Massive meanings; Muscular is 5. Old prototype and temporary body ID strings resolve at lookup. A player with no authored appearance uses the existing Athletic default. The selection contains outfit IDs for future fitted garments. Games and previews currently show the MPFB body alone.
 
 The match prefab and the preview instantiate MPFBPlayerModel. Its adapter selects the fitted prefab and binds presentation to that Avatar's bones. The gameplay capsule remains at the actor root. Each fitted rig has the same named hierarchy and its own bind pose. Swapping the complete visual preserves that difference. The historical PlayerModel prefab, original Avatar and eye meshes support the previous animation-authoring reference.
+
+## Interactive six-body review
+
+Open Assets/Scenes/MPFBCharacterReview.unity in Unity, enter Play Mode and use the Game view. The top row isolates a body or restores the lineup. Choose Front, Side or Three-quarter. Each body turns in place to keep neighboring silhouettes separate. The motion buttons sample the production Animator Controller. Pause freezes the pose and dragging the slider pauses and scrubs the selected motion. Play loops it again. Throw and handoff buttons expose the individual action phases. Use an actual match to judge hand-to-ball contact and timing between two players. Walk and catch have no dedicated production clip.
