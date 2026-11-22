@@ -294,3 +294,7 @@ ui-native-player.log; screenshots are in the chat computer-use record.
   platform acceptance must account for the ball change. No other issue is completed.
 - App, complete-source packet and copied evidence: ignored Builds/BallFlight in
   the original checkout. Detailed scenarios/results/limits: TESTING.md T-112–T-115.
+
+### Six-body visual review (2026-11-22)
+
+The development lineup supports playback, pause/scrub, individual bodies and three viewing angles. Power's bilateral armpit weight correction preserves its approved rest mesh. See ArtSource/Characters/Validation/Integration.md for the measurements, mode tests, retirement decisions and remaining match-speed review.

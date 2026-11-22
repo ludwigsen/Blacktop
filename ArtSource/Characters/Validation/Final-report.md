@@ -1,5 +1,7 @@
 # Blacktop character migration
 
+Historical migration checkpoint, 2026-11-21. The subsequent [six-body integration review](Integration.md) records the corrected Power underarm, the interactive lineup and updated mode coverage.
+
 ## Executive summary
 
 **PASS.** Matches and previews use the six approved MPFB bodies through the existing roster and animation systems. The Athletic rig retains the approved sculpt. Source checksums, rig coverage, Humanoid imports, retargeting and the gameplay regression suite passed. The packaged macOS player initialized the six-team menu on Metal. The shipping scenes and player prefab resolve exclusively to the new body pipeline.
