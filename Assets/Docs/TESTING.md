@@ -778,3 +778,12 @@ inspected. All nine sprites regenerated pixel-for-pixel with Pillow.
 Evidence is in ignored `Builds/Validation/street-kit-final.xml` and
 `Builds/Validation/StreetKit-Overview.png`. Windows, a physical controller
 and a human-played standalone match remain manual checks.
+
+## T-125 · MPFB characters in preview and match
+
+1. Verify the six Core files and the Athletic sculpt against `ArtSource/Characters/Validation/sources.sha256`. Use the production README to rebuild a candidate in isolation. Compare its mesh, weights and diagnostic poses with the per-body measurements and image sheets.
+2. Run the two Unity review drivers in an isolated project. Confirm six valid Humanoid Avatars on the shared controller, nine sampled times per installed clip, correctly fitted skin, and a saved/reopened six-prefab review scene. The review scene is excluded from the player build.
+3. Run the graphics-enabled Play Mode suite. Exercise all six bodies at all twelve heights, old saved body IDs, unfitted outfit IDs, catalog fallback, player GUIDs/ratings and feedback tint. In Head 2 Head and Pickup check the fourteen actors, player selection, shared controller, active hand, handoff and both directions of play. Compare the CapsuleCollider and authoritative ball position before and after visual changes.
+4. Check recursive dependencies of MainMenu, SampleScene and Player.prefab for the old PlayerModel, PlayerBody, old skeleton and temporary meshes. The historical football-action reference rebake should still match the six-action, 58-joint reference.
+
+All three migration Play Mode runs passed 180/180, including separate runs with the local and committed match scene. The packaged macOS player reached the six-team menu on Metal. The 594 sampled Unity poses validate retargeting on the installed clips. Physical controller feel, a human-played full match, match-speed ball grip, foot planting and Windows playback require separate review. The animation readiness matrix records individual missing clips.

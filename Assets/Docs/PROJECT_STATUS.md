@@ -79,11 +79,10 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Both sides use the same flat all-attribute boost (Inspector-tunable 1.2 multiplier, existing attribute hard caps still apply), lasting until the possession ends. Team-owned runtime attributes cover AI and controlled players.
 
 ### Character appearance foundation
-- Editable Blender source is now supplied for all current geometry: five bodies with integrated faces, fifteen garment meshes and four eyes, with shared rest rig/UVs/weights. Open `SourceAssets/Characters/BlacktopCharacters.blend`; per-build and head-focused snapshots are also supplied. The Editor bridge returns artist geometry edits to existing Unity mesh IDs/bind poses. Future character mesh authoring must retain `.blend` source. See SourceAssets/Characters/README.md.
-- Optional roster appearance references preserve GUIDs/ratings; rosterless players use the prefab default. PlayerVisualAssembler/PlayerVisualRig assemble below PlayerVisuals without resizing the gameplay root/collider.
-- Stable preset/palette IDs, five body archetypes, twelve discrete heights/five derived bands, safe fallback, shared-bone attachment slots, authored skinned LOD support, property-block tinting and optional garment number labels.
-- The original catalog remains compatible. The front-end catalog supplies five distinct temporary regional body meshes and fitted temporary top/shorts/footwear shells on the same skeleton. Heavy emphasizes waist mass; Massive emphasizes chest/shoulders/limbs. These are provisional silhouettes, not production anatomy/clothing. Three face IDs share the same integrated head; cropped hair/beard and additional gear are explicitly missing art.
-- See `MODULAR_CHARACTERS.md` for the audit, canonical rig, art/import contract and workflow. Editor Play Mode suite: **62/62 passed**, including field checks and seven character tests.
+
+- Slim, Athletic, Muscular, Stocky, Power and Massive are active in matches and visual previews. Each has a fitted MPFB rig and valid Humanoid Avatar. Athletic retains the approved sculpt. Use `ArtSource/Characters/README.md` for authoring.
+- Saved body IDs and height selections resolve through the existing catalogs. Outfit IDs are retained for future fitted art. The match and preview show the MPFB skin. Players without an assigned appearance use Athletic.
+- Three post-cutover graphics-enabled Play Mode runs passed 180/180 each, including the committed match scene. The shared controller evaluated all 11 installed clips on each body. Rest/pose contact on the larger bodies and football hand contact at match speed remain open. See `ArtSource/Characters/Validation` for measurements and the animation readiness matrix.
 
 ## Known issues
 
@@ -117,7 +116,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 6. **Roster authoring** — identity/ratings deliberately remain in the existing GUID-keyed PlayerRecord. Runtime appearance DTOs omit Unity asset references; explicit source commit creates per-GUID appearance assets. New-team creation is deferred.
 7. **Exhibition balance/acceptance** — ConditionData now feeds bounded match-scoped effects through PlayerAttributes, with independent Accel handling. Four data-driven difficulties affect real CPU pursuit, coverage, offensive decisions and draft ranking. Conditions, difficulty, the six-team draft pool and physical controller play still need manual acceptance.
 
-8. **Character vertical slice art** — author a headless Athletic body, three distinct faces, one cropped hairstyle and one beard on the documented rig. Measure height/profile anatomy and validate missing football-action clips before growing the catalog.
+8. **Football movement and fitted character art** — prioritize planted locomotion, cuts, catch-to-tuck and matched handoffs on the six bodies. Fitted outfits and distinct face/hair assets remain later art work.
 
 ## Design backlog (hard constraints when reached)
 
@@ -151,7 +150,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - **First set:** Build toward 7 Pass, 3 Run/Option, and 9 Defense using supported assignments and small extensions to routes or run lanes where needed. Designed options and trick calls depend on defined exchange, fake, or passing behavior. Track the inventory and dependencies in #18.
 
 ### Character appearance
-- 5 body archetypes (lean / athletic / thick / heavy / massive) as 5 unique meshes on a shared skeleton.
+- Six approved MPFB archetypes (Slim, Athletic, Muscular, Stocky, Power and Massive) use individual fitted meshes and one bone hierarchy.
 - Five derived height bands containing twelve explicit centimetre selections. Calibrated visual scaling around the feet; no arbitrary limb-bone scaling or rating changes.
 - 30 faces, 20 hairstyles, 8 facial hair styles.
 - NFL Street 1 aesthetic: grounded proportions, not cartoon-exaggerated.
