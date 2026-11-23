@@ -38,7 +38,7 @@ public static class FootballClipRoundTrip
     }
     [Serializable] class Report { public Check[] clips; }
 
-    // Record evaluated skin-space transforms on the same Avatar and rig used by the player prefab.
+    // Record evaluated skin-space transforms on the historical player Avatar and rig used to author the baseline.
     public static void Bake()
     {
         using var rig = new PreviewRig();
@@ -146,7 +146,7 @@ public static class FootballClipRoundTrip
             var check = new Check { name = name, seconds = clip.length,
                 joints = jointNames.Length, mappedHumanoidBones = sourceMap.Count, reviewGuid = guid, reviewFileId = fileId,
                 humanoid = clip.humanMotion, loop = clip.isLooping, averageRootSpeed = clip.averageSpeed.magnitude };
-            // Validate against the same idle reference and a running base pose on the production Avatar.
+            // Validate against the same idle reference and a running base pose on the historical authoring Avatar.
             var run = AssetDatabase.LoadAllAssetsAtPath(Art + "Standard Run.fbx").OfType<AnimationClip>()
                 .Single(item => !item.name.StartsWith("__preview__", StringComparison.Ordinal));
             int steps = Mathf.RoundToInt(original.length * Rate * 2);

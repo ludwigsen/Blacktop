@@ -523,20 +523,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::PlayerAnimationPresenter
   animator: {fileID: 6674556529098754192}
   hurdleClip: {fileID: -203655887218126122, guid: fd432b59172b4458b9d5671e43bf78ce, type: 3}
+  walkSpeed: 2
+  jogSpeed: 4
   standardRunSpeed: 6
-  fastRunSpeed: 10
+  fastRunSpeed: 8
+  sprintSpeed: 10
+  strafeSpeed: 4.5
   backwardRunSpeed: 4.5
   idleSpeed: 0.08
   backwardDotThreshold: -0.25
   blendDamping: 0.08
   teleportDistance: 3
-  stumbleLeanAngle: 24
+  stumbleLeanAngle: 12
   carryTuckSpeed: 3
   footballBlendSeconds: 0.07
   followThroughDuration: 0.31
   handoffPoseDuration: 0.4
   handoffTurnLimit: 65
-  footballGripOffset: {x: 0.085, y: 0.005, z: 0.075}
+  throwStanceSpeed: 1.7
+  footballGripOffset: {x: 0.07, y: 0.005, z: 0.085}
 --- !u!114 &1016471713031818523
 MonoBehaviour:
   m_ObjectHideFlags: 0

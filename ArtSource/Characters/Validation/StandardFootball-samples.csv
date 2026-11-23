@@ -1,0 +1,115 @@
+archetype,case,samples,vertex_motion_m,minimum_height_m,maximum_height_m
+Slim,Idle,9,0.307273,1.67121,1.71698
+Slim,Idle alternate,9,0.307172,1.66758,1.71767
+Slim,Walk,9,0.617077,1.63585,1.75197
+Slim,Walk wide,9,0.670280,1.63558,1.75205
+Slim,Jog,9,0.614186,1.68965,1.81990
+Slim,Backpedal,9,0.617196,1.67073,1.82142
+Slim,Run,9,1.018985,1.47286,1.79759
+Slim,Fast run,9,1.094521,1.44005,1.75778
+Slim,Sprint,9,1.048931,1.56633,1.75857
+Slim,Strafe left,9,0.719671,1.69843,1.78476
+Slim,Strafe right,9,0.721556,1.69843,1.78476
+Slim,Hurdle,9,1.238390,1.13243,1.76933
+Slim,Stumble,9,0.859682,1.35557,1.77362
+Slim,Carry ready,9,0.033528,1.72000,1.72156
+Slim,Carry tuck,9,0.502948,1.72827,1.72865
+Slim,Throw windup,9,0.623735,1.70533,1.82068
+Slim,Throw release,9,0.952221,1.71826,1.73060
+Slim,Handoff give,9,0.518402,1.71482,1.72515
+Slim,Handoff take,9,0.493193,1.72067,1.72830
+Athletic,Idle,9,0.310917,1.67051,1.71660
+Athletic,Idle alternate,9,0.310789,1.66695,1.71732
+Athletic,Walk,9,0.618242,1.63538,1.75194
+Athletic,Walk wide,9,0.671230,1.63508,1.75202
+Athletic,Jog,9,0.614950,1.68972,1.81943
+Athletic,Backpedal,9,0.620701,1.67099,1.82172
+Athletic,Run,9,1.020576,1.47305,1.79767
+Athletic,Fast run,9,1.096598,1.44010,1.75796
+Athletic,Sprint,9,1.050066,1.56725,1.75870
+Athletic,Strafe left,9,0.722789,1.69786,1.78663
+Athletic,Strafe right,9,0.724670,1.69786,1.78663
+Athletic,Hurdle,9,1.238697,1.13345,1.76941
+Athletic,Stumble,9,0.856484,1.35410,1.77324
+Athletic,Carry ready,9,0.034596,1.71966,1.72124
+Athletic,Carry tuck,9,0.503364,1.72804,1.72847
+Athletic,Throw windup,9,0.622790,1.70485,1.82098
+Athletic,Throw release,9,0.956982,1.71792,1.73053
+Athletic,Handoff give,9,0.518455,1.71446,1.72481
+Athletic,Handoff take,9,0.493967,1.72032,1.72808
+Muscular,Idle,9,0.317389,1.67009,1.71648
+Muscular,Idle alternate,9,0.317230,1.66660,1.71722
+Muscular,Walk,9,0.620632,1.63518,1.75146
+Muscular,Walk wide,9,0.673153,1.63483,1.75155
+Muscular,Jog,9,0.615801,1.68964,1.81808
+Muscular,Backpedal,9,0.629458,1.67261,1.82193
+Muscular,Run,9,1.024305,1.47298,1.79758
+Muscular,Fast run,9,1.101710,1.44030,1.75784
+Muscular,Sprint,9,1.056250,1.56525,1.75893
+Muscular,Strafe left,9,0.728766,1.69528,1.78897
+Muscular,Strafe right,9,0.730657,1.69528,1.78897
+Muscular,Hurdle,9,1.242420,1.13352,1.76929
+Muscular,Stumble,9,0.850919,1.35225,1.77150
+Muscular,Carry ready,9,0.034919,1.71958,1.72117
+Muscular,Carry tuck,9,0.505905,1.72804,1.72854
+Muscular,Throw windup,9,0.623644,1.70464,1.82366
+Muscular,Throw release,9,0.969494,1.71785,1.73065
+Muscular,Handoff give,9,0.520122,1.71439,1.72470
+Muscular,Handoff take,9,0.496096,1.72023,1.72811
+Stocky,Idle,9,0.317043,1.66950,1.71652
+Stocky,Idle alternate,9,0.316896,1.66599,1.71724
+Stocky,Walk,9,0.621129,1.63480,1.75119
+Stocky,Walk wide,9,0.673401,1.63447,1.75128
+Stocky,Jog,9,0.615871,1.69014,1.81822
+Stocky,Backpedal,9,0.628606,1.67258,1.82250
+Stocky,Run,9,1.025524,1.47286,1.79727
+Stocky,Fast run,9,1.102480,1.44016,1.75757
+Stocky,Sprint,9,1.055251,1.56466,1.75862
+Stocky,Strafe left,9,0.727831,1.69474,1.78962
+Stocky,Strafe right,9,0.729723,1.69474,1.78962
+Stocky,Hurdle,9,1.241832,1.13327,1.77045
+Stocky,Stumble,9,0.851516,1.35015,1.77018
+Stocky,Carry ready,9,0.035355,1.71958,1.72117
+Stocky,Carry tuck,9,0.506728,1.72793,1.72857
+Stocky,Throw windup,9,0.623636,1.70448,1.82393
+Stocky,Throw release,9,0.964860,1.71790,1.73061
+Stocky,Handoff give,9,0.521109,1.71439,1.72450
+Stocky,Handoff take,9,0.496482,1.72018,1.72805
+Power,Idle,9,0.318880,1.66939,1.71636
+Power,Idle alternate,9,0.318717,1.66594,1.71712
+Power,Walk,9,0.620828,1.63442,1.75143
+Power,Walk wide,9,0.672767,1.63407,1.75152
+Power,Jog,9,0.615433,1.69021,1.81808
+Power,Backpedal,9,0.627869,1.67237,1.82197
+Power,Run,9,1.024575,1.47274,1.79754
+Power,Fast run,9,1.101830,1.43987,1.75788
+Power,Sprint,9,1.054913,1.56549,1.75879
+Power,Strafe left,9,0.728481,1.69589,1.78917
+Power,Strafe right,9,0.730362,1.69589,1.78917
+Power,Hurdle,9,1.240185,1.13229,1.76921
+Power,Stumble,9,0.850145,1.35077,1.77042
+Power,Carry ready,9,0.035313,1.71947,1.72106
+Power,Carry tuck,9,0.506810,1.72783,1.72855
+Power,Throw windup,9,0.622265,1.70423,1.82412
+Power,Throw release,9,0.969017,1.71781,1.73057
+Power,Handoff give,9,0.520455,1.71429,1.72432
+Power,Handoff take,9,0.497021,1.72005,1.72798
+Massive,Idle,9,0.322474,1.67133,1.71688
+Massive,Idle alternate,9,0.322314,1.66792,1.71760
+Massive,Walk,9,0.625420,1.63619,1.75189
+Massive,Walk wide,9,0.678553,1.63582,1.75199
+Massive,Jog,9,0.618796,1.68464,1.81658
+Massive,Backpedal,9,0.653987,1.67900,1.82170
+Massive,Run,9,1.034104,1.47472,1.79707
+Massive,Fast run,9,1.111948,1.44294,1.75741
+Massive,Sprint,9,1.067837,1.56338,1.75914
+Massive,Strafe left,9,0.741735,1.68474,1.79918
+Massive,Strafe right,9,0.743672,1.68474,1.79919
+Massive,Hurdle,9,1.260948,1.14265,1.77355
+Massive,Stumble,9,0.844432,1.35265,1.76922
+Massive,Carry ready,9,0.036115,1.71989,1.72149
+Massive,Carry tuck,9,0.508189,1.72842,1.72894
+Massive,Throw windup,9,0.626756,1.70494,1.82673
+Massive,Throw release,9,0.975668,1.71816,1.73108
+Massive,Handoff give,9,0.523209,1.71472,1.72503
+Massive,Handoff take,9,0.497710,1.72053,1.72849

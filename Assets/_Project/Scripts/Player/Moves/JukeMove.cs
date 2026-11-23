@@ -52,6 +52,10 @@ public class JukeMove : IPlayerMove
         ctx.MoveBy(delta * LateralDistance * direction);
     }
 
+    // Keep the visual cue synchronized with the existing committed action clock.
+    internal float PresentationProgress => Mathf.Clamp01(timer / Duration);
+    internal Vector3 PresentationDirection => direction;
+
     public bool IsComplete => timer >= Duration;
 
     public void Exit(PlayerContext ctx) => ctx.setCooldown(cooldownDuration);

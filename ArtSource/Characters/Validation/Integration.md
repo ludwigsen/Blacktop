@@ -1,5 +1,7 @@
 # Six-body integration review · 2026-11-22
 
+This checkpoint used the earlier eleven-clip controller. The [current animation matrix](Animation-readiness.md) covers the integrated StandardFootball controller, handoff measurements and full regression run.
+
 ## Interactive review
 
 Open Assets/Scenes/MPFBCharacterReview.unity, enter Play Mode and use the Game view. Six production prefab instances stand at the same foot baseline and scale. Pick All six or an archetype, then a view and motion. The camera stays in front of the lineup and the subjects turn individually for side and three-quarter views, so they cannot hide each other. Pause holds the phase across view changes. The slider scrubs a paused motion and Play resumes normal clip timing. Idle, run, sprint, backpedal, hurdle, both carry poses, the two throw phases and both handoff roles use their actual controller states. Dedicated walk and catch clips remain missing. The scene is excluded from the player build.

@@ -69,6 +69,64 @@ public class VenueHazardTests
         Assert.That(player.transform.position.z, Is.EqualTo(impact.z).Within(0.001f));
     }
 
+    [Test]
+    public void RealImpactAnimatesTheStumbleUntilWhistleAndCanReplayAfterReset()
+    {
+        GoLive();
+        var player = Actor(0, TeamMember.RosterSlot.RB);
+        var presenter = player.GetComponent<PlayerAnimationPresenter>();
+        var animator = presenter.Animator;
+        presenter.enabled = true;
+        player.transform.SetPositionAndRotation(new Vector3(FieldConstants.HalfWidth - 1f, 1f, 0f), Quaternion.LookRotation(Vector3.right));
+
+        // Begin in an animated hurdle so the wall reaction must interrupt it.
+        animator.Play("Hurdle", 0, 0.25f);
+        animator.Update(0f);
+        Vector3 beyond = player.transform.position + Vector3.right * 4f;
+        Assert.That(Move(player, beyond), Is.False);
+        Assert.That(player.IsStumbling, Is.True);
+        for (int frame = 0; frame < 4; frame++) AdvanceVisual();
+        Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("Stumble"), Is.True);
+        Assert.That(animator.GetCurrentAnimatorClipInfo(0).Single().clip.name, Is.EqualTo("Jogging Stumble"));
+        var hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        var leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+        Vector3 openingFoot = hips.InverseTransformPoint(leftFoot.position);
+
+        Call(player, "TickMove", 0.16f);
+        AdvanceVisual();
+        Assert.That(animator.GetFloat("StumbleProgress"), Is.EqualTo(player.StumbleProgress).Within(0.001f));
+        Assert.That(Vector3.Distance(openingFoot, hips.InverseTransformPoint(leftFoot.position)), Is.GreaterThan(0.1f),
+            "The clip must sample a later pose as recoil progresses.");
+
+        play.EndPlay(PlayState.PlayEndReason.Tackled);
+        Assert.That(player.IsStumbling, Is.False);
+        for (int frame = 0; frame < 8; frame++) AdvanceVisual();
+        Assert.That(animator.GetBool("Stumbling"), Is.False);
+        Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion"), Is.True);
+
+        Call(play, "DoSnap");
+        Assert.That(Move(player, beyond), Is.False);
+        Assert.That(player.IsStumbling, Is.True);
+        AdvanceVisual();
+        Assert.That(animator.GetFloat("StumbleProgress"), Is.Zero);
+        for (int frame = 0; frame < 3; frame++) AdvanceVisual();
+        Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("Stumble"), Is.True);
+        FinishRecoil(player, 60);
+        for (int frame = 0; frame < 8; frame++) AdvanceVisual();
+        Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion"), Is.True);
+
+        void AdvanceVisual()
+        {
+            const float step = 1f / 60f;
+            Vector3 rootPosition = player.transform.position;
+            Quaternion rootRotation = player.transform.rotation;
+            Call(presenter, "UpdatePresentation", step);
+            animator.Update(step);
+            Assert.That(player.transform.position, Is.EqualTo(rootPosition));
+            Assert.That(player.transform.rotation, Is.EqualTo(rootRotation));
+        }
+    }
+
     [UnityTest]
     public IEnumerator SustainedContactClipsAndSlidesUntilVoluntarySeparation()
     {

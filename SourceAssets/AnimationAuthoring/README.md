@@ -1,6 +1,6 @@
 # Football animation authoring in Blender
 
-Open **Football Actions.blend** in Blender 5.2.1 or later. This is an editable baseline of the installed football actions from Blacktop `39600e4`. Save a separate work copy before editing. The `.blend` owns the editable motion and the FBXs are review exports. Both live outside Unity's `Assets` directory. Blacktop still plays the original Unity clips.
+Open **Football Actions.blend** in Blender 5.2.1 or later. This is an editable baseline of the installed football actions from Blacktop `39600e4`. Save a separate work copy before editing. The `.blend` owns the editable motion and the FBXs are review exports. Both live outside Unity's `Assets` directory. The production controller now plays the refined StandardFootball versions at the original six clip GUIDs. Use an isolated checkout of `39600e4` to reproduce the historical bake, checksums and drift measurements below.
 
 ## What was baked
 

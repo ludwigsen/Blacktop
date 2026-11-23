@@ -104,33 +104,18 @@ public static class MpfbModelReview
             var outDir = Path.Combine("Builds/MPFBReview", Path.GetFileNameWithoutExtension(path));
             Directory.CreateDirectory(outDir);
             var rows = new List<string> {"case,samples,vertex_motion_m,minimum_height_m,maximum_height_m"};
-            foreach (var test in new[] {
-                ("Idle",0f,"","mixamo.com"), ("Run",1f,"","Standard Run"), ("Sprint",2f,"","Fast Run"),
-                ("Backpedal",-1f,"","Running Backward"), ("Hurdle",0f,"","Jump"),
-                ("CarryReady",0f,"Carry","Carry Ready"), ("CarryTuck",0f,"Carry","Carry Tuck"),
-                ("ThrowWindup",0f,"Throw Windup","Throw Windup"), ("ThrowFollowThrough",0f,"Throw Follow Through","Throw Follow Through"),
-                ("HandoffGive",0f,"Handoff Give","Handoff Give"), ("HandoffTake",0f,"Handoff Take","Handoff Take") })
+            for (int index = 0; index < CharacterLineupReview.Poses.Length; index++)
             {
-                string label = test.Item1;
-                animator.SetFloat("Locomotion", test.Item2);
-                animator.SetFloat("LocomotionRate", 1);
-                animator.SetFloat("HurdleRate", 1);
-                animator.SetBool("Hurdling", label == "Hurdle");
-                animator.SetFloat("CarryPace", label == "CarryTuck" ? 1 : 0);
-                bool football = test.Item3.Length > 0;
-                animator.SetLayerWeight(1, football ? 1 : 0);
+                var pose = CharacterLineupReview.Poses[index];
+                string label = pose.Label;
                 float motion = 0, low = float.MaxValue, high = 0;
                 Vector3[] first = null;
                 for (int sample = 0; sample < 9; sample++)
                 {
                     float time = sample / 8f * .96f;
-                    animator.Play(label == "Hurdle" ? "Base Layer.Hurdle" : "Base Layer.Locomotion", 0, football ? 0 : time);
-                    if (football) animator.Play("Football." + test.Item3, 1, time);
-                    animator.SetFloat("ThrowWindupTime", time);
-                    animator.SetFloat("FootballActionTime", time);
-                    animator.Update(0);
-                    var clips = animator.GetCurrentAnimatorClipInfo(football ? 1 : 0);
-                    Require(clips.Any(c => c.weight > .9f && c.clip.name == test.Item4), "Expected controller clip " + test.Item4 + ", got " + string.Join(", ", clips.Select(c => c.clip.name + " " + c.weight)));
+                    int layer = CharacterLineupReview.SamplePose(animator, index, time);
+                    var clips = animator.GetCurrentAnimatorClipInfo(layer);
+                    Require(clips.Any(c => c.weight > .9f && c.clip.name == pose.Clip), "Expected controller clip " + pose.Clip + ", got " + string.Join(", ", clips.Select(c => c.clip.name + " " + c.weight)));
                     skin.BakeMesh(rest);
                     var baked = rest.vertices.Select(p => skin.transform.TransformPoint(p)).ToArray();
                     first ??= baked;

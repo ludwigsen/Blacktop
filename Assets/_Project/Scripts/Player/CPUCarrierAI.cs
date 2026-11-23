@@ -23,6 +23,7 @@ public class CPUCarrierAI : MonoBehaviour
     [SerializeField] float scrambleTriggerDistance = 3f;
     [SerializeField] float maxReceiverSearchRadius = 45f;
     [SerializeField] float receiverSearchConeAngle = 90f; // wider than PassMove's human cone — no human read to defer to
+    [SerializeField, Min(0.01f)] float throwAnticipationSeconds = 0.15f;
 
     [Header("Throw Physics (effective Passing scales flight speed)")]
     [SerializeField] float baseThrowSpeed = 30f;
@@ -43,6 +44,7 @@ public class CPUCarrierAI : MonoBehaviour
     DifficultyTuning Difficulty => DifficultyTuning.ForTeam(teamMember.teamId);
     TeamMember teamMember;
     float readTimer;
+    internal float VisualWindup { get; private set; } = -1f;
 
     void Awake() => teamMember = GetComponent<TeamMember>();
 
@@ -56,6 +58,7 @@ public class CPUCarrierAI : MonoBehaviour
 
     void Update()
     {
+        VisualWindup = -1f;
         if (PlayState.Instance != null && !PlayState.Instance.IsLive) return;
 
         if (!ShouldDrive) { readTimer = 0f; return; }
@@ -92,6 +95,10 @@ public class CPUCarrierAI : MonoBehaviour
             if (flushed || readTimer >= readTime * 1.5f) { UpdateRunner(); return; } // nobody's open — tuck it and go
         }
 
+        // Reuse the existing read clock for the visible load. Pressure still
+        // produces an immediate release and the CPU keeps its original decisions.
+        if (readTimer < readTime && readTime - readTimer < throwAnticipationSeconds)
+            VisualWindup = 1f - (readTime - readTimer) / throwAnticipationSeconds;
         PlayerStateMachine.MoveActor(transform, transform.position - PlayState.Instance.AttackDirection.Forward * (dropbackSpeed * SpeedBoost * Time.deltaTime));
     }
 

@@ -73,19 +73,24 @@ public class PassMove : IPlayerMove
 
     public void Exit(PlayerContext ctx)
     {
-        if (target == null || BallController.Instance == null) return;
+        // Consume the committed target once and confirm this QB still holds the
+        // ball before the gameplay release. Pose sampling cannot call Exit.
+        Transform receiver = target;
+        target = null;
+        var ball = BallController.Instance;
+        if (receiver == null || ball == null || !ball.IsHeld || ball.Carrier != ctx.transform) return;
 
         // Lead the throw — see ReceiverAI.PredictedPosition: estimate flight time off
         // current distance, predict where the receiver will actually be by then, aim
         // there instead of at their position-at-release (old behavior always threw
         // "behind" a moving receiver).
-        float initialDistance = Vector3.Distance(ctx.transform.position, target.position);
+        float initialDistance = Vector3.Distance(ctx.transform.position, receiver.position);
         float estimateThrowSpeed = baseThrowSpeed * ctx.attributes.Passing();
         float estimatedDuration = Mathf.Max(initialDistance / estimateThrowSpeed, minFlightDuration);
 
-        Vector3 leadPoint = target.TryGetComponent<ReceiverAI>(out var receiverAI)
+        Vector3 leadPoint = receiver.TryGetComponent<ReceiverAI>(out var receiverAI)
             ? receiverAI.PredictedPosition(estimatedDuration)
-            : target.position; // no ReceiverAI on an eligible target shouldn't happen — fall back to old behavior
+            : receiver.position; // no ReceiverAI on an eligible target shouldn't happen — fall back to old behavior
 
         // Passing-attribute accuracy: leadPoint above is the QB's INTENT. The actual
         // release scatters around it, radius shrinking as Passing rises. This is the
@@ -103,7 +108,7 @@ public class PassMove : IPlayerMove
 
         // BallController derives a ballistic arc from this unchanged target/time.
         // The legacy arcHeight argument remains for pitches and external callers.
-        BallController.Instance.Throw(actualTarget, target, isPitch: false, arcHeight: 0f, duration: duration);
+        ball.Throw(actualTarget, receiver, isPitch: false, arcHeight: 0f, duration: duration);
     }
 
     // Passing() typically ranges ~0.6–1.3 per AttributeCurves. Remap to 0-1 for the Lerp

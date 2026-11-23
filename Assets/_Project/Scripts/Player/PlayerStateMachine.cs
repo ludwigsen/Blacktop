@@ -47,6 +47,18 @@ public class PlayerStateMachine : MonoBehaviour
     // Read-only timing for the shared animation presenter, including move cancellation.
     public float HurdleDuration => hurdleMove.Duration;
     internal float PassWindup => activeMove == passMove && passMove != null ? passMove.VisualWindup : -1f;
+
+    internal bool TryGetJukePresentation(out Vector3 direction, out float progress)
+    {
+        // A canceled or replaced Juke immediately loses its visual action cue as well.
+        direction = Vector3.zero;
+        progress = 0f;
+        if (jukeMove == null || activeMove != jukeMove) return false;
+        direction = jukeMove.PresentationDirection;
+        progress = jukeMove.PresentationProgress;
+        return true;
+    }
+
     public void SetAttributes(PlayerAttributes newAttributes) => attributes = newAttributes;
     // Exposed so BallController can read a receiver's Catching (and any future stat)
     // without every consumer needing its own duplicate serialized attributes reference.

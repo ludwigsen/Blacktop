@@ -89,7 +89,7 @@ public static class MpfbPrefabReview
                 a.SetFloat("Locomotion",1);
                 a.Play("Base Layer.Locomotion",0,0);
                 a.Update(.15f);
-                if (!a.GetCurrentAnimatorClipInfo(0).Any(c=>c.clip.name=="Standard Run" && c.weight>.9f))
+                if (!a.GetCurrentAnimatorClipInfo(0).Any(c=>c.clip.name=="Running" && c.weight>.9f))
                     throw new Exception("Missing run pose "+actor.name);
             }
             Debug.Log("MPFB lineup PASS: six reloaded prefab instances, six local Avatars, shared controller, run clip, no colliders");

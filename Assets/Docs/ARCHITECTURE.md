@@ -344,27 +344,15 @@ SampleScene retains the same BallController root/component IDs and its SphereCol
 
 ### Football action presentation
 
-The shared controller's Football override layer masks the upper body. It plays
-the native Humanoid Carry Ready, Carry Tuck, Throw Windup, Throw Follow Through,
-Handoff Give and Handoff Take clips. PlayerAnimationPresenter selects carry by
-actual speed and follows the human PassMove windup clock. BallController.Throw
-cues release for both human and CPU forward passes. The visible ball starts
-from the last evaluated hand grip and blends onto the ballistic path.
+The shared controller layers six upper-body Humanoid clips over the legs. Carry Ready and Carry Tuck blend with pace. FootballActionPose adjusts the grip for the fitted body. PassMove supplies the human windup clock, the CPU can prepare during its read window, and BallController.Throw cues follow-through. A stationary throw shifts the hips over the lead foot. FootballAppearance moves the rendered ball from the evaluated grip onto the flight path. BallController owns release, flight and possession.
 
-HandoffCoordinator calls BallController.HandoffTo at the existing mesh-point
-distance. AttachTo commits possession immediately. Both presenters aim their
-reach toward the same point and FootballAppearance blends the rendered ball
-from giver to runner over 0.16 seconds. The animation layer never commits an
-action. See T-124 in TESTING.md for current preview and match checks.
+HandoffCoordinator cues give and receive during approach. At the existing mesh point it calls HandoffTo once. Both players reach toward a contact point computed from their fitted skeletons. The rendered football blends to the receiver over the FootballVisual prefab's 0.075-second window. At large transfer separations the hands can still be visibly apart.
 
+## Shared locomotion, hurdle, stumble and hard cut
 
-## Shared player locomotion and hurdle presentation (2026-10-18)
+PlayerAnimationPresenter reads each actor's planar displacement in local space after movement. The shared controller blends forward pace and lateral travel. Idle and walking have team variants, backpedal uses Jog Backward, and the same strafe clip is mirrored for left travel. The Player prefab exposes walk, jog, run, fast run and sprint reference speeds of 2, 4, 6, 8 and 10 world units per second. The blend resets after a teleport. Jump follows HurdleMove's clock and Jogging Stumble follows StumbleMove's recoil progress.
 
-Every Player prefab root owns a PlayerAnimationPresenter; all fourteen scene players inherit it. It stays enabled independently of the components PossessionController toggles. After normal movement Updates it samples actual planar root displacement, compares it to the player's facing, and feeds the shared BlacktopCharacterController. This covers controlled carriers/defenders, routes, blockers, CPU carriers/dropbacks and huddle movement without changing their movement owners. Teleports reset the locomotion blend instead of showing a spurious sprint. Inspector fields tune the reference speeds (standard 6, fast 10, backward 4.5), dead zone, direction threshold and blend damping; these do not modify gameplay speed.
-
-The Animator's Locomotion state is a signed one-dimensional blend: backward (-1), breathing idle (0), standard run (1), fast run (2). Standard/fast follow actual speed; there is no new sprint/backpedal input mechanic. Hurdling selects the Jump clip and returns on completion or cancellation. PlayerStateMachine exposes HurdleDuration from HurdleMove's unchanged duration; HurdleRate fits the source clip into that gameplay window. Animator root motion is disabled and each fitted body uses the shared controller through its own Humanoid Avatar. Imported FBX motion is Humanoid-retargeted; travel is extracted/discarded and Jump's height is extracted so the existing HurdleMove supplies the only vertical trajectory. All four clips retain Original Y as their height reference, matching the fitted model and existing idle; Jump uses Original rather than Feet to keep its body center stable while its legs articulate.
-
-The source FBXs are Assets/_Project/Art/Animations/Jump.fbx, Running Backward.fbx, Standard Run.fbx and Fast Run.fbx. Run clips loop; Jump does not. Their import settings live in the tracked .meta files. The Football layer adds carry, throw and handoff. Catch and tackle still need clips.
+StandardHardCut follows the existing JukeMove direction and progress or a sharp change in actual travel. After the Animator evaluates the base gait, the presenter loads the outside hip, plants the outside ankle, and releases into the exit gait. The carried-ball arm retains its pose. The bone references are rebound when PlayerVisualRig switches fitted Avatars. Transform-based movement, evasion and collision remain gameplay-owned. Animator root motion is disabled.
 
 ## Modular character presentation
 

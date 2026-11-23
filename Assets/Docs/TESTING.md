@@ -549,10 +549,12 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 
 **Validation:** Unity 6000.5.6f1 isolated Editor Play Mode: **44/44 passed**, zero failures/skips (the prior 40 plus four animation cases). All fourteen actors were exercised at standard/fast/backward speeds with root-position and pelvis-grounding assertions. The imported clips retain Original Y to match the existing fitted body/idle; Jump extracts its trajectory using Original, keeping its body center stable while legs articulate. Root motion remains off. Rendered current-bone poses were inspected for backward, idle, standard/fast run and five jump phases; temporary QA bakes avoid reusing a GPU skinning cache between captures in the same Editor frame. Final runtime/controller/prefab/import files match the tested copy byte for byte; git diff --check is clean. Evidence: ignored Builds/Validation/player-animation-playmode.xml, Player-locomotion-poses.png, Player-hurdle-poses.png and player-animation-preview.log. The copied Editor search cache emitted its existing QuickSearch indexing exception during preview startup; no gameplay test failed. Physical controller feel, Windows and a new standalone build remain unverified.
 
-## T-124: Football carry, throw and designed handoff (2026-11-15)
+## T-124: Football carry, throw, handoff and hard cut
+
+**Integrated check, 2026-11-22.** Unity 6000.5.6f1 passed all 186 Play Mode cases. StandardFootballRigTests samples the six fitted skins at three heights. StandardHardCutTests checks both planted feet, pelvis loading, recovery, interruption and preservation of the actor root and carrying arm. PlayerAnimationTests drives live release and handoff, and ExhibitionTests drives both exhibition modes. Open the MPFBCharacterReview scene to scrub 19 controller choices. Use the Blacktop Animations menu for paired handoff and cut previews. The [animation matrix](../../ArtSource/Characters/Validation/Animation-readiness.md) records the measured reach gap and the remaining human playtest. Local evidence is under `Builds/Validation/StandardFootball-MPFB/`.
 
 1. Open `Assets/Scenes/SampleScene.unity`. In the Hierarchy expand a Player's
-   PlayerVisuals > PlayerModel. On the Animator object open Window >
+   PlayerVisuals and select the fitted body instance. On the Animator object open Window >
    Animation > Animator. Inspect the Football layer alongside Base Layer.
    For pose review, open Window > Animation > Animation and scrub the clips
    on the selected Animator object. In the Carry state, ready and tuck are
@@ -560,15 +562,14 @@ The refreshed app passed a headless scene-startup smoke check with no logged run
 2. Enter Play Mode and call Slants. After the offense sets, the QB holds the
    ball in a ready grip. Press R to start, use WASD to move and turn, and use
    Left Shift to exercise the fast gait. Look for upper torso contact and
-   clean forearm and wrist placement. Repeat as a runner and on dressed
-   characters of different builds and heights.
+   clean forearm and wrist placement. Repeat as a runner on different fitted bodies and heights.
 3. Start another Slants play and select a receiver with the shown 1–4 prompt,
    or use H for the existing auto-target pass. Watch for one release, a
    continuous ball path, overhand follow-through and recovery. Pause and
    frame-step across release, then repeat at regular gameplay speed.
 4. Call Dive and press R once set. Watch the runner's approach, both arms at
    the mesh point, and the ball through the runner's breakaway. Expect one
-   ownership change at the proximity trigger and an approximately 0.16 s
+   ownership change at the proximity trigger and an approximately 0.075 s
    rendered-ball blend. A visible gap, floating ball or late receiving pocket
    fails visual acceptance. Repeat on both attacking sides and after a
    whistle. Dive uses Pistol. To test a Shotgun exchange, assign Shotgun_Base

@@ -213,8 +213,8 @@ public class BallController : MonoBehaviour
         if (!isPitch && IsHeld && carrier != null &&
             carrier.TryGetComponent<PlayerAnimationPresenter>(out var thrower))
         {
-            // Use the same release cue for human and CPU passes. Capture the
-            // visible grip before the simulation snaps its root to the launch spot.
+            // The same event drives both human and CPU presentation. The mesh
+            // samples that frame's hand after the Animator evaluates release.
             appearance?.BeginPass(thrower);
             thrower.ShowPassRelease();
         }
@@ -499,12 +499,14 @@ public class BallController : MonoBehaviour
     {
         // This entry point is only used by the designed run exchange.
         // Ordinary catches, recoveries, and formation resets use AttachTo.
-        var giver = carrier != null ? carrier.GetComponent<PlayerAnimationPresenter>() : null;
-        Vector3 exchangePoint = carrier != null ? (carrier.position + receiver.position) * 0.5f : receiver.position;
+        if (!IsHeld || carrier == null || receiver == null || carrier == receiver) return;
+        var giver = carrier.GetComponent<PlayerAnimationPresenter>();
+        var taker = receiver.GetComponent<PlayerAnimationPresenter>();
+        Vector3 exchangePoint = FootballActionPose.GetHandoffContact(giver?.Animator, taker?.Animator, carrier, receiver);
         AttachTo(receiver);
 
         if (giver != null) giver.ShowHandoff(true, exchangePoint);
-        if (receiver.TryGetComponent<PlayerAnimationPresenter>(out var taker)) taker.ShowHandoff(false, exchangePoint);
+        if (taker != null) taker.ShowHandoff(false, exchangePoint);
         appearance?.BeginHandoff(giver);
     }
 

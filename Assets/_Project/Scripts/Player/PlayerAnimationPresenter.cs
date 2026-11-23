@@ -10,8 +10,12 @@ public class PlayerAnimationPresenter : MonoBehaviour
     [SerializeField] Animator animator;
     [SerializeField] AnimationClip hurdleClip;
     [Header("Animation reference speeds (world units per second)")]
+    [SerializeField, Min(0.1f)] float walkSpeed = 2f;
+    [SerializeField, Min(0.1f)] float jogSpeed = 4f;
     [SerializeField, Min(0.1f)] float standardRunSpeed = 6f;
-    [SerializeField, Min(0.1f)] float fastRunSpeed = 10f;
+    [SerializeField, Min(0.1f)] float fastRunSpeed = 8f;
+    [SerializeField, Min(0.1f)] float sprintSpeed = 10f;
+    [SerializeField, Min(0.1f)] float strafeSpeed = 4.5f;
     [SerializeField, Min(0.1f)] float backwardRunSpeed = 4.5f;
     [SerializeField, Min(0f)] float idleSpeed = 0.08f;
     [SerializeField, Range(-1f, 0f)] float backwardDotThreshold = -0.25f;
@@ -19,7 +23,7 @@ public class PlayerAnimationPresenter : MonoBehaviour
     [SerializeField, Min(0.1f)] float teleportDistance = 3f;
 
     [Header("Wall recoil")]
-    [SerializeField, Range(0f, 45f)] float stumbleLeanAngle = 24f;
+    [SerializeField, Range(0f, 45f)] float stumbleLeanAngle = 12f;
 
     [Header("Football presentation")]
     [SerializeField, Min(0.01f)] float carryTuckSpeed = 3f;
@@ -27,13 +31,23 @@ public class PlayerAnimationPresenter : MonoBehaviour
     [SerializeField, Min(0.01f)] float followThroughDuration = 0.31f;
     [SerializeField, Min(0.01f)] float handoffPoseDuration = 0.40f;
     [SerializeField, Range(0f, 90f)] float handoffTurnLimit = 65f;
-    [SerializeField] Vector3 footballGripOffset = new(0.085f, 0.005f, 0.075f);
+    [SerializeField, Min(0.01f)] float throwStanceSpeed = 1.7f;
+    [SerializeField] Vector3 footballGripOffset = DefaultFootballGripOffset;
+    [SerializeField] StandardHardCut hardCut = new();
+
+    public static readonly Vector3 DefaultFootballGripOffset = new(0.070f, 0.005f, 0.085f);
+    public const float HandoffContactProgress = 0.30f;
 
     static readonly int Locomotion = Animator.StringToHash("Locomotion");
+    static readonly int Lateral = Animator.StringToHash("Lateral");
+    static readonly int LocomotionVariant = Animator.StringToHash("LocomotionVariant");
+    static readonly int Stumbling = Animator.StringToHash("Stumbling");
+    static readonly int StumbleProgress = Animator.StringToHash("StumbleProgress");
     static readonly int Hurdling = Animator.StringToHash("Hurdling");
     static readonly int HurdleRate = Animator.StringToHash("HurdleRate");
     static readonly int LocomotionRate = Animator.StringToHash("LocomotionRate");
     static readonly int CarryPace = Animator.StringToHash("CarryPace");
+    static readonly int CarryTime = Animator.StringToHash("CarryTime");
     static readonly int WindupTime = Animator.StringToHash("ThrowWindupTime");
     static readonly int ActionTime = Animator.StringToHash("FootballActionTime");
     static readonly int Carry = Animator.StringToHash("Football.Carry");
@@ -43,21 +57,23 @@ public class PlayerAnimationPresenter : MonoBehaviour
     static readonly int HandoffTake = Animator.StringToHash("Football.Handoff Take");
 
     PlayerStateMachine stateMachine;
+    TeamMember teamMember;
+    CPUCarrierAI cpuCarrier;
+    PlayerVisualAssembler visualAssembler;
     Vector3 previousPosition;
     Transform recoilPivot;
     Quaternion uprightRotation;
-
     int footballLayer = -1;
     int footballState;
     int footballCue;
     float actionElapsed;
     Vector3 exchangePoint;
-    Transform gripHand;
-    Transform gripMiddle;
-    Transform gripIndex;
-    Transform gripLittle;
-    Transform throwingArm;
-    Transform upperChest;
+    int handoffApproachFrame = -1;
+    int handoffApproachState;
+    float handoffApproachProgress;
+    Vector3 handoffApproachPoint;
+    float poseProgress;
+    float throwStanceWeight;
 
     public Animator Animator => animator;
     public float PlanarSpeed { get; private set; }
@@ -66,6 +82,9 @@ public class PlayerAnimationPresenter : MonoBehaviour
     void Awake()
     {
         stateMachine = GetComponent<PlayerStateMachine>();
+        teamMember = GetComponent<TeamMember>();
+        cpuCarrier = GetComponent<CPUCarrierAI>();
+        visualAssembler = GetComponent<PlayerVisualAssembler>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
         BindVisual(animator);
     }
@@ -79,15 +98,6 @@ public class PlayerAnimationPresenter : MonoBehaviour
             footballState = 0;
             animator.applyRootMotion = false;
             footballLayer = animator.GetLayerIndex("Football");
-            if (animator.isHuman)
-            {
-                gripHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
-                gripMiddle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
-                gripIndex = animator.GetBoneTransform(HumanBodyBones.RightIndexProximal);
-                gripLittle = animator.GetBoneTransform(HumanBodyBones.RightLittleProximal);
-                throwingArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
-                upperChest = animator.GetBoneTransform(HumanBodyBones.UpperChest);
-            }
             // Use the wrapper above the Animator so neither the gameplay root nor
             // the Animator's own local pose is overwritten.
             Transform pivot = animator.transform;
@@ -100,6 +110,8 @@ public class PlayerAnimationPresenter : MonoBehaviour
             // Offscreen AI must retain the same animation state as controlled players.
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         }
+        hardCut.Bind(animator, transform);
+        ResetParameters(); // A fitted body swap also installs a fresh controller instance.
     }
 
     void OnEnable()
@@ -123,8 +135,16 @@ public class PlayerAnimationPresenter : MonoBehaviour
         PlayState.Instance.OnPlayEnded -= OnFootballWhistle;
     }
 
-    void ClearFootballAction() => footballCue = 0;
-    void OnFootballWhistle(PlayState.PlayEndReason _) => ClearFootballAction();
+    void ClearFootballAction()
+    {
+        footballCue = 0;
+        handoffApproachFrame = -1;
+    }
+    void OnFootballWhistle(PlayState.PlayEndReason _)
+    {
+        ClearFootballAction();
+        hardCut.Cancel();
+    }
     void OnDisable() => ResetParameters();
     void Update() => UpdatePresentation(Time.deltaTime);
 
@@ -135,8 +155,9 @@ public class PlayerAnimationPresenter : MonoBehaviour
         displacement.y = 0f; // The hurdle's vertical arc is gameplay, not running speed.
         bool teleported = displacement.magnitude > teleportDistance;
         PlanarSpeed = deltaTime > 0f && !teleported ? displacement.magnitude / deltaTime : 0f;
-        MovingBackward = PlanarSpeed > idleSpeed &&
-            Vector3.Dot(displacement.normalized, transform.forward) < backwardDotThreshold;
+        // The root may keep facing upfield during a dropback or coverage shuffle.
+        Vector3 direction = PlanarSpeed > idleSpeed ? transform.InverseTransformDirection(displacement.normalized) : Vector3.zero;
+        MovingBackward = direction.z < backwardDotThreshold;
         bool stumbling = stateMachine != null && stateMachine.IsStumbling;
         if (recoilPivot != null)
         {
@@ -145,6 +166,11 @@ public class PlayerAnimationPresenter : MonoBehaviour
             recoilPivot.localRotation = Quaternion.AngleAxis(angle, Vector3.Cross(Vector3.up, lean)) * uprightRotation;
         }
         if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        // Sample the one-shot at the existing move's progress. On exit, keep its
+        // last sample during the crossfade so it cannot snap to its opening pose.
+        animator.SetBool(Stumbling, stumbling);
+        if (stumbling) animator.SetFloat(StumbleProgress, stateMachine.StumbleProgress);
 
         bool hurdling = stateMachine != null && stateMachine.CurrentState == PlayerState.Hurdle;
         animator.SetBool(Hurdling, hurdling);
@@ -155,21 +181,39 @@ public class PlayerAnimationPresenter : MonoBehaviour
             animator.SetFloat(HurdleRate, length / Mathf.Max(0.01f, stateMachine.HurdleDuration));
         }
 
-        // The football mask supplies the upper body over the existing locomotion pose.
         UpdateFootball(deltaTime, stumbling || hurdling, teleported);
+        var play = PlayState.Instance;
+        bool footballAction = footballState != 0 && footballState != Carry;
+        bool otherMove = stateMachine.CurrentState is PlayerState.StiffArm or PlayerState.Pitch;
+        hardCut.Observe(displacement, deltaTime, teleported || stumbling || hurdling ||
+            (play != null && !play.IsLive) || footballAction || otherMove, stateMachine);
 
-        float blend = 0f;
-        if (PlanarSpeed > idleSpeed)
+        // Formation teleports and the wall's recoil are not locomotion strides.
+        if (stumbling || teleported || deltaTime <= 0f)
         {
-            if (MovingBackward) blend = -Mathf.Clamp01(PlanarSpeed / backwardRunSpeed);
-            else if (PlanarSpeed <= standardRunSpeed) blend = PlanarSpeed / standardRunSpeed;
-            else blend = 1f + Mathf.InverseLerp(standardRunSpeed, Mathf.Max(standardRunSpeed + 0.1f, fastRunSpeed), PlanarSpeed);
+            animator.SetFloat(Locomotion, 0f);
+            animator.SetFloat(Lateral, 0f);
+            animator.SetFloat(LocomotionRate, 1f);
+            return;
         }
-        // Formation/reset teleports must not produce a one-frame sprint or reverse stride.
-        if (stumbling || teleported || deltaTime <= 0f) animator.SetFloat(Locomotion, 0f);
-        else animator.SetFloat(Locomotion, blend, blendDamping, deltaTime);
-        float referenceSpeed = MovingBackward ? backwardRunSpeed : fastRunSpeed;
+
+        float forwardBlend = MovingBackward
+            ? -Mathf.Clamp01(-direction.z * PlanarSpeed / backwardRunSpeed)
+            : ForwardBlend(Mathf.Max(0f, direction.z) * PlanarSpeed);
+        animator.SetFloat(Locomotion, forwardBlend, blendDamping, deltaTime);
+        animator.SetFloat(Lateral, Mathf.Clamp(direction.x * PlanarSpeed / strafeSpeed, -1f, 1f), blendDamping, deltaTime);
+        float referenceSpeed = Mathf.Lerp(MovingBackward ? backwardRunSpeed : sprintSpeed, strafeSpeed, Mathf.Abs(direction.x));
         animator.SetFloat(LocomotionRate, Mathf.Clamp(PlanarSpeed / referenceSpeed, 1f, 1.5f));
+    }
+
+    float ForwardBlend(float speed)
+    {
+        // Keep the appearance previews' signed idle/run/fast-run input values.
+        return Mathf.InverseLerp(idleSpeed, walkSpeed, speed) / 3f +
+            Mathf.InverseLerp(walkSpeed, jogSpeed, speed) / 3f +
+            Mathf.InverseLerp(jogSpeed, standardRunSpeed, speed) / 3f +
+            Mathf.InverseLerp(standardRunSpeed, fastRunSpeed, speed) +
+            Mathf.InverseLerp(fastRunSpeed, sprintSpeed, speed);
     }
 
     internal void ShowPassRelease()
@@ -183,24 +227,47 @@ public class PlayerAnimationPresenter : MonoBehaviour
         footballCue = giving ? HandoffGive : HandoffTake;
         actionElapsed = 0f;
         exchangePoint = contactPoint;
+        handoffApproachFrame = -1;
+    }
+
+    internal void ShowHandoffApproach(bool giving, Vector3 contactPoint, float progress)
+    {
+        // A coordinator that stops reporting the approach also stops the cue.
+        handoffApproachFrame = Time.frameCount;
+        handoffApproachState = giving ? HandoffGive : HandoffTake;
+        handoffApproachPoint = contactPoint;
+        handoffApproachProgress = Mathf.Clamp01(progress);
     }
 
     internal bool TryGetBallGrip(out Pose pose)
     {
         pose = default;
-        if (!isActiveAndEnabled || footballLayer < 0 || gripHand == null || gripMiddle == null ||
-            gripIndex == null || gripLittle == null) return false;
+        return isActiveAndEnabled && footballLayer >= 0 && TrySampleFootballGrip(animator, footballGripOffset, out pose);
+    }
 
-        // Derive a palm frame from the metacarpals so it follows wrist roll and
-        // avatar scale. Local Y is the ball's long axis, laid across the hand.
-        Vector3 fingers = (gripMiddle.position - gripHand.position).normalized;
-        Vector3 thumbSide = (gripIndex.position - gripLittle.position).normalized;
+    public static bool TrySampleFootballGrip(Animator animator, Vector3 gripOffset, out Pose pose)
+    {
+        pose = default;
+        if (animator == null || !animator.isHuman) return false;
+        Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+        Transform middle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
+        Transform index = animator.GetBoneTransform(HumanBodyBones.RightIndexProximal);
+        Transform little = animator.GetBoneTransform(HumanBodyBones.RightLittleProximal);
+        if (hand == null || middle == null || index == null || little == null) return false;
+
+        // Use the anatomical palm frame. The FootballVisual mesh is long on
+        // local Z, which is also the forward/spiral axis during gameplay flight.
+        // Only the contact location on the hand scales with the avatar. The
+        // inflated ball keeps its real palm-to-center distance at every height.
+        Vector3 metacarpal = middle.position - hand.position;
+        Vector3 fingers = metacarpal.normalized;
+        Vector3 thumbSide = Vector3.ProjectOnPlane(index.position - little.position, fingers).normalized;
         Vector3 palm = Vector3.Cross(fingers, thumbSide).normalized;
-        float handScale = gripHand.lossyScale.x;
-        Quaternion rotation = Quaternion.LookRotation(palm, Vector3.Cross(palm, fingers));
-        Vector3 offset = (fingers * footballGripOffset.x + thumbSide * footballGripOffset.y +
-            palm * footballGripOffset.z) * handScale;
-        pose = new Pose(gripHand.position + offset, rotation);
+        if (palm.sqrMagnitude < 0.001f) return false;
+        Quaternion rotation = Quaternion.LookRotation(Vector3.Cross(palm, fingers), -palm);
+        float handRatio = metacarpal.magnitude / 0.09f;
+        Vector3 offset = (fingers * gripOffset.x + thumbSide * gripOffset.y) * handRatio + palm * gripOffset.z;
+        pose = new Pose(hand.position + offset, rotation);
         return true;
     }
 
@@ -211,6 +278,14 @@ public class PlayerAnimationPresenter : MonoBehaviour
         var ball = BallController.Instance;
         bool heldHere = ball != null && ball.IsHeld && ball.Carrier == transform;
         bool live = play == null || play.IsLive;
+        if (heldHere)
+        {
+            // Match the free arm swing to the same gait clock as the legs,
+            // including the runner's first strides out of the handoff.
+            animator.SetFloat(CarryPace, live ? Mathf.Clamp01(PlanarSpeed / carryTuckSpeed) : 0f,
+                blendDamping, deltaTime);
+            animator.SetFloat(CarryTime, Mathf.Repeat(animator.GetCurrentAnimatorStateInfo(0).normalizedTime, 1f));
+        }
 
         // Whistle, a formation reset and a higher-priority move clear one-shots.
         // Losing the ball also cancels a receiving pose or a pending windup.
@@ -219,6 +294,7 @@ public class PlayerAnimationPresenter : MonoBehaviour
 
         int next = 0;
         float progress = 0f;
+        bool commitAtContact = false;
         if (footballCue != 0)
         {
             float duration = footballCue == ThrowFollowThrough ? followThroughDuration : handoffPoseDuration;
@@ -226,23 +302,41 @@ public class PlayerAnimationPresenter : MonoBehaviour
             if (progress < 1f)
             {
                 next = footballCue;
+                commitAtContact = actionElapsed <= 0f && (next != ThrowFollowThrough || footballState == ThrowWindup);
+                if (next != ThrowFollowThrough) progress = Mathf.Lerp(HandoffContactProgress, 1f, progress);
                 actionElapsed += Mathf.Max(0f, deltaTime);
             }
             else footballCue = 0;
         }
 
-        if (next == 0 && heldHere && !interrupted)
+        float windup = live && heldHere ? stateMachine.PassWindup : -1f;
+        if (live && heldHere && windup < 0f && cpuCarrier != null && cpuCarrier.isActiveAndEnabled)
+            windup = cpuCarrier.VisualWindup;
+        if (next == 0 && windup < 0f && handoffApproachFrame == Time.frameCount && !interrupted && !teleported &&
+            (handoffApproachState == HandoffGive) == heldHere)
         {
-            float windup = live ? stateMachine.PassWindup : -1f;
-            next = windup >= 0f ? ThrowWindup : Carry;
-            progress = Mathf.Max(0f, windup);
-            // A new snap keeps the QB's ready grip until their feet move.
-            animator.SetFloat(CarryPace, live ? Mathf.Clamp01(PlanarSpeed / carryTuckSpeed) : 0f,
-                blendDamping, deltaTime);
+            next = handoffApproachState;
+            progress = HandoffContactProgress * handoffApproachProgress;
+            exchangePoint = handoffApproachPoint;
         }
 
+        if (next == 0 && heldHere && !interrupted)
+        {
+            next = windup >= 0f ? ThrowWindup : Carry;
+            progress = Mathf.Max(0f, windup);
+        }
+
+        if (next == ThrowWindup && footballState != ThrowWindup)
+            throwStanceWeight = 1f - Mathf.Clamp01(PlanarSpeed / throwStanceSpeed);
         float weight = animator.GetLayerWeight(footballLayer);
-        if (next != 0 && next != footballState)
+        if (commitAtContact)
+        {
+            // Evaluate the contact/release key this frame. The final windup
+            // and first follow-through share the same throwing arm pose.
+            animator.Play(next, footballLayer, 0f);
+            weight = 1f;
+        }
+        else if (next != 0 && next != footballState)
         {
             if (weight <= 0.01f) animator.Play(next, footballLayer, 0f);
             else animator.CrossFadeInFixedTime(next, 0.045f, footballLayer);
@@ -251,6 +345,7 @@ public class PlayerAnimationPresenter : MonoBehaviour
         // Keep the outgoing release or handoff pose sampled during its crossfade.
         if (next == ThrowWindup) animator.SetFloat(WindupTime, progress);
         else if (next != 0 && next != Carry) animator.SetFloat(ActionTime, progress);
+        poseProgress = progress;
         animator.SetLayerWeight(footballLayer, Mathf.MoveTowards(weight, next == 0 ? 0f : 1f,
             Mathf.Max(0f, deltaTime) / footballBlendSeconds));
         // Preserve the last sample during the no-ball fade.
@@ -259,26 +354,38 @@ public class PlayerAnimationPresenter : MonoBehaviour
 
     void LateUpdate()
     {
-        if (footballCue != HandoffGive && footballCue != HandoffTake) return;
-        if (gripHand == null || throwingArm == null) return;
+        bool carrying = BallController.Instance is { IsHeld: true } ball && ball.Carrier == transform;
+        hardCut.Apply(carrying);
+        if (footballLayer < 0) return;
 
-        // Shotgun and Pistol put the runner on different sides. Turn the
-        // animated reach toward the real mesh point without steering the actor.
-        Vector3 aim = Vector3.ProjectOnPlane(exchangePoint - transform.position, Vector3.up);
-        if (aim.sqrMagnitude < 0.001f) return;
-        float progress = animator.GetFloat(ActionTime);
-        float reach = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.26f, 0.72f, progress));
-        Vector3 authoredDirection = footballCue == HandoffGive ? transform.right : transform.forward;
-        float turn = Vector3.SignedAngle(authoredDirection, aim, Vector3.up);
-        if (upperChest != null)
-            upperChest.rotation = Quaternion.AngleAxis(Mathf.Clamp(turn * 0.6f, -handoffTurnLimit, handoffTurnLimit) * reach,
-                Vector3.up) * upperChest.rotation;
+        float weight = animator.GetLayerWeight(footballLayer);
+        float carryWeight = footballState == Carry ? weight : 0f;
+        if (footballState == ThrowWindup)
+            carryWeight = weight * (1f - Mathf.SmoothStep(0f, 1f, poseProgress / 0.28f));
+        if (footballCue == HandoffTake)
+            carryWeight = weight * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.68f, 1f, poseProgress));
+        if (footballState == HandoffGive && footballCue == 0 && handoffApproachFrame == Time.frameCount)
+            carryWeight = weight * (1f - Mathf.SmoothStep(0f, 1f, handoffApproachProgress));
+        if (carrying && carryWeight > 0.001f)
+            FootballActionPose.ApplyCarry(animator, animator.GetFloat(CarryPace), footballGripOffset,
+                visualAssembler?.AppliedAppearance?.bodyArchetype ?? BodyArchetype.Athletic, carryWeight);
+        if (footballState == ThrowWindup || footballCue == ThrowFollowThrough)
+        {
+            float windup = footballState == ThrowWindup ? poseProgress : -1f;
+            float followThrough = footballCue == ThrowFollowThrough ? poseProgress : -1f;
+            FootballActionPose.ApplyThrowStance(animator, transform, windup, followThrough, throwStanceWeight * weight);
+            FootballActionPose.ApplyOverhandArm(animator, transform, windup, followThrough, footballGripOffset, weight);
+        }
+        if (footballState != HandoffGive && footballState != HandoffTake) return;
+        if (footballCue == 0 && handoffApproachFrame != Time.frameCount) return;
 
-        Vector3 target = exchangePoint;
-        target.y = gripHand.position.y;
-        Quaternion correction = Quaternion.FromToRotation(gripHand.position - throwingArm.position, target - throwingArm.position);
-        throwingArm.rotation = Quaternion.RotateTowards(Quaternion.identity, correction, handoffTurnLimit * reach) *
-            throwingArm.rotation;
+        // The reach peaks at the same frame on both players. Visual corrections
+        // then decay into the already-playing recovery and carry poses.
+        float reach = footballCue == 0
+            ? 0.72f * Mathf.SmoothStep(0f, 1f, handoffApproachProgress)
+            : 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(HandoffContactProgress, 0.73f, poseProgress));
+        FootballActionPose.ApplyHandoff(animator, transform, exchangePoint, reach * weight,
+            footballState == HandoffGive, footballGripOffset, handoffTurnLimit);
     }
 
     void ResetParameters()
@@ -286,17 +393,26 @@ public class PlayerAnimationPresenter : MonoBehaviour
         if (recoilPivot != null) recoilPivot.localRotation = uprightRotation;
         PlanarSpeed = 0f;
         MovingBackward = false;
-        footballState = footballCue = 0;
+        hardCut.Cancel();
+        ClearFootballAction();
+        footballState = 0;
         actionElapsed = 0f;
+        throwStanceWeight = 0f;
         if (animator == null || animator.runtimeAnimatorController == null) return;
         if (footballLayer >= 0)
         {
             animator.SetLayerWeight(footballLayer, 0f);
             animator.SetFloat(CarryPace, 0f);
+            animator.SetFloat(CarryTime, 0f);
             animator.SetFloat(ActionTime, 0f);
             animator.SetFloat(WindupTime, 0f);
         }
         animator.SetFloat(Locomotion, 0f);
+        animator.SetFloat(Lateral, 0f);
+        // Pick a stable idle and walk pair at spawn so the stance does not change mid-stride.
+        animator.SetFloat(LocomotionVariant, teamMember != null && teamMember.teamId == 1 ? 1f : 0f);
+        animator.SetBool(Stumbling, false);
+        animator.SetFloat(StumbleProgress, 0f);
         animator.SetBool(Hurdling, false);
         animator.SetFloat(HurdleRate, 1f);
         animator.SetFloat(LocomotionRate, 1f);

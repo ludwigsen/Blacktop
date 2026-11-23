@@ -21,6 +21,7 @@ public class HandoffCoordinator : MonoBehaviour
     // float precision.
     [SerializeField] float handoffRadius = 2f;
     [SerializeField] float autoPathSpeed = 6f; // matches ReceiverAI's default moveSpeed — same footspeed whether running a route or running the mesh point
+    [SerializeField, Min(0.01f)] float presentationApproachDistance = 0.9f;
 
     // Latches once resolved so a fumble recovered back to the QB mid-play can't
     // re-trigger a second "handoff" just because the receiver happens to still be nearby.
@@ -40,10 +41,11 @@ public class HandoffCoordinator : MonoBehaviour
 
     void Update()
     {
-        if (PlayState.Instance == null || !PlayState.Instance.IsLive) return;
-        if (handoffResolvedThisPlay) return;
+        var play = PlayState.Instance;
+        if (play == null || (!play.IsLive && !play.IsSetAtLOS)) return;
+        if (play.IsLive && handoffResolvedThisPlay) return;
 
-        var playCall = PlayState.Instance.CurrentPlayCall;
+        var playCall = play.CurrentPlayCall;
         if (playCall == null || playCall.PlayType != PlayType.Run) return;
 
         if (BallController.Instance == null || !BallController.Instance.IsHeld) return;
@@ -53,14 +55,14 @@ public class HandoffCoordinator : MonoBehaviour
         // Only relevant while the QB still has it — once the back receives it,
         // carrier.slot is no longer QB, so this naturally stops without a second guard.
         if (!carrier.TryGetComponent<TeamMember>(out var carrierTeam)) return;
-        if (carrierTeam.teamId != PlayState.Instance.PossessionTeamId) return; // handoff logic only ever applies to the team actually running this play call
+        if (carrierTeam.teamId != play.PossessionTeamId) return; // handoff logic only ever applies to the team actually running this play call
         if (carrierTeam.slot != TeamMember.RosterSlot.QB) return;
 
         // A handoff is a behind-the-line exchange. Once the QB has crossed the LOS it's
         // off for the rest of the play — otherwise the back keeps chasing the QB downfield
         // and "hands off" past the line. Latching also stops the autopath, so the back
         // goes back to normal behavior (blocking) instead of running into the QB.
-        if (PlayState.Instance.IsPastLineOfScrimmage(carrier.position.z))
+        if (play.IsLive && play.IsPastLineOfScrimmage(carrier.position.z))
         {
             handoffResolvedThisPlay = true;
             return;
@@ -68,6 +70,14 @@ public class HandoffCoordinator : MonoBehaviour
 
         Transform receiver = FindReceiver(carrierTeam.teamId, playCall.HandoffReceiverSlot);
         if (receiver == null || PlayerStateMachine.IsMovementLocked(receiver)) return;
+
+        if (!play.IsLive)
+        {
+            // The real QB already has the football in Blacktop's formation.
+            // Cue a small receiving pocket during Set while gameplay stays frozen.
+            PrepareExchange(carrier, receiver, 0.42f);
+            return;
+        }
 
         // Autopath: walk the receiver toward the QB's current position every frame
         // until the mesh point closes the gap and the exchange resolves.
@@ -82,12 +92,26 @@ public class HandoffCoordinator : MonoBehaviour
             autoPathSpeed * (attributes != null ? attributes.Speed() : 1f) * Time.deltaTime);
         if (!PlayerStateMachine.MoveActor(receiver, destination)) return;
 
-        if (Vector3.Distance(carrier.position, receiver.position) <= handoffRadius)
+        float distance = Vector3.Distance(carrier.position, receiver.position);
+        if (distance <= handoffRadius)
         {
             // Commit ownership at the same mesh point. The paired action is visual.
             BallController.Instance.HandoffTo(receiver);
             handoffResolvedThisPlay = true;
         }
+        else PrepareExchange(carrier, receiver, 1f);
+    }
+
+    void PrepareExchange(Transform carrier, Transform receiver, float progressLimit)
+    {
+        float distance = Vector3.Distance(carrier.position, receiver.position);
+        float progress = Mathf.InverseLerp(handoffRadius + presentationApproachDistance, handoffRadius, distance);
+        if (progress <= 0f || !carrier.TryGetComponent<PlayerAnimationPresenter>(out var giver) ||
+            !receiver.TryGetComponent<PlayerAnimationPresenter>(out var taker)) return;
+
+        Vector3 contact = FootballActionPose.GetHandoffContact(giver.Animator, taker.Animator, carrier, receiver);
+        giver.ShowHandoffApproach(true, contact, progress * progressLimit);
+        taker.ShowHandoffApproach(false, contact, progress * progressLimit);
     }
 
     internal static Transform FindReceiver(int teamId, TeamMember.RosterSlot slot)
