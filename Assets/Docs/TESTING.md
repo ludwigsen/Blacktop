@@ -592,6 +592,13 @@ shells show clipping. The throw frames sample the animation clock with the
 ball flight clock held at launch. Local XML, logs and labeled frames are under
 `Builds/Validation/AnimationAudit/`.
 
+**Blender authoring round trip:** See `SourceAssets/AnimationAuthoring/README.md` for
+six editable Actions, FBX reference files, and a disposable Unity review workflow.
+Blender reimports match all 58 joints and sample spans. Unity Humanoid comparison
+retains the durations, loops and masked feet/root. Some upper-body rotations and
+positions exceed fidelity limits, so review candidates in the match before changing
+any live clip reference.
+
 ## T-101: Modular player appearances (2026-10-22)
 
 **Automated:** PlayerAppearanceTests loads the actual match and verifies all fourteen assemblers, shared Avatar/materials, all sixty height/build data combinations with unchanged root/collider/ratings/GUID/possession/bounds, saved-ID reconstruction after catalog reorder, repeated assembly reuse, missing/duplicate/incompatible selection retention, changed bind-pose rejection, skinned/rigid attachment fixtures using live bones, authored LOD mapping, team property-block refresh and roster selection on a newly instantiated player. Attachment fixtures reuse existing mesh assets only for tests; they are not hairstyle art.

@@ -1,0 +1,62 @@
+[
+  {
+    "clip": "Throw Windup",
+    "joints": 58,
+    "frames": 16,
+    "blender_pose_error_m": 8.534818124859915e-07,
+    "blender_matrix_error": 1.0132789611816406e-06,
+    "fbx_rest_error_m": 5.127385417844431e-07,
+    "fbx_pose_error_m": 2.198918669902887e-06,
+    "fbx_matrix_error": 3.255903720855713e-06
+  },
+  {
+    "clip": "Throw Follow Through",
+    "joints": 58,
+    "frames": 32,
+    "blender_pose_error_m": 1.13444723550524e-06,
+    "blender_matrix_error": 8.344650268554688e-07,
+    "fbx_rest_error_m": 5.127385417844431e-07,
+    "fbx_pose_error_m": 2.0265579223632812e-06,
+    "fbx_matrix_error": 3.643333911895752e-06
+  },
+  {
+    "clip": "Carry Ready",
+    "joints": 58,
+    "frames": 125,
+    "blender_pose_error_m": 1.2233481259211178e-06,
+    "blender_matrix_error": 1.1324882507324219e-06,
+    "fbx_rest_error_m": 5.127385417844431e-07,
+    "fbx_pose_error_m": 2.5155641660562497e-06,
+    "fbx_matrix_error": 3.3974647521972656e-06
+  },
+  {
+    "clip": "Carry Tuck",
+    "joints": 58,
+    "frames": 65,
+    "blender_pose_error_m": 1.1187351310510217e-06,
+    "blender_matrix_error": 1.1622905731201172e-06,
+    "fbx_rest_error_m": 5.127385417844431e-07,
+    "fbx_pose_error_m": 2.0906281360740166e-06,
+    "fbx_matrix_error": 3.6731362342834473e-06
+  },
+  {
+    "clip": "Handoff Give",
+    "joints": 58,
+    "frames": 41,
+    "blender_pose_error_m": 1.2017396184000941e-06,
+    "blender_matrix_error": 1.0728836059570312e-06,
+    "fbx_rest_error_m": 5.127385417844431e-07,
+    "fbx_pose_error_m": 2.180463042717021e-06,
+    "fbx_matrix_error": 4.732981324195862e-06
+  },
+  {
+    "clip": "Handoff Take",
+    "joints": 58,
+    "frames": 41,
+    "blender_pose_error_m": 1.205429340371888e-06,
+    "blender_matrix_error": 1.0728836059570312e-06,
+    "fbx_rest_error_m": 5.127385417844431e-07,
+    "fbx_pose_error_m": 2.04075197169423e-06,
+    "fbx_matrix_error": 3.3527612686157227e-06
+  }
+]

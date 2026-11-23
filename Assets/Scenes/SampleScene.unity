@@ -313,7 +313,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &172831028 stripped
 Transform:
@@ -505,7 +505,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &325364142 stripped
 Transform:
@@ -906,6 +906,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5927057260479977703, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
   m_PrefabInstance: {fileID: 1731406316029656970}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &801123489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 801123490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc44c5f2f5e7c4fd48be3f4c40eaa02d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::BallGroundMarkers
+  looseRadius: 0.65
+  targetRadius: 0.8
+  lineWidth: 0.12
+  groundOffset: 0.035
+  looseColor: {r: 1, g: 0.83, b: 0.15, a: 1}
+  targetColor: {r: 0.4, g: 0.95, b: 1, a: 1}
 --- !u!1 &801123490
 GameObject:
   m_ObjectHideFlags: 0
@@ -942,6 +960,19 @@ MonoBehaviour:
   carrier: {fileID: 0}
   carryOffset: {x: 0.34, y: 0.12, z: 0.22}
   recoveryRadius: 1
+  passGravity: 9.81
+  spiralDegreesPerSecond: 1440
+  looseMotion:
+    gravity: 9.81
+    collisionRadius: 0.1
+    halfLength: 0.16
+    restitution: 0.48
+    contactFriction: 0.24
+    rollingDeceleration: 3
+    settleSpeed: 0.12
+    minimumBounceSpeed: 0.7
+    tipDeflection: 0.2
+    maxStep: 0.008333334
   flightArcCurve:
     serializedVersion: 2
     m_Curve:
@@ -981,29 +1012,12 @@ MonoBehaviour:
   fumbleMinDistance: 1
   fumbleMaxDistance: 3
   fumblePopHeight: 0.9
+  releaseClearance: 0.5
   fumbleScatterAngle: 70
   deflectionMinDistance: 0.5
   deflectionMaxDistance: 1.5
   deflectionHeight: 0.5
   deflectionDuration: 0.25
---- !u!114 &801123489
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 801123490}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc44c5f2f5e7c4fd48be3f4c40eaa02d, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Blacktop::BallGroundMarkers
-  looseRadius: 0.65
-  targetRadius: 0.8
-  lineWidth: 0.12
-  groundOffset: 0.035
-  looseColor: {r: 1, g: 0.83, b: 0.15, a: 1}
-  targetColor: {r: 0.4, g: 0.95, b: 1, a: 1}
 --- !u!135 &801123492
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1354,7 +1368,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &1038486232
 GameObject:
@@ -1514,7 +1528,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1087445713
 PrefabInstance:
@@ -1594,7 +1608,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &1099329970 stripped
 Transform:
@@ -1739,7 +1753,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 042136b1557f44810b8e4bdfa22bc5b5, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::FieldLoader
   fieldBounds: {fileID: 1113649416}
   selectedField: {fileID: 11400000, guid: 860ba7b5c82894438b7e42498ea7d6c4, type: 2}
@@ -1750,6 +1764,7 @@ MonoBehaviour:
   legacyGroundRenderer: {fileID: 1429029026}
   activeSurface: {fileID: 1558371489}
   activeDetails: {fileID: 401856898}
+  activeBoundary: {fileID: 0}
   loadedField: {fileID: 11400000, guid: 860ba7b5c82894438b7e42498ea7d6c4, type: 2}
 --- !u!114 &1113649416
 MonoBehaviour:
@@ -1761,7 +1776,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8bab8176bc88e4c48a0755bdfee9c871, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::FieldBounds
   drawGizmos: 1
   gizmoHeight: 0.05
@@ -1876,7 +1891,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1140467156
 PrefabInstance:
@@ -1956,7 +1971,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1249996160
 PrefabInstance:
@@ -2036,7 +2051,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &1314477354
 GameObject:
@@ -2162,44 +2177,6 @@ MonoBehaviour:
   playState: {fileID: 1314477355}
   theme: {fileID: 11400000, guid: 15ec121cbcae04115ad3f3b2d4a210a9, type: 2}
   labelLayout: {fileID: 1314477372}
---- !u!114 &1314477372
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1314477354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1c3fa138250946f09c40c31a725348d, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Blacktop::GameplayLabelLayout
-  topSafeMargin: 190
-  bottomSafeMargin: 85
-  edgeMargin: 18
-  gap: 8
-  anchorLift: 12
-  receiverAnchorHeight: 1.45
-  identitySize: {x: 230, y: 34}
-  promptSize: {x: 210, y: 38}
-  identityFontSize: 26
-  promptFontSize: 24
---- !u!114 &1314477373
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1314477354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19a17b4bdce5457cb6317d7220931aa7, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Blacktop::PreSnapPlayPreview
-  labels: {fileID: 1314477372}
-  settings: {fileID: 11400000, guid: f454f03e2ba074a4fb13842706ee89e0, type: 2}
-  strokeWidth: 4
-  groundHeight: 0.05
 --- !u!114 &1314477361
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2383,7 +2360,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf2af85c58d7140efb3851e82c8df24d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::MatchBootstrap
   settings: {fileID: 11400000, guid: f454f03e2ba074a4fb13842706ee89e0, type: 2}
   players:
@@ -2401,6 +2378,44 @@ MonoBehaviour:
   - {fileID: 1921861413}
   - {fileID: 1004196104}
   - {fileID: 294411624}
+--- !u!114 &1314477372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1c3fa138250946f09c40c31a725348d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::GameplayLabelLayout
+  topSafeMargin: 190
+  bottomSafeMargin: 85
+  edgeMargin: 18
+  gap: 8
+  anchorLift: 12
+  receiverAnchorHeight: 1.45
+  identitySize: {x: 230, y: 34}
+  promptSize: {x: 210, y: 38}
+  identityFontSize: 26
+  promptFontSize: 24
+--- !u!114 &1314477373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314477354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19a17b4bdce5457cb6317d7220931aa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blacktop::PreSnapPlayPreview
+  labels: {fileID: 1314477372}
+  settings: {fileID: 11400000, guid: f454f03e2ba074a4fb13842706ee89e0, type: 2}
+  strokeWidth: 4
+  groundHeight: 0.05
 --- !u!1001 &1382229152
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2479,7 +2494,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &1429029024
 GameObject:
@@ -2723,7 +2738,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5834d08e2aadc460abcd0ec5b54a7b51, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::FieldSurface
   surfaceRenderer: {fileID: 1558371490}
 --- !u!23 &1558371490
@@ -2852,11 +2867,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6791215661319204177, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
       propertyPath: roster
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 43e613d2cdfe9441ca277d34cb504f34, type: 2}
     - target: {fileID: 6791215661319204177, guid: 9f83ba6dfacb4488299c16c4b7f0b4ef, type: 3}
       propertyPath: playerId
-      value: 4a35f6b3-a871-477e-a512-639b3cc9e40e
+      value: 87a90c6f-3e64-42c0-a6af-0f0bf31ed467
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2872,7 +2887,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!4 &1626384844 stripped
 Transform:
@@ -3038,7 +3053,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1928572278
 PrefabInstance:
@@ -3130,7 +3145,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1001 &1978966654
 PrefabInstance:
@@ -3214,7 +3229,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1 &2133066429
 GameObject:
@@ -3388,7 +3403,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 933709709348846cb8dc8b7e5a2681b6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Blacktop::TeamMember
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
