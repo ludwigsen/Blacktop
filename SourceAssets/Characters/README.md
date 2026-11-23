@@ -1,4 +1,6 @@
-# Editable Blacktop character sources
+# Archived prototype character sources
+
+The current MPFB body workflow is documented in [ArtSource/Characters](../../ArtSource/Characters/README.md). These editable prototype meshes and their reference seed are retained for historical work. The procedures below describe the original setup at commit `39600e4`. Use an isolated checkout of that revision to reconstruct its mesh targets and Editor menus. The retired bridge and its mesh reader are preserved in Validation. The separate football animation reference remains usable in the current project.
 
 **Open `BlacktopCharacters.blend` to edit all current character geometry in Blender.** The five body builds, integrated faces, fifteen clothing meshes and four eye meshes are real editable mesh objects with UVs, skin weights and the shared rest rig. Unity still consumes ordinary mesh assets; installing Blender is not required to open/play Blacktop.
 

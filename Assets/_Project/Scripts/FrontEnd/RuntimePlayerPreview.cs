@@ -28,7 +28,6 @@ public class RuntimePlayerPreview : MonoBehaviour,IDragHandler,IScrollHandler
         previewCamera.clearFlags=CameraClearFlags.SolidColor;previewCamera.backgroundColor=Color.clear;
         previewCamera.cullingMask=1<<31;previewCamera.fieldOfView=30;previewCamera.nearClipPlane=.05f;previewCamera.farClipPlane=20f;
         Light("Key",Quaternion.Euler(35,-30,0),1.7f);Light("Rim",Quaternion.Euler(30,155,0),1.1f);
-        assembler.rig.animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;
         Frame();
     }
     void Light(string name,Quaternion rotation,float intensity)
@@ -42,18 +41,18 @@ public class RuntimePlayerPreview : MonoBehaviour,IDragHandler,IScrollHandler
         bool valid=assembler.TryApply(appearance,team,player.record.jerseyNumber);
         Diagnostics=assembler.LastDiagnostics;
         foreach(var child in root.GetComponentsInChildren<Transform>(true)) child.gameObject.layer=31;
-        assembler.rig.animator.Update(0f);Frame();return valid;
+        if (valid) assembler.rig.animator.Update(0f);Frame();return valid;
     }
     public void Rotate(float degrees) {yaw+=degrees;model.transform.localRotation=Quaternion.Euler(0,yaw,0);}
     public void Zoom(float amount) {zoom=Mathf.Clamp(zoom+amount,headView?.7f:2.5f,8f);Frame();}
     public void SetHeadView(bool close) {headView=close;zoom=close?1.2f:4.6f;Frame();}
     public void ResetCamera() {yaw=0;model.transform.localRotation=Quaternion.identity;SetHeadView(false);}
-    public void Animation(float locomotion) {assembler.rig.animator.SetFloat("Locomotion",locomotion);}
+    public void Animation(float locomotion) {if (assembler.rig.animator != null) assembler.rig.animator.SetFloat("Locomotion",locomotion);}
     void Frame()
     {
         if(previewCamera==null)return;
         Vector3 target=root.transform.position;
-        if(headView && assembler.rig.animator.isHuman) target=assembler.rig.animator.GetBoneTransform(HumanBodyBones.Head).position;
+        if(headView && assembler.rig.animator != null && assembler.rig.animator.isHuman) target=assembler.rig.animator.GetBoneTransform(HumanBodyBones.Head).position;
         previewCamera.transform.position=target+new Vector3(0,.12f,zoom);
         previewCamera.transform.LookAt(target);
     }

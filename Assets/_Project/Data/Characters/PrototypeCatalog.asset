@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: PrototypeCatalog
   m_EditorClassIdentifier: Blacktop::PlayerAppearanceCatalog
   parts:
-  - {fileID: 11400000, guid: 76d7beac8ac304e939803c2eb67392ac, type: 2}
-  - {fileID: 11400000, guid: df15256cb269341f9a5ba47462a30298, type: 2}
-  - {fileID: 11400000, guid: 8efa957ccf62443e39e191d404b53d03, type: 2}
-  - {fileID: 11400000, guid: 53eb0c1a6df0a407b93723497243ddda, type: 2}
-  - {fileID: 11400000, guid: 957324f119c8c4fed826b17d145b5776, type: 2}
+  - {fileID: 11400000, guid: 483813a3c23174616bd588472093b99a, type: 2}
+  - {fileID: 11400000, guid: c462b107c06ed4397ab640353d0a9460, type: 2}
+  - {fileID: 11400000, guid: d6bba8b8317d6411383d46f0f1a0ddf0, type: 2}
+  - {fileID: 11400000, guid: ab3cc3d8d154c45788bebd49ccb5c903, type: 2}
+  - {fileID: 11400000, guid: 5967d0acc0fcd4cd9a0e5af1ea366867, type: 2}
+  - {fileID: 11400000, guid: 81a91949c355f48ce9f450553a2c9b77, type: 2}
   - {fileID: 11400000, guid: eb7f7c93877df44d088f3683de958534, type: 2}
   - {fileID: 11400000, guid: 4773468aa419a4b6788d6d94c82a3541, type: 2}
   - {fileID: 11400000, guid: 7fa66d2cb29e34411b4f6b179ae30d66, type: 2}

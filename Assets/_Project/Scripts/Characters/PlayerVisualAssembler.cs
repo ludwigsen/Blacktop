@@ -22,6 +22,7 @@ public class PlayerVisualAssembler : MonoBehaviour
     MaterialPropertyBlock block;
     static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
+    // The roster and team have resolved before Start. A visual swap also rebinds the presenter's grip.
     void Start()
     {
         var record = GetComponent<CharacterApplier>()?.Record;
@@ -40,38 +41,40 @@ public class PlayerVisualAssembler : MonoBehaviour
     {
         if (catalog == null || rig == null || rig.transform == transform || !rig.transform.IsChildOf(transform))
         { LastDiagnostics = "Assign a catalog and a separate child PlayerVisualRig."; return false; }
-        if (!rig.ValidateRig(out string rigError)) { LastDiagnostics = rigError; return false; }
         var errors = catalog.Validate(appearance, out var parts);
         if (errors.Count != 0) { LastDiagnostics = string.Join("\n", errors); return false; }
-        rig.Initialize();
+        var body = parts[0];
+        var next = body.skeleton;
+        if (next == null || next.referenceModel == null) { LastDiagnostics = "Missing body prefab."; return false; }
         foreach (var part in parts)
         {
             if (part.placeholder || part.emptyOption) continue;
-            if (part.skeleton != rig.skeleton)
+            if (part.skeleton != next)
             { LastDiagnostics = $"{part.id}: skeleton contract differs from the adapter."; return false; }
             if (part.useExistingBody) continue;
-            if (part.skinnedSource != null)
-            {
-                var sources = new List<SkinnedMeshRenderer> { part.skinnedSource };
-                foreach (var lod in part.lowerDetailLevels) sources.Add(lod.source);
-                foreach (var source in sources)
-                foreach (var bone in rig.Remap(source))
-                    if (bone == null) { LastDiagnostics = $"{part.id}: target skeleton is missing a bone."; return false; }
-            }
-            else if (rig.animator.GetBoneTransform(part.socket) == null)
-            { LastDiagnostics = $"{part.id}: target skeleton is missing socket {part.socket}."; return false; }
+            // Catalog validation already checked deform paths and bind poses on the target prefab.
+            if (part.attachmentPrefab != null && next.referenceModel.GetComponent<Animator>().GetBoneTransform(part.socket) == null)
+            { LastDiagnostics = $"Missing socket {part.socket}."; return false; }
         }
 
-        var body = parts[0];
         if (body.useExistingBody && !string.IsNullOrEmpty(appearance.heightProfile.proportionCalibrationId))
         { LastDiagnostics = "The existing prototype has no authored limb-proportion calibration."; return false; }
         string nextSignature = appearance.GetEntityId() + ":" + appearance.heightProfile.GetEntityId() + ":" +
             appearance.heightProfile.Centimeters + ":" + appearance.headScale + ":" + string.Join("|", Array.ConvertAll(parts, p => p.id));
-        if (signature != nextSignature || forceRebuild)
+        bool changedBody = rig.skeleton != next || rig.animator == null;
+        if (!changedBody && !rig.ValidateRig(out string rigError)) { LastDiagnostics = rigError; return false; }
+        if (changedBody || signature != nextSignature || forceRebuild)
         {
             // Build only after preflight; old visuals remain intact for missing/incompatible art.
             ClearParts();
+            rig.SelectBody(next);
+            rig.Initialize();
             rig.RestoreBody();
+            if (changedBody)
+            {
+                GetComponent<PlayerAnimationPresenter>()?.BindVisual(rig.animator);
+                GetComponent<Blacktop.Player.PlayerVisualFeedback>()?.BindVisual(rig.bodyRenderer);
+            }
             tinted.Clear();
             if (!body.placeholder && !body.useExistingBody) CopySkin(body.skinnedSource, rig.bodyRenderer, body.skinnedMeshOverride);
             tinted.Add((rig.bodyRenderer, body));
@@ -89,7 +92,7 @@ public class PlayerVisualAssembler : MonoBehaviour
         }
         if (nameplate != null) nameplate.localPosition = nameplateBasePosition + NameplateOffset;
         HasPlaceholders = Array.Exists(parts, p => p.placeholder);
-        LastDiagnostics = HasPlaceholders ? "PLACEHOLDER selections: prototype geometry retained / unavailable attachments omitted." : "Appearance assembled.";
+        LastDiagnostics = HasPlaceholders ? "MPFB body active. Unfitted appearance selections are saved." : "Appearance assembled.";
         ApplyTeam(team, jerseyNumber);
         return true;
     }

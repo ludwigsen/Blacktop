@@ -1,0 +1,3 @@
+class	path	file_count	logical_bytes	decision
+C	Library/Bee	2370	308489359	Ignored regenerable compiler or shader cache in the idle main checkout.
+C	Library/ShaderCache	1175	6449860	Ignored regenerable compiler or shader cache in the idle main checkout.

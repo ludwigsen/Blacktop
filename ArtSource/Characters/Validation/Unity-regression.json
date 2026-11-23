@@ -1,0 +1,83 @@
+{
+  "toolchain": {
+    "Blender": "5.2.1 LTS",
+    "MPFB": "2.0.18",
+    "Unity": "6000.5.6f1",
+    "render_pipeline": "URP 17.5.0"
+  },
+  "play_mode": [
+    {
+      "scope": "working scene, before legacy cleanup",
+      "status": "PASS",
+      "total": 180,
+      "passed": 180,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 177.7457273,
+      "result_file": "Builds/Validation/MPFB/runtime-before-cleanup.xml",
+      "xml_sha256": "1b34f6ed4928a7675c1dd9d56332e4ca2c1386cd91b93436ddc009a07d08dfe1"
+    },
+    {
+      "scope": "working scene, after legacy cleanup",
+      "status": "PASS",
+      "total": 180,
+      "passed": 180,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 178.928445,
+      "result_file": "Builds/Validation/MPFB/runtime-final.xml",
+      "xml_sha256": "d163e3bb641eb826df25bf1461bf570f540f2d9184bb1e410fb89e9b45e2f2d0"
+    },
+    {
+      "scope": "committed scene, after legacy cleanup",
+      "status": "PASS",
+      "total": 180,
+      "passed": 180,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 176.1104296,
+      "result_file": "Builds/Validation/MPFB/runtime-branch.xml",
+      "xml_sha256": "26cb39317806a301848a07968bb2bfce4d2e1e3ad8ff13a02839710404a04cf9"
+    }
+  ],
+  "fixtures_per_run": {
+    "BallFlightTests": 20,
+    "ExhibitionTests": 26,
+    "FieldSurfaceTests": 11,
+    "FrontEndTests": 9,
+    "GameplayReadabilityTests": 7,
+    "MenuPrototypeTests": 5,
+    "PlayerAnimationTests": 11,
+    "PlayerAppearanceTests": 7,
+    "PlayResolutionTests": 40,
+    "PreSnapTests": 7,
+    "SuppliedRosterTests": 5,
+    "UIThemeTests": 15,
+    "VenueHazardTests": 17
+  },
+  "controller": {
+    "status": "PASS",
+    "bodies": 6,
+    "distinct_clips": 11,
+    "samples_per_clip_per_body": 9,
+    "total_samples": 594
+  },
+  "macos_player": {
+    "build": "PASS",
+    "errors": 0,
+    "warnings": 438,
+    "build_report_bytes": 252477872,
+    "startup": "PASS",
+    "gpu": "Apple M4 Metal",
+    "main_menu_team_count": 6,
+    "human_full_match": "NOT TESTED"
+  },
+  "legacy_football_action_reference": {
+    "status": "PASS",
+    "actions": 6,
+    "joint_count": 58,
+    "comparison": "All parsed bake values equal"
+  },
+  "physical_controller": "NOT TESTED",
+  "windows": "NOT TESTED"
+}

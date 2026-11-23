@@ -1,0 +1,20 @@
+category	baseline_files_39600e4	baseline_logical_bytes	post_cleanup_files_0f56559	post_cleanup_logical_bytes	delta_bytes
+Animation clips, controllers, masks	8	1216687	8	1216687	0
+Audio	0	0	0	0	0
+Blender sources and rigged derivatives	8	22228255	21	45380490	23152235
+Development tools	18	138201	22	140232	2031
+FBX animation sources	5	2375152	5	2375152	0
+FBX character and prop models	4	6389204	10	12077132	5687928
+Gameplay and presentation code	127	684698	127	687193	2495
+Materials and shaders	42	1363970	43	1367768	3798
+Other Unity serialized data	159	8564434	161	8558655	-5779
+Other art source, exports and archives	10	11602538	10	11568959	-33579
+Other generated assets and temporary character meshes	25	29708820	5	149234	-29559586
+Other project files	51	1630482	51	1630482	0
+Test code and validation records	14	229233	33	312072	82839
+Textures, graphics and review images	51	128469627	62	128963875	494248
+Third-party files and package manifests	19	3377953	19	3377953	0
+Unity asset and folder metadata	535	352444	532	515235	162791
+Unity prefabs	9	68581	15	94050	25469
+Unity scenes	3	131855	4	154259	22404
+TOTAL	1088	218532134	1128	218569428	37294

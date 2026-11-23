@@ -1,10 +1,10 @@
 # Modular player characters — foundation
 
-## Current front-end extension
+## Production MPFB bodies
 
-**Editable source:** all current body, integrated-face, clothing and eye geometry is available under `SourceAssets/Characters/` as `.blend` files with the shared rig/weights. Use the combined BlacktopCharacters.blend as the main authoring file, then export through export_meshes.py and apply with Blacktop > Characters > Blender > Apply Blender Mesh Export. Individual source files are independent snapshots targeting the same meshes, not synchronized libraries. All new character art must retain editable `.blend` source; see that folder's README for the source/export rules and the distinction between an integrated prototype face and future modular heads.
+The six approved bodies and the Athletic sculpt are under `ArtSource/Characters`. Its README explains how to reproduce a rig and FBX, validate it in Unity and assign a body to another roster record. Both production catalogs resolve stable IDs to fitted MPFB prefabs. Matches and previews show the selected body at the player's saved height. Outfit choices are retained for later fitting.
 
-The foundation audit/results below describe the original prototype catalog. The implemented MainMenu/runtime creator now uses a separate FrontEndCatalog with five distinct temporary regional bodies and fifteen team-tinted garment shells on this same rig. FRONT_END.md documents the live preview, derived weights, versioned runtime saves, independent active lineups, explicit Editor source commit and replacement-art workflow. Production faces/hair/beards/garments and LODs remain outstanding. Vipers now has an explicit balanced development source roster; the current-master front-end audit found no roster asset or metadata, so both were authored once with stable new IDs. Kings identity/ratings remain intact.
+The sections below record the October prototype. Its combined Blender source and exchange tools are archived under `SourceAssets/Characters`. Use the MPFB README for current production work.
 
 ## Audit and decisions
 

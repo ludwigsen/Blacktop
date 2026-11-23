@@ -1,0 +1,287 @@
+{
+  "asset": "BT_Muscular",
+  "hierarchy": {
+    "Root": null,
+    "pelvis": "Root",
+    "spine_01": "pelvis",
+    "spine_02": "spine_01",
+    "spine_03": "spine_02",
+    "clavicle_l": "spine_03",
+    "upperarm_l": "clavicle_l",
+    "lowerarm_l": "upperarm_l",
+    "hand_l": "lowerarm_l",
+    "index_01_l": "hand_l",
+    "index_02_l": "index_01_l",
+    "index_03_l": "index_02_l",
+    "middle_01_l": "hand_l",
+    "middle_02_l": "middle_01_l",
+    "middle_03_l": "middle_02_l",
+    "pinky_01_l": "hand_l",
+    "pinky_02_l": "pinky_01_l",
+    "pinky_03_l": "pinky_02_l",
+    "ring_01_l": "hand_l",
+    "ring_02_l": "ring_01_l",
+    "ring_03_l": "ring_02_l",
+    "thumb_01_l": "hand_l",
+    "thumb_02_l": "thumb_01_l",
+    "thumb_03_l": "thumb_02_l",
+    "clavicle_r": "spine_03",
+    "upperarm_r": "clavicle_r",
+    "lowerarm_r": "upperarm_r",
+    "hand_r": "lowerarm_r",
+    "index_01_r": "hand_r",
+    "index_02_r": "index_01_r",
+    "index_03_r": "index_02_r",
+    "middle_01_r": "hand_r",
+    "middle_02_r": "middle_01_r",
+    "middle_03_r": "middle_02_r",
+    "pinky_01_r": "hand_r",
+    "pinky_02_r": "pinky_01_r",
+    "pinky_03_r": "pinky_02_r",
+    "ring_01_r": "hand_r",
+    "ring_02_r": "ring_01_r",
+    "ring_03_r": "ring_02_r",
+    "thumb_01_r": "hand_r",
+    "thumb_02_r": "thumb_01_r",
+    "thumb_03_r": "thumb_02_r",
+    "neck_01": "spine_03",
+    "head": "neck_01",
+    "thigh_l": "pelvis",
+    "calf_l": "thigh_l",
+    "foot_l": "calf_l",
+    "ball_l": "foot_l",
+    "thigh_r": "pelvis",
+    "calf_r": "thigh_r",
+    "foot_r": "calf_r",
+    "ball_r": "foot_r"
+  },
+  "dimensions_m": [
+    1.1898019313812256,
+    0.5014809370040894,
+    1.7291074991226196
+  ],
+  "rest_mesh_qa": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [],
+    "ground_z": -0.0,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [],
+    "enclosed": [],
+    "objects": {
+      "BT_Muscular": {
+        "verts": 13380,
+        "faces": 13378,
+        "tris": 26756,
+        "ngons": 0,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 0,
+        "islands": 1,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 1,
+        "unweighted_verts": 0,
+        "verts_over_4_influences": 0,
+        "uv_maps": 1,
+        "uv_oob_pct": 0.0,
+        "uv_zero_area_faces": 0,
+        "uv_overlap_pct": 0.0,
+        "uv_coverage_pct": 62.4
+      }
+    }
+  },
+  "influence_coverage": 52,
+  "edge_weight_L1_p99": 0.7006706595420837,
+  "poses": {
+    "Rest": {
+      "edge_ratio_min_max": [
+        1.0,
+        1.0
+      ],
+      "edge_ratio_p01_p99": [
+        1.0,
+        1.0
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    },
+    "Shoulder abduction": {
+      "edge_ratio_min_max": [
+        0.6665961146354675,
+        3.634765863418579
+      ],
+      "edge_ratio_p01_p99": [
+        0.9794056296348572,
+        1.0260045111179352
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    },
+    "Shoulder forward": {
+      "edge_ratio_min_max": [
+        0.23506736755371094,
+        4.798463344573975
+      ],
+      "edge_ratio_p01_p99": [
+        0.9711574584245681,
+        1.0728078722953798
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    },
+    "Shoulder backward": {
+      "edge_ratio_min_max": [
+        0.19353018701076508,
+        1.9804110527038574
+      ],
+      "edge_ratio_p01_p99": [
+        0.9797917127609252,
+        1.0266076326370241
+      ],
+      "intersecting_triangle_pairs": 22,
+      "new_contacts": {
+        "spine_03 / upperarm_l": 18,
+        "upperarm_l / upperarm_l": 4
+      }
+    },
+    "Elbow flexion": {
+      "edge_ratio_min_max": [
+        0.2652478516101837,
+        2.406881093978882
+      ],
+      "edge_ratio_p01_p99": [
+        0.9999682903289795,
+        1.0000260412693023
+      ],
+      "intersecting_triangle_pairs": 43,
+      "new_contacts": {
+        "lowerarm_l / upperarm_l": 42,
+        "upperarm_l / upperarm_l": 1
+      }
+    },
+    "Wrist rotation": {
+      "edge_ratio_min_max": [
+        0.5536414384841919,
+        1.6557902097702026
+      ],
+      "edge_ratio_p01_p99": [
+        0.9999727338552475,
+        1.0000293254852295
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    },
+    "Torso twist": {
+      "edge_ratio_min_max": [
+        0.7517961859703064,
+        1.4839329719543457
+      ],
+      "edge_ratio_p01_p99": [
+        0.9781768709421158,
+        1.050214117765427
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    },
+    "Hip flexion": {
+      "edge_ratio_min_max": [
+        0.12376096844673157,
+        6.886890888214111
+      ],
+      "edge_ratio_p01_p99": [
+        0.9951631516218186,
+        1.0380192577838898
+      ],
+      "intersecting_triangle_pairs": 64,
+      "new_contacts": {
+        "pelvis / thigh_l": 62,
+        "spine_01 / thigh_l": 2
+      }
+    },
+    "Knee flexion": {
+      "edge_ratio_min_max": [
+        0.22010518610477448,
+        2.0500073432922363
+      ],
+      "edge_ratio_p01_p99": [
+        0.9999822705984116,
+        1.0000159740447998
+      ],
+      "intersecting_triangle_pairs": 57,
+      "new_contacts": {
+        "calf_l / thigh_l": 56,
+        "calf_l / calf_l": 1
+      }
+    },
+    "Neck rotation": {
+      "edge_ratio_min_max": [
+        0.70269775390625,
+        1.4689757823944092
+      ],
+      "edge_ratio_p01_p99": [
+        0.964299789071083,
+        1.0677681267261507
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    },
+    "Running stride": {
+      "edge_ratio_min_max": [
+        0.17479705810546875,
+        5.449343681335449
+      ],
+      "edge_ratio_p01_p99": [
+        0.8208932667970658,
+        1.2530479192733777
+      ],
+      "intersecting_triangle_pairs": 107,
+      "new_contacts": {
+        "calf_r / thigh_r": 13,
+        "calf_l / thigh_l": 30,
+        "pelvis / thigh_l": 18,
+        "spine_03 / upperarm_l": 23,
+        "upperarm_l / upperarm_l": 16,
+        "calf_r / calf_r": 1,
+        "spine_03 / upperarm_r": 6
+      }
+    },
+    "Throwing position": {
+      "edge_ratio_min_max": [
+        0.234053835272789,
+        5.02775239944458
+      ],
+      "edge_ratio_p01_p99": [
+        0.875261303782463,
+        1.2252840042114275
+      ],
+      "intersecting_triangle_pairs": 22,
+      "new_contacts": {
+        "lowerarm_r / upperarm_r": 22
+      }
+    },
+    "Catching position": {
+      "edge_ratio_min_max": [
+        0.18933835625648499,
+        5.284774303436279
+      ],
+      "edge_ratio_p01_p99": [
+        0.883448737859726,
+        1.2079263031482705
+      ],
+      "intersecting_triangle_pairs": 0,
+      "new_contacts": {}
+    }
+  }
+}

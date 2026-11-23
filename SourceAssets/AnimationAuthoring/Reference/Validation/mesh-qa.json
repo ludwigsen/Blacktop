@@ -1,0 +1,102 @@
+{
+  "authoring": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [
+      "Handoff QB \u00b7 Body_Athletic: duplicate verts=3585 loose verts=0",
+      "hidden back-to-back faces: Handoff QB \u00b7 Body_Athletic (35 pairs) - delete to save tris"
+    ],
+    "ground_z": -0.0014,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [
+      {
+        "where": "Handoff QB \u00b7 Body_Athletic",
+        "tri_pairs": 35
+      }
+    ],
+    "enclosed": [],
+    "objects": {
+      "Handoff QB \u00b7 Body_Athletic": {
+        "verts": 18277,
+        "faces": 28796,
+        "tris": 28796,
+        "ngons": 0,
+        "boundary_edges": 7190,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 3585,
+        "islands": 286,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 1,
+        "unweighted_verts": 0,
+        "verts_over_4_influences": 0,
+        "uv_maps": 1,
+        "uv_oob_pct": 0.0,
+        "uv_zero_area_faces": 0,
+        "uv_overlap_pct": 0.0,
+        "uv_coverage_pct": 55.3
+      }
+    }
+  },
+  "reference": {
+    "ok": true,
+    "pass": true,
+    "errors": [],
+    "warnings": [
+      "Body_Athletic: duplicate verts=3585 loose verts=0",
+      "hidden back-to-back faces: Body_Athletic (35 pairs) - delete to save tris"
+    ],
+    "ground_z": -0.0014,
+    "zfighting": [],
+    "floating": [],
+    "back_to_back": [
+      {
+        "where": "Body_Athletic",
+        "tri_pairs": 35
+      }
+    ],
+    "enclosed": [],
+    "objects": {
+      "Body_Athletic": {
+        "verts": 18277,
+        "faces": 28796,
+        "tris": 28796,
+        "ngons": 0,
+        "boundary_edges": 7190,
+        "nonmanifold_edges": 0,
+        "wire_edges": 0,
+        "loose_verts": 0,
+        "degenerate_faces": 0,
+        "zero_length_edges": 0,
+        "inconsistent_normals_edges": 0,
+        "duplicate_verts": 3585,
+        "islands": 286,
+        "inside_out_islands": 0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "materials": 1,
+        "unweighted_verts": 0,
+        "verts_over_4_influences": 0,
+        "uv_maps": 1,
+        "uv_oob_pct": 0.0,
+        "uv_zero_area_faces": 0,
+        "uv_overlap_pct": 0.0,
+        "uv_coverage_pct": 55.3
+      }
+    }
+  }
+}

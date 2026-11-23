@@ -275,6 +275,21 @@ public class ExhibitionTests
     [UnityTest] public IEnumerator PickupAwayLifecycle()=>Lifecycle(true,1);
     IEnumerator Lifecycle(bool pickup,int side)
     {
+        // Put all six builds in both modes using only this test's disposable rosters.
+        foreach (var teamId in new[] { "kings", "vipers" })
+        {
+            var squad = service.Team(teamId);
+            int index = teamId == "kings" ? 0 : 4;
+            foreach (var entry in squad.players)
+            {
+                var slot = squad.active.Single(a => a.playerId == entry.record.id);
+                entry.appearance.bodyArchetype = (BodyArchetype)(index++ % 6);
+                entry.appearance.bodyId = entry.appearance.bodyArchetype.ToString().ToUpperInvariant();
+                entry.appearance.clothingIds = Array.Empty<string>();
+                Assert.That(service.SavePlayer(teamId, entry, (int)slot.offense, (int)slot.defense,
+                    out _, out string error), Is.True, error);
+            }
+        }
         var options=new MatchOptions {condition=MatchCondition.Random,difficulty=MatchDifficulty.Random};
         var match=pickup?Pickup(side,options):Head(side,options);string before=JsonUtility.ToJson(match.Snapshot);
         FrontEndRuntime.Match=match;yield return SceneManager.LoadSceneAsync("SampleScene");yield return null;
@@ -282,10 +297,20 @@ public class ExhibitionTests
         foreach(var actor in Object.FindObjectsByType<CharacterApplier>())
         {
             var member=actor.GetComponent<TeamMember>();var record=actor.Record.Value;var team=match.Snapshot.teams[member.teamId];
+            var saved = team.players.Single(p => p.record.id == record.id);
+            var expected = settings.appearances.Find(saved.appearance.bodyId).skeleton;
+            var rig = actor.GetComponent<PlayerVisualAssembler>().rig;
+            Assert.That(rig.skeleton, Is.SameAs(expected));
+            Assert.That(rig.bodyRenderer.sharedMesh, Is.SameAs(expected.referenceSkin.sharedMesh));
+            var sourceAnimator = expected.referenceModel.GetComponent<Animator>();
+            Assert.That(rig.animator.avatar, Is.SameAs(sourceAnimator.avatar));
+            Assert.That(rig.animator.runtimeAnimatorController, Is.SameAs(sourceAnimator.runtimeAnimatorController));
             Assert.That(team.active.Single(a=>a.playerId==record.id).offense,Is.EqualTo(member.slot));
             Assert.That(team.active.Single(a=>a.playerId==record.id).defense,Is.EqualTo(member.defensiveLineupSlot));
             Assert.That(PlayState.Instance.IdentityFor(member.teamId).teamName,Is.EqualTo(match.Brand(member.teamId).Name));
         }
+        Assert.That(Object.FindObjectsByType<PlayerVisualAssembler>().Select(v => v.rig.skeleton.id).Distinct().Count(),
+            Is.EqualTo(6), "The live match must render every production build.");
         yield return SceneManager.LoadSceneAsync("SampleScene");yield return null;
         Assert.That(FrontEndRuntime.Match,Is.SameAs(match));Assert.That(JsonUtility.ToJson(match.Snapshot),Is.EqualTo(before));
         Assert.That(Object.FindObjectsByType<CharacterApplier>().Select(a=>a.Record.Value.id).Distinct().Count(),Is.EqualTo(14));

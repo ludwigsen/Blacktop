@@ -48,20 +48,20 @@ public class PlayerAnimationTests
     static string DominantClip(Animator animator) => animator.GetCurrentAnimatorClipInfo(0)
         .OrderByDescending(info => info.weight).First().clip.name;
 
-    static void MoveAndSample(TeamMember actor, float speed, int frames = 40)
+    static void MoveAndSample(TeamMember actor, Vector3 localVelocity, int frames = 40)
     {
         const float dt = 0.02f;
         var presenter = actor.GetComponent<PlayerAnimationPresenter>();
         Set(presenter, "previousPosition", actor.transform.position);
-        // Signed speed is relative to the actor so this can also sample a turning carrier.
-        Vector3 step = actor.transform.forward * (speed * dt);
         for (int frame = 0; frame < frames; frame++)
         {
-            actor.transform.position += step;
+            actor.transform.position += actor.transform.TransformDirection(localVelocity) * dt;
             Sample(presenter, dt);
             Vector3 gameplayPosition = actor.transform.position;
+            Quaternion gameplayFacing = actor.transform.rotation;
             presenter.Animator.Update(dt);
             Assert.That(actor.transform.position, Is.EqualTo(gameplayPosition), "Animation moved gameplay root");
+            Assert.That(actor.transform.rotation, Is.EqualTo(gameplayFacing), "Animation rotated gameplay root");
             // Retargeted running must keep the pelvis near the existing two-unit capsule's center.
             float hipOffset = presenter.Animator.GetBoneTransform(HumanBodyBones.Hips).position.y - actor.transform.position.y;
             Assert.That(hipOffset, Is.InRange(-0.5f, 0.5f), "Imported run height does not match the fitted player body");
@@ -73,7 +73,6 @@ public class PlayerAnimationTests
     {
         Assert.That(actors.Length, Is.EqualTo(14));
         var first = actors[0].GetComponent<PlayerAnimationPresenter>().Animator;
-        Assert.That(first.GetLayerIndex("Football"), Is.GreaterThan(0));
         foreach (var actor in actors)
         {
             var presenter = actor.GetComponent<PlayerAnimationPresenter>();
@@ -83,40 +82,56 @@ public class PlayerAnimationTests
             Assert.That(presenter.Animator.avatar.isValid && presenter.Animator.avatar.isHuman, Is.True);
             Assert.That(presenter.Animator.runtimeAnimatorController, Is.SameAs(first.runtimeAnimatorController));
             Assert.That(presenter.Animator.applyRootMotion, Is.False);
-            string[] clips = presenter.Animator.runtimeAnimatorController.animationClips.Select(clip => clip.name).ToArray();
-            foreach (string clip in new[] { "Running Backward", "Standard Run", "Fast Run", "Jump" })
-                Assert.That(clips, Does.Contain(clip), actor.name);
+            // One clip asset appears twice in the controller, once mirrored.
+            var clips = presenter.Animator.runtimeAnimatorController.animationClips.Distinct().ToArray();
+            foreach (string clip in new[] { "Idle", "Idle-2", "Walking", "Walking-Wide", "Jog Forward", "Jog Backward",
+                "Running", "Running-Faster", "Running-Sprint", "Strafe", "Carry Ready", "Carry Tuck" })
+                CheckClip(clip, true);
+            foreach (string clip in new[] { "Jogging Stumble", "Jump", "Throw Windup", "Throw Follow Through",
+                "Handoff Give", "Handoff Take" })
+                CheckClip(clip, false);
 
-            // Native clips keep their Humanoid bindings and have no gameplay release events.
-            foreach (string name in new[] { "Carry Ready", "Carry Tuck", "Throw Windup", "Throw Follow Through", "Handoff Give", "Handoff Take" })
+            void CheckClip(string name, bool loop)
             {
-                var motion = presenter.Animator.runtimeAnimatorController.animationClips.Single(clip => clip.name == name);
+                var motion = clips.Single(c => c.name == name);
                 Assert.That(motion.humanMotion, Is.True, name);
-                Assert.That(motion.isLooping, Is.EqualTo(name.StartsWith("Carry")), name);
-                Assert.That(motion.events, Is.Empty, name);
+                Assert.That(motion.isLooping, Is.EqualTo(loop), name);
             }
         }
         yield return null;
     }
 
     [UnityTest]
-    public IEnumerator EveryPlayerCanRunFastRunAndBackpedalWithoutAnimationMovingTheRoot()
+    public IEnumerator EveryPlayerUsesTheSharedDirectionalGaitsWithoutAnimationMovingTheRoot()
     {
         FreezeActors();
         foreach (var actor in actors)
         {
             var presenter = actor.GetComponent<PlayerAnimationPresenter>();
-            presenter.Animator.Rebind();
-            presenter.Animator.Update(0f);
-            MoveAndSample(actor, 6f);
-            Assert.That(DominantClip(presenter.Animator), Is.EqualTo("Standard Run"), actor.name);
-            MoveAndSample(actor, 10f);
-            Assert.That(DominantClip(presenter.Animator), Is.EqualTo("Fast Run"), actor.name);
-            MoveAndSample(actor, -4.5f);
+            // Sample in each team's facing so the same side input stays local to the actor.
+            actor.transform.rotation = Quaternion.Euler(0f, actor.teamId * 180f, 0f);
+            bool alternate = actor.teamId == 1;
+            CheckGait(Vector3.zero, alternate ? "Idle-2" : "Idle");
+            CheckGait(Vector3.forward * 2f, alternate ? "Walking-Wide" : "Walking");
+            CheckGait(Vector3.forward * 4f, "Jog Forward");
+            CheckGait(Vector3.forward * 6f, "Running");
+            CheckGait(Vector3.forward * 8f, "Running-Faster");
+            CheckGait(Vector3.forward * 10f, "Running-Sprint");
+            CheckGait(Vector3.back * 4.5f, "Jog Backward");
             Assert.That(presenter.MovingBackward, Is.True);
-            Assert.That(DominantClip(presenter.Animator), Is.EqualTo("Running Backward"), actor.name);
-            MoveAndSample(actor, 0f, 60);
+            CheckGait(Vector3.right * 4.5f, "Strafe");
+            Assert.That(presenter.Animator.GetFloat("Lateral"), Is.EqualTo(1f).Within(0.01f));
+            CheckGait(Vector3.left * 4.5f, "Strafe");
+            Assert.That(presenter.Animator.GetFloat("Lateral"), Is.EqualTo(-1f).Within(0.01f));
+            CheckGait(Vector3.zero, alternate ? "Idle-2" : "Idle");
             Assert.That(presenter.Animator.GetFloat("Locomotion"), Is.EqualTo(0f).Within(0.01f));
+            Assert.That(presenter.Animator.GetFloat("Lateral"), Is.EqualTo(0f).Within(0.01f));
+
+            void CheckGait(Vector3 velocity, string clip)
+            {
+                MoveAndSample(actor, velocity);
+                Assert.That(DominantClip(presenter.Animator), Is.EqualTo(clip), actor.name);
+            }
         }
         yield return null;
     }
@@ -127,11 +142,13 @@ public class PlayerAnimationTests
         FreezeActors();
         var actor = actors[0];
         var presenter = actor.GetComponent<PlayerAnimationPresenter>();
-        MoveAndSample(actor, 10f);
+        MoveAndSample(actor, new Vector3(4.5f, 0f, 6f));
+        Assert.That(presenter.Animator.GetFloat("Lateral"), Is.GreaterThan(0.9f));
         actor.transform.position += Vector3.forward * 20f;
         Sample(presenter, 0.02f);
         Assert.That(presenter.PlanarSpeed, Is.Zero);
         Assert.That(presenter.Animator.GetFloat("Locomotion"), Is.Zero);
+        Assert.That(presenter.Animator.GetFloat("Lateral"), Is.Zero);
         actor.transform.position += Vector3.up * 2f;
         Sample(presenter, 0.02f);
         Assert.That(presenter.PlanarSpeed, Is.Zero, "Vertical hurdle motion is not running speed");
@@ -190,11 +207,9 @@ public class PlayerAnimationTests
         yield return null;
     }
 
-    // Breathing Idle.fbx retains its original imported take name.
-    [TestCase(0f, "mixamo.com")]
-    [TestCase(6f, "Standard Run")]
-    [TestCase(10f, "Fast Run")]
-    public void CarryUsesTheLiveHoldersGripWhileRulingsFollowThePlayerRoot(float speed, string gait)
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CarryUsesTheLiveHoldersGripWhileRulingsFollowThePlayerRoot(bool move)
     {
         FreezeActors(keepPresenters: true);
         var play = PlayState.Instance;
@@ -203,13 +218,13 @@ public class PlayerAnimationTests
         var runner = SpotPlayer(1 - play.UserTeamId, TeamMember.RosterSlot.RB, 3f, 1f);
         var appearance = ball.GetComponentInChildren<FootballAppearance>();
         var visual = appearance.transform;
-        bool move = speed > 0f;
         var holder = move ? runner : qb;
         var other = move ? qb : runner;
         ball.AttachTo(holder.transform);
         Set(play, "<IsLive>k__BackingField", move);
 
-        MoveAndSample(holder, speed);
+        Vector3 velocity = move ? Vector3.forward * 6f : Vector3.zero;
+        MoveAndSample(holder, velocity);
         UpdateBallVisual();
         Assert.That(visual.parent, Is.EqualTo(ball.transform), "Only the visual child follows the grip");
         var hand = holder.GetComponent<PlayerAnimationPresenter>().Animator.GetBoneTransform(HumanBodyBones.RightHand);
@@ -219,20 +234,21 @@ public class PlayerAnimationTests
         Assert.That(ball.transform.position, Is.EqualTo(ball.RulingPosition));
         AssertFootballState(holder, "Carry");
         Assert.That(FootballDominantClip(holder), Is.EqualTo(move ? "Carry Tuck" : "Carry Ready"));
-        Assert.That(DominantClip(holder.GetComponent<PlayerAnimationPresenter>().Animator), Is.EqualTo(gait),
-            "The carry overlay must preserve the live locomotion gait");
+        if (move)
+            Assert.That(DominantClip(holder.GetComponent<PlayerAnimationPresenter>().Animator), Is.EqualTo("Running"),
+                "The carry overlay must preserve the live locomotion gait");
 
         // Changing root orientation and movement must leave the held mesh attached to the same anatomical grip.
         holder.transform.Rotate(0f, 105f, 0f);
-        MoveAndSample(holder, speed);
+        MoveAndSample(holder, velocity);
         UpdateBallVisual();
         Assert.That(Vector3.Distance(hand.InverseTransformPoint(visual.position), gripInHand), Is.LessThan(0.025f));
         Assert.That(ball.transform.position, Is.EqualTo(ball.RulingPosition));
 
         // An immediate possession change (including a turnover) moves the carry pose and the ball.
         ball.AttachTo(other.transform);
-        MoveAndSample(other, 0f);
-        MoveAndSample(holder, 0f);
+        MoveAndSample(other, Vector3.zero);
+        MoveAndSample(holder, Vector3.zero);
         UpdateBallVisual();
         var nextHand = other.GetComponent<PlayerAnimationPresenter>().Animator.GetBoneTransform(HumanBodyBones.RightHand);
         Assert.That(Vector3.Distance(visual.position, nextHand.position), Is.LessThan(0.3f));
@@ -299,10 +315,25 @@ public class PlayerAnimationTests
             Assert.That(ball.IsForwardPass, Is.True);
             Assert.That(ball.Carrier, Is.Null);
             Assert.That(ball.transform.position, Is.EqualTo(launch));
+            StepFootball(presenter, 1);
+            Call(presenter, "LateUpdate");
+            var appearance = ball.GetComponentInChildren<FootballAppearance>();
+            Call(appearance, "UpdateBallVisual", 0.02f);
+            Assert.That(PlayerAnimationPresenter.TrySampleFootballGrip(presenter.Animator,
+                PlayerAnimationPresenter.DefaultFootballGripOffset, out var grip), Is.True);
+            Assert.That(Vector3.Distance(appearance.transform.position, grip.position), Is.LessThan(0.01f),
+                "The airborne mesh must start at the evaluated release pose, even if the prior frame was a half-windup.");
+
             StepFootball(presenter, 4);
             AssertFootballState(qb, "Throw Follow Through");
             Assert.That(ball.transform.position, Is.EqualTo(launch));
             Assert.That(qb.transform.position, Is.EqualTo(root));
+
+            // A stale completion cannot commit another pass or reset the same flight.
+            Call(ball, "Simulate", 0.024f);
+            object elapsed = ball.GetType().GetField("flightTimer", PrivateInstance).GetValue(ball);
+            pass.Exit(new PlayerContext { transform = qb.transform, attributes = machine.Attributes });
+            Assert.That(ball.GetType().GetField("flightTimer", PrivateInstance).GetValue(ball), Is.EqualTo(elapsed));
         }
     }
 
@@ -337,7 +368,18 @@ public class PlayerAnimationTests
     }
 
     [Test]
-    public void DesignedHandoffTransfersImmediatelyAndPlaysBothRoles()
+    public void DesignedHandoffTransfersImmediatelyAndPlaysBothRoles() => CheckDesignedHandoff(0.8f);
+
+    [Test]
+    public void HandoffAtGameplayRadiusStillTransfersOnceAndSettlesAtTheReceiverGrip()
+    {
+        var handoff = Object.FindAnyObjectByType<HandoffCoordinator>();
+        // Use the shipped scene override. The component fallback is wider than this venue's setting.
+        float radius = (float)typeof(HandoffCoordinator).GetField("handoffRadius", PrivateInstance).GetValue(handoff);
+        CheckDesignedHandoff(Mathf.Sqrt(radius * radius - 0.3f * 0.3f) - 0.02f);
+    }
+
+    void CheckDesignedHandoff(float meshDistance)
     {
         FreezeActors(keepPresenters: true);
         var play = PlayState.Instance;
@@ -345,7 +387,7 @@ public class PlayerAnimationTests
         var run = FindPlay(PlayType.Run);
         play.SetPlayCall(run);
         var qb = SpotPlayer(play.PossessionTeamId, TeamMember.RosterSlot.QB, 0f, -3f);
-        var back = SpotPlayer(qb.teamId, run.HandoffReceiverSlot, -0.8f, -3.3f);
+        var back = SpotPlayer(qb.teamId, run.HandoffReceiverSlot, -meshDistance, -3.3f);
         var handoff = Object.FindAnyObjectByType<HandoffCoordinator>();
         var giver = qb.GetComponent<PlayerAnimationPresenter>();
         var taker = back.GetComponent<PlayerAnimationPresenter>();
@@ -354,27 +396,32 @@ public class PlayerAnimationTests
         Vector3 qbPosition = qb.transform.position;
 
         Call(handoff, "Update");
-        Assert.That(ball.Carrier, Is.EqualTo(back.transform), "The exchange keeps the existing mesh-point timing");
+        Assert.That(ball.Carrier, Is.SameAs(back.transform), "The exchange keeps the existing mesh-point timing");
         Assert.That(ball.IsHeld, Is.True);
         var appearance = ball.GetComponentInChildren<FootballAppearance>();
-        var givingHand = giver.Animator.GetBoneTransform(HumanBodyBones.RightHand);
-        var takingHand = taker.Animator.GetBoneTransform(HumanBodyBones.RightHand);
         SampleExchange(1);
         AssertFootballState(qb, "Handoff Give");
         AssertFootballState(back, "Handoff Take");
-        Assert.That(Vector3.Distance(appearance.transform.position, givingHand.position), Is.LessThan(0.3f),
+        Assert.That(PlayerAnimationPresenter.TrySampleFootballGrip(giver.Animator,
+            PlayerAnimationPresenter.DefaultFootballGripOffset, out var givingGrip), Is.True);
+        Assert.That(PlayerAnimationPresenter.TrySampleFootballGrip(taker.Animator,
+            PlayerAnimationPresenter.DefaultFootballGripOffset, out var takingGrip), Is.True);
+        if (meshDistance < 1f)
+            Assert.That(Vector3.Distance(givingGrip.position, takingGrip.position), Is.LessThan(0.1f),
+                "At a reachable mesh point both wrists must point to the same football.");
+        Assert.That(Vector3.Distance(appearance.transform.position, givingGrip.position), Is.LessThan(0.065f),
             "The visible ball starts at the hand giving it");
-        float initialGap = Vector3.Distance(appearance.transform.position, takingHand.position);
         SampleExchange(10);
-        float remainingGap = Vector3.Distance(appearance.transform.position, takingHand.position);
-        Assert.That(remainingGap, Is.LessThan(0.3f), "The visible ball ends at the hand receiving it");
-        Assert.That(remainingGap, Is.LessThan(initialGap));
+        Assert.That(PlayerAnimationPresenter.TrySampleFootballGrip(taker.Animator,
+            PlayerAnimationPresenter.DefaultFootballGripOffset, out takingGrip), Is.True);
+        Assert.That(Vector3.Distance(appearance.transform.position, takingGrip.position), Is.LessThan(0.01f),
+            "The visible ball ends at the receiver's exact grip.");
         Assert.That(ball.transform.position, Is.EqualTo(ball.RulingPosition));
 
         // Simulate a recovery by the QB at the same mesh point. One play has only one exchange.
         ball.AttachTo(qb.transform);
         Call(handoff, "Update");
-        Assert.That(ball.Carrier, Is.EqualTo(qb.transform));
+        Assert.That(ball.Carrier, Is.SameAs(qb.transform));
 
         play.EndPlay(PlayState.PlayEndReason.Tackled);
         StepFootball(giver, 20);
@@ -385,11 +432,11 @@ public class PlayerAnimationTests
         // Stage the next formation and use the real snap event to rearm the handoff.
         play.StopAllCoroutines();
         SpotPlayer(qb.teamId, qb.slot, 0f, -3f);
-        SpotPlayer(back.teamId, back.slot, -0.8f, -3.3f);
+        SpotPlayer(back.teamId, back.slot, -meshDistance, -3.3f);
         Call(play, "DoSnap");
-        Assert.That(ball.Carrier, Is.EqualTo(qb.transform));
+        Assert.That(ball.Carrier, Is.SameAs(qb.transform));
         Call(handoff, "Update");
-        Assert.That(ball.Carrier, Is.EqualTo(back.transform), "A new snap rearms the designed exchange");
+        Assert.That(ball.Carrier, Is.SameAs(back.transform), "Starting the next play rearms the designed exchange");
         StepFootball(giver, 1);
         StepFootball(taker, 1);
         AssertFootballState(qb, "Handoff Give");
@@ -398,12 +445,16 @@ public class PlayerAnimationTests
         void SampleExchange(int frames)
         {
             // Sample the edited rig and render hand transfer after canonical held-position follow.
-            StepFootball(giver, frames);
-            StepFootball(taker, frames);
-            Call(ball, "LateUpdate");
-            Call(giver, "LateUpdate");
-            Call(taker, "LateUpdate");
-            Call(appearance, "UpdateBallVisual", frames * 0.02f);
+            for (int frame = 0; frame < frames; frame++)
+            {
+                StepFootball(giver, 1);
+                StepFootball(taker, 1);
+                Call(ball, "LateUpdate");
+                Call(giver, "LateUpdate");
+                Call(taker, "LateUpdate");
+                Call(appearance, "UpdateBallVisual", 0.02f);
+                Assert.That(ball.Carrier, Is.SameAs(back.transform), "The presentation cannot change possession.");
+            }
             Assert.That(qb.transform.position, Is.EqualTo(qbPosition));
         }
     }

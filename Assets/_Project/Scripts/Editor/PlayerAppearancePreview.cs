@@ -24,7 +24,7 @@ public class PlayerAppearancePreview : EditorWindow
     {
         catalog = AssetDatabase.LoadAssetAtPath<PlayerAppearanceCatalog>(CharacterAppearanceSetup.Data + "/PrototypeCatalog.asset");
         appearance = AssetDatabase.LoadAssetAtPath<PlayerAppearanceDefinition>(CharacterAppearanceSetup.Data + "/Appearance_Standard.asset");
-        visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/PlayerModel.prefab");
+        visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/MPFBPlayerModel.prefab");
     }
 
     void OnGUI()
@@ -118,7 +118,7 @@ public class PlayerAppearancePreview : EditorWindow
         preview.lights[0].intensity = 1.2f;
         preview.lights[0].transform.rotation = Quaternion.Euler(40f, 30f, 0f);
         preview.lights[1].intensity = 0.7f;
-        if (!applied) Repaint();
+        if (!applied) Cleanup();
     }
 
     void Cleanup()

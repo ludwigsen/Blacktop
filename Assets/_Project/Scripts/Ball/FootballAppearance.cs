@@ -10,7 +10,7 @@ public class FootballAppearance : MonoBehaviour
     [SerializeField] FootballStyle selectedStyle;
     [SerializeField] FootballStyle[] availableStyles;
     [Header("Animated ball transfer")]
-    [SerializeField, Min(0.01f)] float handoffBlendSeconds = 0.16f;
+    [SerializeField, Min(0.01f)] float handoffBlendSeconds = 0.075f;
     [SerializeField, Min(0.01f)] float passBlendSeconds = 0.07f;
 
     static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
@@ -20,7 +20,10 @@ public class FootballAppearance : MonoBehaviour
     Vector3 restPosition;
     Quaternion restRotation;
     PlayerAnimationPresenter exchangeGiver;
+    PlayerAnimationPresenter releaseThrower;
+    Pose exchangeGrip;
     Pose releasedGrip;
+    Vector3 passLaunchPosition;
     Vector3 releaseOffset;
     float handoffElapsed;
     float passElapsed = float.PositiveInfinity;
@@ -48,14 +51,16 @@ public class FootballAppearance : MonoBehaviour
     internal void ClearTransfer()
     {
         exchangeGiver = null;
+        releaseThrower = null;
+        handoffElapsed = 0f;
         passElapsed = float.PositiveInfinity;
     }
 
     internal void BeginPass(PlayerAnimationPresenter thrower)
     {
-        if (!thrower.TryGetBallGrip(out releasedGrip)) return;
-        releaseOffset = releasedGrip.position - ball.RulingPosition;
-        passElapsed = 0f;
+        // Defer the socket read until the release frame's evaluated pose.
+        releaseThrower = thrower;
+        passLaunchPosition = ball.RulingPosition;
     }
 
     internal void BeginHandoff(PlayerAnimationPresenter giver)
@@ -67,6 +72,16 @@ public class FootballAppearance : MonoBehaviour
     void UpdateBallVisual(float deltaTime)
     {
         if (ball == null) return; // The visual prefab can also be previewed by itself.
+        if (releaseThrower != null)
+        {
+            if (ball.IsForwardPass && releaseThrower.TryGetBallGrip(out releasedGrip))
+            {
+                releaseOffset = releasedGrip.position - passLaunchPosition;
+                passElapsed = 0f;
+            }
+            releaseThrower = null;
+        }
+
         var carrier = ball.Carrier;
         if (ball.IsHeld && carrier != null &&
             carrier.TryGetComponent<PlayerAnimationPresenter>(out var holder) &&
@@ -74,10 +89,15 @@ public class FootballAppearance : MonoBehaviour
         {
             if (exchangeGiver != null)
             {
-                handoffElapsed += deltaTime;
+                if (handoffElapsed <= 0f && !exchangeGiver.TryGetBallGrip(out exchangeGrip))
+                    exchangeGrip = grip;
                 float t = Mathf.SmoothStep(0f, 1f, handoffElapsed / handoffBlendSeconds);
-                if (exchangeGiver.TryGetBallGrip(out var from))
-                    grip = new Pose(Vector3.Lerp(from.position, grip.position, t), Quaternion.Slerp(from.rotation, grip.rotation, t));
+                float gap = Vector3.Distance(exchangeGrip.position, grip.position);
+                // The wrists already meet at normal exchanges. Only a residual
+                // reach gap needs a visual blend, which follows the new carrier.
+                Vector3 position = gap > 0.06f ? Vector3.Lerp(exchangeGrip.position, grip.position, t) : grip.position;
+                grip = new Pose(position, Quaternion.Slerp(exchangeGrip.rotation, grip.rotation, t));
+                handoffElapsed += deltaTime;
                 if (t >= 1f) exchangeGiver = null;
             }
 
@@ -85,12 +105,12 @@ public class FootballAppearance : MonoBehaviour
         }
         else if (ball.IsForwardPass && passElapsed < passBlendSeconds)
         {
-            passElapsed += deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, passElapsed / passBlendSeconds);
             // Decay only the launch offset. The visual travels with the real ball
             // immediately, keeping fast passes readable at gameplay distance.
             transform.SetPositionAndRotation(ball.transform.TransformPoint(restPosition) + releaseOffset * (1f - t),
                 Quaternion.Slerp(releasedGrip.rotation, ball.transform.rotation * restRotation, t));
+            passElapsed += deltaTime;
         }
         else transform.SetLocalPositionAndRotation(restPosition, restRotation);
     }

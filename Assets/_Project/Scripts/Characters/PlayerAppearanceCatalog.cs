@@ -12,7 +12,20 @@ public class PlayerAppearanceCatalog : ScriptableObject
     public AppearanceColor[] skinTones = Array.Empty<AppearanceColor>();
     public AppearanceColor[] hairColors = Array.Empty<AppearanceColor>();
 
-    public CharacterPartDefinition Find(string id) => Array.Find(parts, p => p != null && p.id == id);
+    public CharacterPartDefinition Find(string id)
+    {
+        // Older roster files store the prototype/temporary part ID alongside an integer build.
+        // Resolve both generations without migrating or resaving the player's selections.
+        string canonical = id switch {
+            "body.lean.temporary" or "body.lean.prototype" => "SLIM",
+            "body.athletic.temporary" or "body.athletic.prototype" => "ATHLETIC",
+            "body.thick.temporary" or "body.thick.prototype" => "STOCKY",
+            "body.heavy.temporary" or "body.heavy.prototype" => "POWER",
+            "body.massive.temporary" or "body.massive.prototype" => "MASSIVE",
+            _ => id
+        };
+        return Array.Find(parts, p => p != null && p.id == canonical);
+    }
 
     public bool TryColor(AppearanceColor[] palette, string id, out Color color)
     {
@@ -76,7 +89,8 @@ public class PlayerAppearanceCatalog : ScriptableObject
         if (body != null && body.bodyArchetype != appearance.bodyArchetype) errors.Add("Body ID and body archetype disagree.");
         foreach (var part in resolved)
         {
-            if (part.supportedBodies.Length > 0 && Array.IndexOf(part.supportedBodies, appearance.bodyArchetype) < 0)
+            if (!(part.placeholder && part.slot >= CharacterPartSlot.Top && part.slot <= CharacterPartSlot.Footwear) &&
+                part.supportedBodies.Length > 0 && Array.IndexOf(part.supportedBodies, appearance.bodyArchetype) < 0)
                 errors.Add($"{part.id} does not support {appearance.bodyArchetype}.");
             if (part.compatibleFaceIds.Length > 0 && Array.IndexOf(part.compatibleFaceIds, appearance.faceId) < 0)
                 errors.Add($"{part.id} does not fit {appearance.faceId}.");

@@ -14,19 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blacktop::CharacterPartDefinition
   id: gear.footwear.heavy.temporary
   displayName: Footwear Heavy
-  variantFamilyId: temporary.Footwear
-  temporaryVisual: 1
+  variantFamilyId: 
+  temporaryVisual: 0
   slot: 6
   bodyArchetype: 3
-  skeleton: {fileID: 11400000, guid: 985357a217d524e44927dc1c70ba514b, type: 2}
-  placeholder: 0
-  authoringNote: TEMPORARY region-deformed prototype geometry. Shared rig/binds retained;
-    production topology, seams and animation fit require artist review.
+  skeleton: {fileID: 0}
+  placeholder: 1
+  authoringNote: Outfit ID retained for future MPFB garment fitting.
   emptyOption: 0
   useExistingBody: 0
   integratedHead: 0
-  skinnedSource: {fileID: -3103262157978312569, guid: 32b3f30a3d57b4490a64db28000294f7, type: 3}
-  skinnedMeshOverride: {fileID: 4300000, guid: 57c8245a8046b422db95ba7e626238ae, type: 2}
+  skinnedSource: {fileID: 0}
+  skinnedMeshOverride: {fileID: 0}
   lod0ScreenHeight: 0.6
   lowerDetailLevels: []
   attachmentPrefab: {fileID: 0}
@@ -37,6 +36,6 @@ MonoBehaviour:
   materialTints: 03000000
   supportedBodies: 03000000
   compatibleFaceIds: []
-  proportionCalibrationId:
-  scalpProfileId:
+  proportionCalibrationId: 
+  scalpProfileId: 
   supportedScalpProfiles: []

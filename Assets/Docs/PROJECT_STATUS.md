@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Blacktop
 
-Last updated: 2026-11-07
+Last updated: 2026-11-22
 
 Status snapshot of what works, what's incomplete, and what's blocking. Keep this current. If it disagrees with the code, the code wins.
 
@@ -15,7 +15,7 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 ### Movement and moves
 - Transform-based player movement (no Rigidbody).
 - Juke, Hurdle, and StiffArm, attribute-driven, implemented through the `IPlayerMove` pattern and orchestrated by `PlayerStateMachine`.
-- All fourteen players inherit speed/direction-driven standard run, fast run and backward run through PlayerAnimationPresenter and the shared Animator Controller. Jump presents the existing hurdle, timed to its duration; no root motion or movement/attribute tuning changes.
+- All fourteen players share directional walk, jog, run, sprint, backpedal, strafe, hurdle, wall stumble and planted hard-cut presentation. Each fitted MPFB body supplies its own Humanoid Avatar. The integrated Unity Play Mode suite passed 186/186.
 - Issue #17: The Lot has concrete sideline barriers and open ends. Downtown has a
   chain-link fence with a central opening on one sideline. Human and AI
   movement sweep against these hazards and recoil through the shared
@@ -79,11 +79,10 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 - Both sides use the same flat all-attribute boost (Inspector-tunable 1.2 multiplier, existing attribute hard caps still apply), lasting until the possession ends. Team-owned runtime attributes cover AI and controlled players.
 
 ### Character appearance foundation
-- Editable Blender source is now supplied for all current geometry: five bodies with integrated faces, fifteen garment meshes and four eyes, with shared rest rig/UVs/weights. Open `SourceAssets/Characters/BlacktopCharacters.blend`; per-build and head-focused snapshots are also supplied. The Editor bridge returns artist geometry edits to existing Unity mesh IDs/bind poses. Future character mesh authoring must retain `.blend` source. See SourceAssets/Characters/README.md.
-- Optional roster appearance references preserve GUIDs/ratings; rosterless players use the prefab default. PlayerVisualAssembler/PlayerVisualRig assemble below PlayerVisuals without resizing the gameplay root/collider.
-- Stable preset/palette IDs, five body archetypes, twelve discrete heights/five derived bands, safe fallback, shared-bone attachment slots, authored skinned LOD support, property-block tinting and optional garment number labels.
-- The original catalog remains compatible. The front-end catalog supplies five distinct temporary regional body meshes and fitted temporary top/shorts/footwear shells on the same skeleton. Heavy emphasizes waist mass; Massive emphasizes chest/shoulders/limbs. These are provisional silhouettes, not production anatomy/clothing. Three face IDs share the same integrated head; cropped hair/beard and additional gear are explicitly missing art.
-- See `MODULAR_CHARACTERS.md` for the audit, canonical rig, art/import contract and workflow. Editor Play Mode suite: **62/62 passed**, including field checks and seven character tests.
+
+- Slim, Athletic, Muscular, Stocky, Power and Massive are active in matches and visual previews. Each has a fitted MPFB rig and valid Humanoid Avatar. Athletic retains the approved sculpt. Use `ArtSource/Characters/README.md` for authoring.
+- Saved body IDs and height selections resolve through the existing catalogs. Outfit IDs are retained for future fitted art. The match and preview show the MPFB skin. Players without an assigned appearance use Athletic.
+- Three post-cutover graphics-enabled Play Mode runs passed 180/180 each, including the committed match scene. The shared controller evaluated all 11 installed clips on each body. Rest/pose contact on the larger bodies and football hand contact at match speed remain open. See `ArtSource/Characters/Validation` for measurements and the animation readiness matrix.
 
 ## Known issues
 
@@ -91,8 +90,8 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 |---|---|
 | OOB / goal-line rulings need Editor validation | Automatic OOB polling exists. Held-ball goal-line and sideline checks now share live ruling position and contact precedence; test both directions and corners. |
 | Downs and first-down marker | Automated match cases verify first downs, incompletions, OOB gains and fourth-down possession changes; visual line placement still needs manual review. |
-| Football action motion is provisional (#11) | Carry needs secure torso/forearm fit. Throw lacks an authored lower-body weight transfer. Handoff starts its visual blend on ownership transfer and needs a contact-matched receiving pocket. Match-speed and dressed roster acceptance remain open. |
-| Football animation authoring | Editable Unity clips are installed. The earlier batch authoring and capture scripts were temporary. Blender has the character rig with no action sources for these clips. |
+| Football action motion is provisional (#11) | Carry and stationary throw now adjust the fitted pose. Handoff reach starts before transfer. The preview still measures a 0.447–0.563 m grip gap at 2 m separation. Check exchange contact, carry grip and release at game speed. Fitted outfits remain pending. |
+| Football animation authoring | Six source Actions and editable FBXs are available in `SourceAssets/AnimationAuthoring/`. Unity Humanoid reimport preserves timing and the masked feet/root but introduces arm and finger pose drift. The original clips remain in use while candidates await visual approval. |
 | Blocking untested | `BlockingCoordinator` / `AllyBlocker` have not been properly play-tested. |
 | Blocking / D-Moves feel (#14) | Previously unused ratings now own block-contact recovery cadence and recovery from block knockback respectively. Neutral timers and the existing power/resistance contest are retained; manual engagement/balance acceptance is still needed. |
 | Gamepad action bindings (#13) | Pass, Pitch and the human offensive start-play action still need controller bindings. #10 adds LT/L2 for play art and reuses RB/R1 for defensive cycling. |
@@ -112,12 +111,12 @@ Blacktop is an arcade 7v7 street football game (Unity 6.5, URP). The core loop i
 1. **Normal standalone gameplay pass** — owner verified the prior four-fix Editor gameplay. The expanded 39-case suite passes in both Editor and a macOS standalone player, including matches to 21 and rematches. Manual controller/graphics checks of the normal app remain.
 2. **Loose-ball gameplay feel (#14)** — ownership is exclusive; #3 adds moving/airborne fumbles and ground glyphs. Recheck scrum readability, release-contact clearance and recovery/control transfer with physical input.
 3. **Handoff contact (#11)** — make the giver's presentation and the runner's receiving pocket meet at the existing ownership event. Verify a single visually continuous ball and an unobstructed breakaway on Dive.
-4. **Football animation readability (#11)** — refine throw weight transfer/release and carry grip. Hard Cut Left/Right, catch-to-tuck and tackle reactions still need motion. Controller feel, foot sliding and transition tuning need live playtesting.
+4. **Football animation readability (#11)** — review the planted hard cut and gaits at match speed, then close the wide handoff reach gap. Catch-to-tuck and tackle reactions still need motion. Controller feel, foot sliding and transition tuning need live playtesting.
 5. **Front-end manual acceptance** — finish a physical-controller match with an edited roster, confirm all gameplay actions and restart persistence on Windows. MainMenu, roster editing and both exhibition modes are implemented; automated integration includes both human sides, rematch and return to menu.
 6. **Roster authoring** — identity/ratings deliberately remain in the existing GUID-keyed PlayerRecord. Runtime appearance DTOs omit Unity asset references; explicit source commit creates per-GUID appearance assets. New-team creation is deferred.
 7. **Exhibition balance/acceptance** — ConditionData now feeds bounded match-scoped effects through PlayerAttributes, with independent Accel handling. Four data-driven difficulties affect real CPU pursuit, coverage, offensive decisions and draft ranking. Conditions, difficulty, the six-team draft pool and physical controller play still need manual acceptance.
 
-8. **Character vertical slice art** — author a headless Athletic body, three distinct faces, one cropped hairstyle and one beard on the documented rig. Measure height/profile anatomy and validate missing football-action clips before growing the catalog.
+8. **Football movement and fitted character art** — prioritize planted locomotion, cuts, catch-to-tuck and matched handoffs on the six bodies. Fitted outfits and distinct face/hair assets remain later art work.
 
 ## Design backlog (hard constraints when reached)
 
@@ -151,7 +150,7 @@ Passing, Speed, Blocking, Agility, Catching, Run Power, Carrying, Tackling, Cove
 - **First set:** Build toward 7 Pass, 3 Run/Option, and 9 Defense using supported assignments and small extensions to routes or run lanes where needed. Designed options and trick calls depend on defined exchange, fake, or passing behavior. Track the inventory and dependencies in #18.
 
 ### Character appearance
-- 5 body archetypes (lean / athletic / thick / heavy / massive) as 5 unique meshes on a shared skeleton.
+- Six approved MPFB archetypes (Slim, Athletic, Muscular, Stocky, Power and Massive) use individual fitted meshes and one bone hierarchy.
 - Five derived height bands containing twelve explicit centimetre selections. Calibrated visual scaling around the feet; no arbitrary limb-bone scaling or rating changes.
 - 30 faces, 20 hairstyles, 8 facial hair styles.
 - NFL Street 1 aesthetic: grounded proportions, not cartoon-exaggerated.
@@ -295,3 +294,7 @@ ui-native-player.log; screenshots are in the chat computer-use record.
   platform acceptance must account for the ball change. No other issue is completed.
 - App, complete-source packet and copied evidence: ignored Builds/BallFlight in
   the original checkout. Detailed scenarios/results/limits: TESTING.md T-112–T-115.
+
+### Six-body visual review (2026-11-22)
+
+The development lineup supports playback, pause/scrub, individual bodies and three viewing angles. Power's bilateral armpit weight correction preserves its approved rest mesh. See ArtSource/Characters/Validation/Integration.md for the measurements, mode tests, retirement decisions and remaining match-speed review.

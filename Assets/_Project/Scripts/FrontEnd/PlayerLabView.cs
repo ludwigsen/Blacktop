@@ -94,7 +94,7 @@ public class PlayerLabView : MonoBehaviour
                     Note("Shaved and clean-shaven are available. Other styles await art.");preview.SetHeadView(true);break;
                 case PlayerLabPage.Fit:
                     Gear(CharacterPartSlot.Top);Gear(CharacterPartSlot.Shorts);Gear(CharacterPartSlot.Footwear);
-                    Note("Team colors follow your saved team. Prototype garments are provisional.");break;
+                    Note("Outfit selections are saved for future fitted garments.");break;
                 case PlayerLabPage.Accessories:
                     foreach(var slot in new[]{CharacterPartSlot.Gloves,CharacterPartSlot.Wristband,CharacterPartSlot.ArmSleeve,CharacterPartSlot.Headband,CharacterPartSlot.Accessory})Gear(slot);
                     Note("Unavailable pieces are marked MISSING ART.");break;
@@ -131,7 +131,7 @@ public class PlayerLabView : MonoBehaviour
         FrontEndUI.Picker(form,"HEIGHT",heights.Select(RosterBrowserView.HeightLabel).ToArray(),Array.IndexOf(heights,Appearance.height),i=>{Appearance.height=heights[i];Refresh();},Settings);
         FrontEndUI.Picker(form,"BUILD",Enum.GetNames(typeof(BodyArchetype)),(int)Appearance.bodyArchetype,i=>{
             Appearance.bodyArchetype=(BodyArchetype)i;
-            var body=Settings.appearances.parts.First(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==(BodyArchetype)i&&p.temporaryVisual);
+            var body=Settings.appearances.Find(((BodyArchetype)i).ToString().ToUpperInvariant());
             Appearance.bodyId=body.id;
             Appearance.clothingIds=Appearance.clothingIds.Select(Compatible).ToArray();
             Appearance.accessoryIds=Appearance.accessoryIds.Select(Compatible).ToArray();Refresh();},Settings);

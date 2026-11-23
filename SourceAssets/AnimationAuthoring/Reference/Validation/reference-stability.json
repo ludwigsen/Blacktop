@@ -1,0 +1,17 @@
+{
+  "clipEdited": "Throw Windup",
+  "testEditRadians": 0.55,
+  "testEditBlenderFrames": [
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "measuredPeakAngleDiffBeforeDegrees": 9.940469741821289,
+  "measuredPeakAngleDiffAfterDegrees": 34.78190994262695,
+  "identicalClipIdentities": 6,
+  "overrideBytesUnchanged": true,
+  "overrideMetaBytesUnchanged": true,
+  "overrideSha256": "669895ed2d9043e460150014f78adf29126587fb40cc513308ed16dabe941266"
+}

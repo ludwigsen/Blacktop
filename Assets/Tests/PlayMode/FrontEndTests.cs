@@ -42,7 +42,7 @@ public class FrontEndTests
     RosterPlayer Rookie(string team="kings")
     {
         var player=PlayerEditorSession.New(settings,service.NextNumber(team));player.record.displayName="Rook Example";
-        player.appearance.height=PlayerHeight.Ft6In3;player.appearance.bodyArchetype=BodyArchetype.Thick;
+        player.appearance.height=PlayerHeight.Ft6In3;player.appearance.bodyArchetype=BodyArchetype.Stocky;
         player.appearance.bodyId="body.thick.temporary";
         player.appearance.clothingIds=new[]{"gear.top.thick.temporary","gear.shorts.thick.temporary","gear.footwear.thick.temporary"};
         for(int i=0;i<12;i++)RosterRatings.Set(ref player.record,i,20-i);
@@ -104,20 +104,20 @@ public class FrontEndTests
         Assert.That(outdated.Team("kings").players.Select(p=>p.record.id),Is.EqualTo(settings.Team("kings").roster.players.Select(p=>p.id)));
     }
     [Test]
-    public void HeightWeightAndTemporarySilhouettesUseOneRigWithoutChangingRatings()
+    public void SixFittedBodyPrefabsRetainHeightAndWeightMetadata()
     {
-        int[] baseline={165,190,220,250,275};var meshes=new System.Collections.Generic.HashSet<Mesh>();
+        int[] baseline={165,190,220,250,275,220};var meshes=new System.Collections.Generic.HashSet<Mesh>();
         foreach(BodyArchetype build in Enum.GetValues(typeof(BodyArchetype)))
         {
             Assert.That(settings.weights.Pounds(PlayerHeight.Ft6In0,build),Is.EqualTo(baseline[(int)build]));
-            var part=settings.appearances.parts.Single(p=>p.slot==CharacterPartSlot.Body&&p.bodyArchetype==build&&p.temporaryVisual);
-            Assert.That(part.skeleton.ValidateSkin(part.skinnedSource,out string error,part.skinnedMeshOverride),Is.True,error);
-            meshes.Add(part.skinnedMeshOverride);
+            var part=settings.appearances.Find(build.ToString().ToUpperInvariant());
+            Assert.That(part.skeleton.ValidateSkin(part.skeleton.referenceSkin,out string error),Is.True,error);
+            meshes.Add(part.skeleton.referenceSkin.sharedMesh);
             foreach(PlayerHeight height in Enum.GetValues(typeof(PlayerHeight)))Assert.That(settings.weights.Pounds(height,build),Is.InRange(120,390));
         }
-        Assert.That(meshes.Count,Is.EqualTo(5));
-        var heavy=settings.appearances.Find("body.heavy.temporary").skinnedMeshOverride;
-        var massive=settings.appearances.Find("body.massive.temporary").skinnedMeshOverride;
+        Assert.That(meshes.Count,Is.EqualTo(6));
+        var heavy=settings.appearances.Find("body.heavy.temporary").skeleton.referenceSkin.sharedMesh;
+        var massive=settings.appearances.Find("body.massive.temporary").skeleton.referenceSkin.sharedMesh;
         Assert.That(heavy.vertices,Is.Not.EqualTo(massive.vertices),"Heavy and Massive must not be identical IDs on one mesh");
     }
     static Button ButtonNamed(string name)=>Object.FindObjectsByType<Button>().First(b=>b.gameObject.name==name);
@@ -150,8 +150,11 @@ public class FrontEndTests
         var actor=Object.FindObjectsByType<CharacterApplier>().Single(a=>a.Record.HasValue&&a.Record.Value.id==player.record.id);
         Assert.That(actor.GetComponent<TeamMember>().slot,Is.EqualTo(TeamMember.RosterSlot.RB));
         Assert.That(actor.GetComponent<PlayerStateMachine>().Attributes.speed,Is.EqualTo(19));
-        Assert.That(actor.GetComponent<PlayerVisualAssembler>().AppliedAppearance.bodyArchetype,Is.EqualTo(BodyArchetype.Thick));
+        Assert.That(actor.GetComponent<PlayerVisualAssembler>().AppliedAppearance.bodyArchetype,Is.EqualTo(BodyArchetype.Stocky));
         Assert.That(actor.GetComponent<PlayerVisualAssembler>().AppliedAppearance.heightProfile.height,Is.EqualTo(PlayerHeight.Ft6In3));
+        Assert.That(actor.GetComponent<PlayerVisualAssembler>().rig.skeleton.id,Is.EqualTo("STOCKY"));
+        Assert.That(actor.GetComponent<PlayerVisualAssembler>().AppliedAppearance.clothingIds,Is.EqualTo(player.appearance.clothingIds));
+        Assert.That(actor.GetComponentsInChildren<SkinnedMeshRenderer>().Length,Is.EqualTo(1));
         Assert.That(actor.GetComponentInChildren<TMP_Text>().text,Does.Contain("Created InMenu"));
         Assert.That(Object.FindObjectsByType<TeamMember>().Length,Is.EqualTo(14));
         Assert.That(actor.transform.localScale,Is.EqualTo(Vector3.one));
